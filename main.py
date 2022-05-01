@@ -7,13 +7,13 @@ import curses
 
 x = 0
 y = 0
-current_color_pair = 1
+current_color_pair = 0
 max_color_pair_defined = -1
 mode = 'normal'
 max_x = -1
 max_y = -1
 current_character = -1
-hud_color = 8
+hud_color = 16
 quit = False
 movement_keys = ['KEY_LEFT', 'KEY_RIGHT', 'KEY_UP', 'KEY_DOWN']
 
@@ -50,9 +50,10 @@ def draw_hud(s):
 
     s.addstr(max_y-2, 0, f'y: {y:3} | ', color_pair(hud_color)) 
     s.addstr('█', color_pair(current_color_pair))
+    #s.addstr('▀', color_pair(current_color_pair))
     s.addstr(f'{current_color_pair:3}', color_pair(hud_color))
     s.addstr(max_y-1, 0, f'x: {x:3} | ', color_pair(hud_color)) 
-    s.addstr('#', color_pair(current_color_pair))
+    s.addstr(' ', color_pair(current_color_pair))
     s.addstr(f'{current_color_pair:3}', color_pair(hud_color))
     reset_cursor(s, y, x)
 
@@ -119,22 +120,20 @@ def check_cursor_bounds():
 def define_color_pairs():
     global max_color_pair_defined
     x = 0
-    for j in range(128):
-        for i in range(256):
+    for j in range(-1, 15):
+        for i in range(-1, 15):
             init_pair(x, i, j)
             x += 1
     max_color_pair_defined = x
 
 
 def draw_initial_ascii(s):
-    lines = [ 'Welcome to shade v0.1',
-        'by darkmage',
-        'www.evildojo.com'
-    ]
-    y0 = 0
+    #lines = []
+    lines = open('title.md', 'r').readlines()
+    y = 0
     for i in lines:
-        s.addstr(y0, 0, i, color_pair(8))
-        y0 += 1
+        s.addstr(y, 0, i, color_pair(hud_color))
+        y += 1
 
 
 def main(s):
@@ -157,4 +156,8 @@ def main(s):
 
 
 if __name__ == '__main__':
-    wrapper(main)
+    try:
+        wrapper(main)
+    except Exception as e:
+        print(f'{e}')
+        exit(-1)
