@@ -3,7 +3,9 @@ from curses import start_color
 from curses import use_default_colors
 from curses import init_pair
 from curses import color_pair
+from curses import has_colors
 import curses
+
 
 x = 0
 y = 0
@@ -47,7 +49,6 @@ def draw_hud(s):
                 s.addstr(j, i, ' ', color_pair(hud_color))
             except:
                 pass
-
     s.addstr(max_y-2, 0, f'y: {y:3} | ', color_pair(hud_color)) 
     s.addstr('█', color_pair(current_color_pair))
     #s.addstr('▀', color_pair(current_color_pair))
@@ -58,8 +59,21 @@ def draw_hud(s):
     reset_cursor(s, y, x)
 
 
+def handle_input_movement_keys(s, c):
+    global y
+    global x
+    if c == movement_keys[0]:
+        x -= 1
+    elif c == movement_keys[1]:
+        x += 1
+    elif c == movement_keys[2]:
+        y -= 1
+    elif c == movement_keys[3]:
+        y += 1
+
 def handle_input(s, c):
-    global y, x
+    global y
+    global x
     global mode
     global current_color_pair
     global current_character
@@ -82,6 +96,14 @@ def handle_input(s, c):
                     current_color_pair = 0
             elif c == 'q':
                 quit = True
+            elif c == 's': #save
+                with open('test.txt', 'wb') as outfile:
+                    s.putwin(outfile)
+            elif c == 'l': #load 
+                new_win = None
+                with open('test.txt', 'rb') as infile:
+                    new_win = curses.getwin(infile)
+                new_win.overwrite(s)
             elif c == 'i': #info
                 attr = s.inch(y, x)
                 char = chr(attr & curses.A_CHARTEXT)
@@ -94,14 +116,8 @@ def handle_input(s, c):
                 switch_mode()
             else:
                 add_character(s, c)
-    elif c == movement_keys[0]:
-        x -= 1
-    elif c == movement_keys[1]:
-        x += 1
-    elif c == movement_keys[2]:
-        y -= 1
-    elif c == movement_keys[3]:
-        y += 1
+    else:
+        handle_input_movement_keys(s, c)
     check_cursor_bounds()
     s.move(y, x)
 
@@ -116,7 +132,6 @@ def check_cursor_bounds():
     elif y > max_y - 3:
         y = max_y - 3
 
-
 def define_color_pairs():
     global max_color_pair_defined
     x = 0
@@ -126,20 +141,30 @@ def define_color_pairs():
             x += 1
     max_color_pair_defined = x
 
-
 def draw_initial_ascii(s):
-    #lines = []
     lines = open('title.md', 'r').readlines()
     y = 0
     for i in lines:
         s.addstr(y, 0, i, color_pair(hud_color))
         y += 1
 
+def do_save(s):
+    outstr = ''
+    for i in range(max_y):
+        for j in range(max_x):
+            attr = s.inch(i, j)
+            char = chr(attr & curses.A_CHARTEXT)
+            color = attr & curses.A_COLOR
+            outstr += '\x03' + char + '\x03'
+    with open('test.txt','w') as outfile:
+        outfile.write(outstr)
 
 def main(s):
     global mode
-    global y, x
-    global max_y, max_x
+    global y
+    global x
+    global max_y
+    global max_x
     s.clear()
     max_y, max_x = s.getmaxyx()
     start_color()
@@ -161,3 +186,4 @@ if __name__ == '__main__':
     except Exception as e:
         print(f'{e}')
         exit(-1)
+                                                                               

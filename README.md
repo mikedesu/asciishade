@@ -50,10 +50,12 @@ A good number of people care about ASCII art.
 
 **Under construction**
 
-To run: `python3 main.py`
+To run, from the project folder: `python3 -m asciishade`
 
 **Keyboard Controls**
 
+- 's': save to file 'test.txt'
+- 'l': load from file 'test.txt'
 - 'c': go back one color pair
 - 'v': go forward one color pair
 - 'q': quit
