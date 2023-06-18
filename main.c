@@ -1,8 +1,6 @@
 #define _XOPEN_SOURCE_EXTENDED 1
 
 #include <ncurses.h>
-//#include <curses.h>
-
 #include <ctype.h>
 #include <locale.h>
 #include <stddef.h>
@@ -27,9 +25,13 @@ int hud_color = 7;
 int current_color_pair = 0;
 int max_color_pairs = -1;
 int max_colors = -1;
-char *filename = NULL;
-int color_array[128*128][2] = { 0 };
 
+// this is the current filename
+char *filename = NULL;
+
+// this is used to quickly grab info about what the current
+// fg and bg color is based on the current "color pair"
+int color_array[128*128][2] = { 0 };
 
 int convert_to_irc_color(int color);
 void handle_save();
