@@ -102,7 +102,7 @@ No!
 
 -----
 
-[www.evildojo.com](https://www.evildojo.com)
+All of my social media contact info can be found on my website: [www.evildojo.com](https://www.evildojo.com)
 
 I stream regularly on Twitch as well at: [twitch.tv/darkmage666](https://www.twitch.tv/darkmage666)
 
