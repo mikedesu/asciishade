@@ -9,7 +9,7 @@
                www.evildojo.com
 ```
 
-<img src="https://www.evildojo.com/asciishadepreview.png"/>
+<img src="https://raw.githubusercontent.com/mikedesu/asciishade/main/preview.png"/>
 
 *doin' ascii? throw some shade on it*
 
