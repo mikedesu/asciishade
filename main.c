@@ -1,4 +1,8 @@
+#define _XOPEN_SOURCE_EXTENDED 1
+
 #include <ncurses.h>
+//#include <curses.h>
+
 #include <ctype.h>
 #include <locale.h>
 #include <stddef.h>
@@ -6,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <wchar.h>
 
 // something broken about ncurses movement keys but i hacked this together
 #define MV_DOWN 66
@@ -121,7 +126,11 @@ int get_bg_color(int color_pair) {
 
 
 void draw_initial_ascii() {
-    char *lines[3] = { "Welcome to asciishade\n", "by darkmage\n", "www.evildojo.com\n" };
+    char *lines[3] = { 
+        "Welcome to asciishade\n", 
+        "by darkmage\n", 
+        "www.evildojo.com\n" 
+    };
     current_color_pair = 1;
     attron(COLOR_PAIR(current_color_pair));
     for (int i = 0; i < 3; i++) {
@@ -134,6 +143,7 @@ void draw_initial_ascii() {
 void add_block() { 
     attron(COLOR_PAIR(current_color_pair)); 
     mvaddstr(y, x, "█"); 
+    //mvaddstr(y, x, "x"); 
     attroff(COLOR_PAIR(current_color_pair)); 
 }
 
@@ -170,15 +180,15 @@ void decr_color_pair_by_max() {
 
 int convert_to_irc_color(int color) {
     switch (color) {
-        case COLOR_BLACK: return 1;
-        case COLOR_RED: return 4;
-        case COLOR_GREEN: return 3;
-        case COLOR_YELLOW: return 8;
-        case COLOR_BLUE: return 2;
+        case COLOR_BLACK:   return 1;
+        case COLOR_RED:     return 4;
+        case COLOR_GREEN:   return 3;
+        case COLOR_YELLOW:  return 8;
+        case COLOR_BLUE:    return 2;
         case COLOR_MAGENTA: return 6;
-        case COLOR_CYAN: return 10;
-        case COLOR_WHITE: return 0;
-        default: return color;
+        case COLOR_CYAN:    return 10;
+        case COLOR_WHITE:   return 0;
+        default:            return color;
     }
     return 0;
 }
@@ -196,28 +206,43 @@ void handle_save() {
             exit(-1);
         }
         
-        //int canvas_width = max_x;
-        int canvas_width = 40;
-        int canvas_height = 10;
+        //int canvas_width = 80;
+        //int canvas_height = 4;
+        
+        int canvas_width = 80; // once we've optimized the output, this can probably go back to normal
+        // it will be reasonable to have certain limits on the canvas width
+        int canvas_height = 8;
         //int canvas_height = max_y-2;
+        
+        int prev_irc_fg_color = -1;
+        int prev_irc_bg_color = -1;
+
+        //wchar_t blockCharacter = L'\u2588';  // Wide character representation of block character
         for (int i = 0; i < canvas_height; i++) {
             for (int j = 0; j < canvas_width; j++) {
-                chtype character = mvinch(i,j);
-                attr_t attribute = character & A_COLOR;
+                cchar_t character;
+                mvwin_wch(stdscr, i, j, &character);  // Read wide character from the canvas
+                wchar_t wc = character.chars[0];
+                attr_t attribute = character.attr;
                 int color_pair_number = PAIR_NUMBER(attribute);
                 int foreground_color = get_fg_color(color_pair_number);
                 int background_color = get_bg_color(color_pair_number);
-                // convert the foreground and background colors to irc colors
                 int irc_foreground_color = convert_to_irc_color(foreground_color);
                 int irc_background_color = convert_to_irc_color(background_color);
-                // get the character
-                char c = character & A_CHARTEXT;
-                if (c == '\x88') {
-                    fprintf(outfile, "\x03%d,%d%lc", irc_foreground_color, irc_background_color,0x2588);
+                bool color_changed = prev_irc_fg_color != irc_foreground_color || prev_irc_bg_color != irc_background_color;
+                if (color_changed) {
+                    fprintf(outfile, "\x03%d,%d%lc", irc_foreground_color, irc_background_color, wc);
                 }
                 else {
-                    fprintf(outfile, "\x03%d,%d%c", irc_foreground_color, irc_background_color, c);
+                    fprintf(outfile, "%lc", wc);
                 }
+                prev_irc_fg_color = irc_foreground_color;
+                prev_irc_bg_color = irc_background_color;
+
+                // soon we will be able to optimize the format that we write things out
+                // by recognizing when fg and bg colors actually change on a line
+                // but for now, we write out the fg/bg color for each character
+                //fprintf(outfile, "\x03%d,%d%lc", irc_foreground_color, irc_background_color, wc);
             }
             fprintf(outfile, "\x03\n");
         }
@@ -238,21 +263,31 @@ void handle_input() {
     }
     // movement keys
     else if (c == MV_DOWN) {
-        y++;
+        if (y+1 < max_y-2) {
+            y++;
+        }
     }
     else if (c == MV_UP) {
-        y--;
+        if (y-1 >= 0) {
+            y--;
+        }
     }
     else if (c == MV_LEFT) {
-        x--;
+        if (x-1 >= 0) {
+            x--;
+        }
     }
     else if (c == MV_RIGHT) {
-        x++;
+        if (x+1 < max_x) {
+            x++;
+        }
     }
     // variations on adding blocks
     else if (c == ' ') { 
         add_block(); 
-        x++; 
+        if (x+1 < max_x) {
+            x++;
+        }
     }
     //else if (c == 'f') {
     //    add_block(); 
@@ -305,14 +340,19 @@ void switch_between_current_and_hud_color() {
 void draw_hud_row_1() {
     char str[64] = {0};
     sprintf(str, "y: %03d | ", y);
+
     mvaddstr(max_y-2, 0, str);
+    
     switch_between_hud_and_current_color();
+    
     addstr("█");
+    
     //addstr(0x2588);
     switch_between_current_and_hud_color();
     memset(str,0,32);
     int fg_color = current_color_pair % max_colors;
-    sprintf(str, " %03d FG CurrentColorPair(%05d) Filename: %s", fg_color, current_color_pair, filename );
+    sprintf(str, " %03d FG CurrentColorPair(%05d) FG %03d Filename: %s", fg_color, current_color_pair, 0, filename );
+    
     addstr(str);
 }
 
@@ -324,14 +364,23 @@ void draw_hud_row_2() {
     switch_between_hud_and_current_color();
     addstr(" ");
     switch_between_current_and_hud_color();
-    char str2[32] = {0};
+    char str2[64] = {0};
     int bg_color = current_color_pair / max_colors;
 
-    chtype character = inch();
+    // get where our cursor is
+    int cursor_y, cursor_x;
+    getyx(stdscr, cursor_y, cursor_x);
+
+    // now that we have memory of where we stopped drawing...
+    chtype character = mvinch(y, x);
     attr_t attribute = character & A_COLOR;
     int color_pair_number = PAIR_NUMBER(attribute);
 
-    sprintf(str2, " %03d BG PairUnderCursor (%05d)", bg_color, color_pair_number);
+    //move back to where the cursor was
+    move(cursor_y, cursor_x);
+
+    //sprintf(str2, " %03d BG PairUnderCursor (%05d)", bg_color, color_pair_number);
+    sprintf(str2, " %03d BG PairUnderCursor (%05d) BG %03d %dx%d", bg_color, color_pair_number, 0, max_y, max_x);
     addstr(str2);
     attroff(COLOR_PAIR(hud_color));
     reset_cursor();
