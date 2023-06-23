@@ -49,7 +49,9 @@ char filename[1024] = {0};
 // fg and bg color is based on the current "color pair"
 // 128x128 = 16384
 // 16x16 = 256
-int color_array[16384][2] = { 0 };
+//int color_array[16384][2] = { 0 };
+int color_array[256][2] = { 0 };
+int color_pair_array[256][256] = { 0 };
 
 
 int convert_to_irc_color(int color);
@@ -60,6 +62,7 @@ void draw_initial_ascii();
 void handle_input();
 void draw_hud();
 void draw_hud_background();
+void draw_canvas();
 void reset_cursor();
 void parse_arguments(int argc, char **argv);
 int get_fg_color(int color_pair);
@@ -67,6 +70,12 @@ int get_bg_color(int color_pair);
 void init_program();
 void init_canvas(int width, int height);
 void free_canvas();
+void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
+void fail_with_msg(const char *msg);
+
+
+
+
 
 
 int main(int argc, char *argv[]) 
@@ -77,6 +86,9 @@ int main(int argc, char *argv[])
     refresh();
     while (!quit) 
     {
+        clear();
+        draw_canvas();
+
         draw_hud();
         handle_input();
         refresh();
@@ -139,6 +151,8 @@ void define_color_pairs()
             // store the color pair in the array
             color_array[current_pair][0] = fg_color;
             color_array[current_pair][1] = bg_color;
+            // store the color pair in the array
+            color_pair_array[fg_color][bg_color] = current_pair;
             current_pair++;
         }
     }
@@ -159,40 +173,117 @@ int get_bg_color(int color_pair)
 }
 
 
+
+void fail_with_msg(const char *msg) 
+{
+    endwin();
+    fprintf(stderr, "%s\n", msg);
+    exit(EXIT_FAILURE);
+}
+
+
+
+void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) 
+{
+    // check to make sure y,x is within the canvas
+    if (y < 0 || y >= canvas_height || x < 0 || x >= canvas_width) 
+    {
+        fail_with_msg("write_char_to_canvas: y,x is out of bounds");
+    }
+
+    // make sure the other parameters arent absurd
+    if (fg_color < 0 || fg_color >= max_colors || bg_color < 0 || bg_color >= max_colors) 
+    {
+        fail_with_msg("write_char_to_canvas: fg_color or bg_color is out of bounds");
+    }
+
+    canvas[y][x].character = c;
+    canvas[y][x].foreground_color = fg_color;
+    canvas[y][x].background_color = bg_color;
+} 
+
+
+
 void draw_initial_ascii() 
 {
     char *lines[3] = 
     { 
-        "Welcome to asciishade\n", 
-        "by darkmage\n", 
-        "www.evildojo.com\n" 
+        "Welcome to asciishade", 
+        "by darkmage", 
+        "www.evildojo.com" 
     };
     current_color_pair = 1;
-    attron(COLOR_PAIR(current_color_pair));
-    for (int i = 0; i < 3; i++) 
-    {
-        addstr(lines[i]);
+    int fg_color = get_fg_color(current_color_pair);
+    int bg_color = get_bg_color(current_color_pair);
+    for (int i=0; i < 3; i++) {
+        for (int j=0; j < strlen(lines[i]); j++) {
+            // convert the char at lines[i][j] to a wchar_t
+            // store in the canvas
+
+            write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
+
+            //canvas[i][j].character = lines[i][j];
+            //canvas[i][j].foreground_color = fg_color;
+            //canvas[i][j].background_color = bg_color;
+        }
     }
-    attroff(COLOR_PAIR(current_color_pair));
+
+    //attron(COLOR_PAIR(current_color_pair));
+    //for (int i = 0; i < 3; i++) 
+    //{
+    //    mvaddstr(i, 0, lines[i]);
+    //}
+    //attroff(COLOR_PAIR(current_color_pair));
 }
+
+
+
+void draw_canvas() 
+{
+    for (int i = 0; i < canvas_height; i++) 
+    {
+        for (int j = 0; j < canvas_width; j++) 
+        {
+            // set the color pair
+            // first, get the color pair
+            // it should be equal to fg_color + (bg_color * 16)
+            //int color_pair = canvas[i][j].foreground_color + (canvas[i][j].background_color * 16);
+
+            int fg_color = canvas[i][j].foreground_color;
+            int bg_color = canvas[i][j].background_color;
+            int color_pair = color_pair_array[fg_color][bg_color];
+
+            attron(COLOR_PAIR(color_pair));
+            // draw the character
+
+            wchar_t c = canvas[i][j].character;
+            //char mbstr[2];
+            //mbstr[0] = c;
+            //mbstr[1] = '\0';
+            mvaddch(i, j, c);
+            //mvadd_wch(i, j, mbstr);
+
+            // turn off the color pair
+            attroff(COLOR_PAIR(color_pair));
+        }
+    }
+}
+
+
 
 
 void add_block() 
 { 
-    attron(COLOR_PAIR(current_color_pair)); 
-    
+    //attron(COLOR_PAIR(current_color_pair)); 
     // add the block to the canvas
     canvas[y][x].character = L'█';
     // store the color component
     canvas[y][x].foreground_color = get_fg_color(current_color_pair);
     canvas[y][x].background_color = get_bg_color(current_color_pair);
-
     // this will soon go away once we have a function to render the canvas
     // that way we dont have to write directly to stdscr
-    mvaddstr(y, x, "█"); 
-
-    //mvaddstr(y, x, "x"); 
-    attroff(COLOR_PAIR(current_color_pair)); 
+    //mvaddstr(y, x, "█"); 
+    //attroff(COLOR_PAIR(current_color_pair)); 
 }
 
 
@@ -508,7 +599,15 @@ void init_canvas(int width, int height)
     {
         //canvas[i] = malloc(sizeof(canvas_pixel_t) * canvas_width);
         canvas[i] = calloc(canvas_width, sizeof(canvas_pixel_t));
+
+        for (int j = 0; j < canvas_width; j++) 
+        {
+            canvas[i][j].foreground_color = 0;
+            canvas[i][j].background_color = 0;
+            canvas[i][j].character = ' ';
+        }
     }
+
 }
 
 
