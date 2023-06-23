@@ -52,10 +52,6 @@ char filename[1024] = {0};
 int color_array[16384][2] = { 0 };
 
 
-
-
-
-
 int convert_to_irc_color(int color);
 void handle_save_inner_loop(FILE *outfile);
 void handle_save();
@@ -87,7 +83,6 @@ int main(int argc, char *argv[])
     }
     endwin();
     
-    printf("Freeing the canvas memory...\n");
     // free the canvas
     free_canvas();
 
@@ -265,30 +260,30 @@ void handle_save_inner_loop(FILE *outfile)
         perror("Error opening file for writing");
         exit(-1);
     }
-    int canvas_width = max_x; 
-    int canvas_height = max_y-2;
+    //int canvas_width = max_x; 
+    //int canvas_height = max_y-2;
     int prev_irc_fg_color = -1;
     int prev_irc_bg_color = -1;
     for (int i = 0; i < canvas_height; i++) 
     {
         for (int j = 0; j < canvas_width; j++) 
         {
-/*
- 
-
-*/
-
-
-            cchar_t character;
-            mvwin_wch(stdscr, i, j, &character);  // Read wide character from the canvas
-            wchar_t wc = character.chars[0];
-            attr_t attribute = character.attr;
-            int color_pair_number = PAIR_NUMBER(attribute);
-            int foreground_color = get_fg_color(color_pair_number);
-            int background_color = get_bg_color(color_pair_number);
+            // now, instead of grabbing characters from stdscr
+            // and having to do all this shit on the fly
+            // we can just render from the canvas
+            
+            wchar_t wc = canvas[i][j].character;
+            int foreground_color = canvas[i][j].foreground_color;
+            int background_color = canvas[i][j].background_color;
             int irc_foreground_color = convert_to_irc_color(foreground_color);
             int irc_background_color = convert_to_irc_color(background_color);
             bool color_changed = prev_irc_fg_color != irc_foreground_color || prev_irc_bg_color != irc_background_color;
+
+            //cchar_t character;
+            //mvwin_wch(stdscr, i, j, &character);  // Read wide character from the canvas
+            //wchar_t wc = character.chars[0];
+            //attr_t attribute = character.attr;
+            //int color_pair_number = PAIR_NUMBER(attribute);
             if (color_changed) 
             {
                 fprintf(outfile, "\x03%d,%d%lc", irc_foreground_color, irc_background_color, wc);
@@ -309,7 +304,7 @@ void handle_save()
 {
     // 1. filename is empty
     // 2. filename is not empty
-    if (strcmp(filename, "") == 0) 
+    if (strcmp(filename, "") != 0) 
     { 
         // test writing out file
         FILE *outfile = fopen(filename, "w");
@@ -519,6 +514,7 @@ void init_canvas(int width, int height)
 
 void free_canvas() 
 {
+    printf("Freeing the canvas memory...\n");
     for (int i = 0; i < canvas_height; i++) 
     {
         free(canvas[i]);
