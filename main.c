@@ -9,6 +9,23 @@
 #include <unistd.h>
 #include <wchar.h>
 
+// this is the base of the canvas
+typedef struct 
+{
+    wchar_t character;
+    int foreground_color;
+    int background_color;
+} canvas_pixel_t;
+
+
+
+//canvas_pixel_t canvas[1024][1024] = { 0 };
+canvas_pixel_t **canvas = NULL;
+int canvas_width  = -1;
+int canvas_height = -1;
+
+
+
 // something broken about ncurses movement keys but i hacked this together
 #define MV_DOWN 66
 #define MV_UP 65
@@ -35,6 +52,10 @@ char filename[1024] = {0};
 int color_array[16384][2] = { 0 };
 
 
+
+
+
+
 int convert_to_irc_color(int color);
 void handle_save_inner_loop(FILE *outfile);
 void handle_save();
@@ -48,7 +69,8 @@ void parse_arguments(int argc, char **argv);
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
 void init_program();
-
+void init_canvas(int width, int height);
+void free_canvas();
 
 
 int main(int argc, char *argv[]) 
@@ -64,6 +86,11 @@ int main(int argc, char *argv[])
         refresh();
     }
     endwin();
+    
+    printf("Freeing the canvas memory...\n");
+    // free the canvas
+    free_canvas();
+
     return EXIT_SUCCESS;
 }
 
@@ -158,7 +185,17 @@ void draw_initial_ascii()
 void add_block() 
 { 
     attron(COLOR_PAIR(current_color_pair)); 
+    
+    // add the block to the canvas
+    canvas[y][x].character = L'█';
+    // store the color component
+    canvas[y][x].foreground_color = get_fg_color(current_color_pair);
+    canvas[y][x].background_color = get_bg_color(current_color_pair);
+
+    // this will soon go away once we have a function to render the canvas
+    // that way we dont have to write directly to stdscr
     mvaddstr(y, x, "█"); 
+
     //mvaddstr(y, x, "x"); 
     attroff(COLOR_PAIR(current_color_pair)); 
 }
@@ -236,6 +273,12 @@ void handle_save_inner_loop(FILE *outfile)
     {
         for (int j = 0; j < canvas_width; j++) 
         {
+/*
+ 
+
+*/
+
+
             cchar_t character;
             mvwin_wch(stdscr, i, j, &character);  // Read wide character from the canvas
             wchar_t wc = character.chars[0];
@@ -448,6 +491,39 @@ void init_program()
     use_default_colors();
     define_color_pairs();
     getmaxyx(stdscr, max_y, max_x);
+    // initialize the canvas
+    init_canvas(max_x, max_y-2);
+}
+
+
+void init_canvas(int width, int height) 
+{
+    // do some basic checks on the input parameters
+    if (width < 1 || height < 1) 
+    {
+        fprintf(stderr, "Error: width and height must be greater than 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    canvas_width  = width;
+    canvas_height = height;
+    //canvas = malloc(sizeof(canvas_pixel_t *) * canvas_height);
+    canvas = calloc(canvas_height, sizeof(canvas_pixel_t *));
+    for (int i = 0; i < canvas_height; i++) 
+    {
+        //canvas[i] = malloc(sizeof(canvas_pixel_t) * canvas_width);
+        canvas[i] = calloc(canvas_width, sizeof(canvas_pixel_t));
+    }
+}
+
+
+void free_canvas() 
+{
+    for (int i = 0; i < canvas_height; i++) 
+    {
+        free(canvas[i]);
+    }
+    free(canvas);
 }
 
 
