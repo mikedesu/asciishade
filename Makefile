@@ -1,7 +1,7 @@
 
 CC=gcc
 FLAGS=-Wall -Werror
-LINKS=-lncursesw -lm
+LINKS=-lncursesw 
 BINARY=asciishade
 
 all: $(BINARY)
