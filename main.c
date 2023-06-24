@@ -70,6 +70,9 @@ int get_bg_color(int color_pair);
 void add_character(wchar_t c);
 void add_character_and_move_right(wchar_t c);
 void add_block_and_move_right();
+void add_block_and_move_left();
+void add_block_and_move_up();
+void add_block_and_move_down();
 void define_color_pairs();
 void draw_hud();
 void draw_hud_background();
@@ -517,6 +520,27 @@ void add_block_and_move_right()
 }
 
 
+void add_block_and_move_left() 
+{
+    add_block();
+    handle_move_left();
+}
+
+
+void add_block_and_move_up() 
+{
+    add_block();
+    handle_move_up();
+}
+
+
+void add_block_and_move_down() 
+{
+    add_block();
+    handle_move_down();
+}
+
+
 
 
 void handle_normal_mode_input(int c) 
@@ -529,7 +553,7 @@ void handle_normal_mode_input(int c)
     {
         quit = 1;
     }
-    else if (c=='s') 
+    else if (c=='S') 
     {
         handle_save();
     }
@@ -553,6 +577,23 @@ void handle_normal_mode_input(int c)
     {
         add_block_and_move_right();
     }
+    else if (c=='a')
+    {
+        add_block_and_move_left();
+    }
+    else if (c=='w')
+    {
+        add_block_and_move_up();
+    }
+    else if (c=='s')
+    {
+        add_block_and_move_down();
+    }
+    else if (c=='d')
+    {
+        add_block_and_move_right();
+    }
+    
     else if (c=='o')
     {
         decr_color_pair();
