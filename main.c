@@ -40,9 +40,7 @@ typedef struct
 bool is_text_mode = false;
 
 
-//canvas_pixel_t canvas[1024][1024] = { 0 };
 canvas_pixel_t **canvas = NULL;
-//wchar_t last_char_pressed   = -1;
 int last_char_pressed   = -1;
 int canvas_width        = -1;
 int canvas_height       = -1;
@@ -344,12 +342,6 @@ void add_character_and_move_right(wchar_t c)
 void add_block() 
 { 
     add_character(L'█');
-    // add the block to the canvas
-    //canvas[y][x].character = L'█';
-    // store the color component
-    //canvas[y][x].foreground_color = get_fg_color(current_color_pair);
-    //canvas[y][x].background_color = get_bg_color(current_color_pair);
-    //attroff(COLOR_PAIR(current_color_pair)); 
 }
 
 
@@ -529,8 +521,6 @@ void add_block_and_move_right()
 
 void handle_normal_mode_input(int c) 
 {
-    //int c = getch();
-
     if (c == '`')
     {
         is_text_mode = true;
@@ -543,19 +533,19 @@ void handle_normal_mode_input(int c)
     {
         handle_save();
     }
-    else if (c==MV_DOWN)
+    else if (c==KEY_DOWN)
     {
         handle_move_down();
     }
-    else if (c==MV_UP)
+    else if (c==KEY_UP)
     {
         handle_move_up();
     }
-    else if (c==MV_LEFT)
+    else if (c==KEY_LEFT)
     {
         handle_move_left();
     }
-    else if (c==MV_RIGHT)
+    else if (c==KEY_RIGHT)
     {
         handle_move_right();
     }
@@ -585,33 +575,27 @@ void handle_normal_mode_input(int c)
 
 void handle_text_mode_input(int c)
 {
-    //int c = getch();
-
     if (c == '`') 
     {
         is_text_mode = false;
     }
-    //else if (c==MV_LEFT) 
-    //else if (c==KEY_LEFT) 
-    //{
-        //handle_move_left();
-    //}
-    //else if (c==MV_RIGHT) 
-    //else if (c==KEY_RIGHT) 
-    //{
-        //handle_move_right();
-    //}
-    //else if (c==KEY_UP) 
-    //else if (c==MV_UP) 
-    //{
-        //handle_move_up();
-    //}
-    //else if (c==KEY_DOWN) 
-    //else if (c==MV_DOWN) 
-    //{
-        //handle_move_down();
-    //}
-    else if (c >= 32 && c <= 126)
+    else if (c==KEY_LEFT) 
+    {
+        handle_move_left();
+    }
+    else if (c==KEY_RIGHT) 
+    {
+        handle_move_right();
+    }
+    else if (c==KEY_UP) 
+    {
+        handle_move_up();
+    }
+    else if (c==KEY_DOWN) 
+    {
+        handle_move_down();
+    }
+    else 
     {
         add_character_and_move_right(c);
     }
@@ -621,7 +605,6 @@ void handle_text_mode_input(int c)
 
 void handle_input() 
 {
-    //wchar_t c = getch();
     int c = getch();
     
     last_char_pressed = c;
@@ -675,10 +658,9 @@ void draw_hud_row_1()
     // to display the entire string.  if it's not, we need to truncate the string
     // and display a warning message
 
-    //sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
     sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, 
         is_text_mode ? "TEXT" : "NORMAL"
-            );
+    );
 
     // get the length of str
     int str_len = strlen(str);
@@ -737,8 +719,9 @@ void draw_hud_row_2()
     int bg_color_cursor = canvas[y][x].background_color;
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
 
-    //sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width);
-    sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d %d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width, last_char_pressed);
+    sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d %d", x, bg_color, 
+        color_pair_num, bg_color_cursor, canvas_height, canvas_width, 
+        last_char_pressed);
 
     for (char c = str[0]; c != '\0'; c = str[hud_x]) 
     {
@@ -799,6 +782,9 @@ void init_program()
     noecho();
     start_color();
     use_default_colors();
+    keypad(stdscr, true);
+
+
     define_color_pairs();
 
     getmaxyx(stdscr, max_y, max_x);
