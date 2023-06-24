@@ -612,16 +612,14 @@ void draw_hud_row_2()
 {
     attron(COLOR_PAIR(hud_color));
     
-    
-    int hud_y     = max_y-1;
-    int hud_x     = 0;
-    int hud_max_x = max_x;
+    int hud_y            = max_y-1;
+    int hud_x            = 0;
+    int hud_max_x        = max_x;
+    const int len_of_str = 30;
     
     move(hud_y,hud_x);
     
-    //int fg_color  = get_fg_color(current_color_pair);
-    char *str     = calloc(1, hud_max_x*2);
-    //char *str     = calloc(1, hud_max_x);
+    char *str            = calloc(1, len_of_str);
     if (str == NULL) 
     {
         mPrint("Error allocating memory for str\n");
@@ -633,7 +631,7 @@ void draw_hud_row_2()
     int bg_color_cursor = canvas[y][x].background_color;
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
 
-    sprintf(str, "x:%03d|#%03dBG(%05d)%03d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, max_y, max_x);
+    sprintf(str, "x:%03d|#%03dBG(%05d)%03d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width);
 
     for (char c = str[0]; c != '\0'; c = str[hud_x]) 
     {
