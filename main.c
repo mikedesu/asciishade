@@ -701,6 +701,7 @@ void draw_hud_row_2()
         {
             break;
         }
+
         else if (c=='#') 
         {
             switch_between_hud_and_current_color();
@@ -725,7 +726,7 @@ void draw_hud_background()
     attron(COLOR_PAIR(hud_color));
     for (int j = max_y - 2; j < max_y; j++) 
     { 
-        for (int i = 0; i < max_x-1; i++) 
+        for (int i = 0; i < max_x; i++) 
         {
             mvaddstr(j, i, " ");
         }
