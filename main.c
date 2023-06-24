@@ -8,6 +8,22 @@
 #include <string.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <getopt.h>
+
+
+
+
+// something broken about ncurses movement keys but i hacked this together
+#define MV_DOWN 66
+#define MV_UP 65
+#define MV_LEFT 68
+#define MV_RIGHT 67
+#define MAX_FG_COLORS 16
+#define MAX_BG_COLORS 16
+#define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
+
+
+
 
 // this is the base of the canvas
 typedef struct 
@@ -19,42 +35,35 @@ typedef struct
 
 
 
+
 //canvas_pixel_t canvas[1024][1024] = { 0 };
 canvas_pixel_t **canvas = NULL;
-int canvas_width  = -1;
-int canvas_height = -1;
-
-
-
-// something broken about ncurses movement keys but i hacked this together
-#define MV_DOWN 66
-#define MV_UP 65
-#define MV_LEFT 68
-#define MV_RIGHT 67
-
-int max_y              = -1;
-int max_x              = -1;
-int y                  = 0;
-int x                  = 0;
-int quit               = 0;
-int hud_color          = 7;
-int current_color_pair = 0;
-int max_color_pairs    = -1;
-int max_colors         = -1;
-
+int canvas_width        = -1;
+int canvas_height       = -1;
+int max_y               = -1;
+int max_x               = -1;
+int y                   = 0;
+int x                   = 0;
+int quit                = 0;
+int hud_color           = 7;
+int current_color_pair  = 0;
+int max_color_pairs     = -1;
+int max_colors          = -1;
 // this is the current filename
 char filename[1024] = {0};
-
 // this is used to quickly grab info about what the current
 // fg and bg color is based on the current "color pair"
 // 128x128 = 16384
 // 16x16 = 256
-//int color_array[16384][2] = { 0 };
-int color_array[256][2] = { 0 };
-int color_pair_array[256][256] = { 0 };
+int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
+int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
+
+
 
 
 int convert_to_irc_color(int color);
+int get_fg_color(int color_pair);
+int get_bg_color(int color_pair);
 void handle_save_inner_loop(FILE *outfile);
 void handle_save();
 void define_color_pairs();
@@ -65,15 +74,12 @@ void draw_hud_background();
 void draw_canvas();
 void reset_cursor();
 void parse_arguments(int argc, char **argv);
-int get_fg_color(int color_pair);
-int get_bg_color(int color_pair);
 void init_program();
 void init_canvas(int width, int height);
 void free_canvas();
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
 void fail_with_msg(const char *msg);
-
-
+void print_help(char **argv);
 
 
 
@@ -88,18 +94,15 @@ int main(int argc, char *argv[])
     {
         clear();
         draw_canvas();
-
         draw_hud();
         handle_input();
         refresh();
     }
     endwin();
-    
-    // free the canvas
     free_canvas();
-
     return EXIT_SUCCESS;
 }
+
 
 
 void reset_cursor() 
@@ -108,35 +111,66 @@ void reset_cursor()
 }
 
 
+
+void print_help(char **argv) 
+{
+    //printf("Usage: %s [-f filename]\n", argv[0]);
+    printf("Usage: %s [OPTION]...\n", argv[0]);
+    printf("  -f, --filename=FILENAME    specify a filename to save to\n");
+    printf("  -h, --help                 display this help and exit\n");
+}
+
+
+
 void parse_arguments(int argc, char **argv) 
 {
+    // parsing arguments using getopt_long
     int c = -1;
-    while ((c = getopt(argc, argv, "f:")) != -1) 
+    int option_index = 0;
+    static struct option longoptions[] = 
     {
-        // set filename of ascii
-        if (c == 'f') 
+        {"filename", 1, NULL, 'f'},
+        {"help",     0, NULL, 'h'}
+    };
+
+    while (1) 
+    {
+        c = getopt_long(argc, argv, "f:h", longoptions, &option_index);
+        if (c == -1)
         {
-            //filename = optarg;
-            strncpy(filename, optarg, 1024);
+            break;
         }
-        else if (c == '?') 
+
+        switch (c) 
         {
-            if (optopt == 'f') 
-            {
-                fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-            }
-            else if (isprint(optopt)) 
-            {
-                fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-            }
-            else 
-            {
-                fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
-            }
-            exit(EXIT_FAILURE);
+            case 'f':
+                strncpy(filename, optarg, 1024);
+                break;
+            case 'h':
+                print_help(argv);
+                exit(EXIT_SUCCESS);
+                break;
+            case '?':
+                if (optopt == 'f') 
+                {
+                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+                }
+                else if (isprint(optopt)) 
+                {
+                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                }
+                else 
+                {
+                    fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+                }
+                exit(EXIT_FAILURE);
+                break;
+            default:
+                abort();
         }
     }
 }
+
 
 
 void define_color_pairs() 
@@ -161,10 +195,12 @@ void define_color_pairs()
 }
 
 
+
 int get_fg_color(int color_pair) 
 {
     return color_array[color_pair][0];
 }
+
 
 
 int get_bg_color(int color_pair) 
@@ -190,13 +226,11 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color)
     {
         fail_with_msg("write_char_to_canvas: y,x is out of bounds");
     }
-
     // make sure the other parameters arent absurd
     if (fg_color < 0 || fg_color >= max_colors || bg_color < 0 || bg_color >= max_colors) 
     {
         fail_with_msg("write_char_to_canvas: fg_color or bg_color is out of bounds");
     }
-
     canvas[y][x].character = c;
     canvas[y][x].foreground_color = fg_color;
     canvas[y][x].background_color = bg_color;
@@ -217,23 +251,10 @@ void draw_initial_ascii()
     int bg_color = get_bg_color(current_color_pair);
     for (int i=0; i < 3; i++) {
         for (int j=0; j < strlen(lines[i]); j++) {
-            // convert the char at lines[i][j] to a wchar_t
-            // store in the canvas
-
+            // convert the lines[i][j] to a wchar_t and store in the canvas
             write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
-
-            //canvas[i][j].character = lines[i][j];
-            //canvas[i][j].foreground_color = fg_color;
-            //canvas[i][j].background_color = bg_color;
         }
     }
-
-    //attron(COLOR_PAIR(current_color_pair));
-    //for (int i = 0; i < 3; i++) 
-    //{
-    //    mvaddstr(i, 0, lines[i]);
-    //}
-    //attroff(COLOR_PAIR(current_color_pair));
 }
 
 
@@ -246,7 +267,6 @@ void draw_canvas()
     int color_pair = 0;
     int i          = -1;
     int j          = -1;
-
     for (i = 0; i < canvas_height; i++) 
     {
         for (j = 0; j < canvas_width; j++) 
@@ -254,12 +274,9 @@ void draw_canvas()
             // set the color pair
             // first, get the color pair
             // it should be equal to fg_color + (bg_color * 16)
-            //int color_pair = canvas[i][j].foreground_color + (canvas[i][j].background_color * 16);
-
             fg_color   = canvas[i][j].foreground_color;
             bg_color   = canvas[i][j].background_color;
             color_pair = color_pair_array[fg_color][bg_color];
-
             // draw the character
             attron(COLOR_PAIR(color_pair));
             c = canvas[i][j].character;
@@ -273,8 +290,6 @@ void draw_canvas()
             {
                 mvaddch(i, j, c);
             }
-
-            // turn off the color pair
             attroff(COLOR_PAIR(color_pair));
         }
     }
@@ -282,20 +297,16 @@ void draw_canvas()
 
 
 
-
 void add_block() 
 { 
-    //attron(COLOR_PAIR(current_color_pair)); 
     // add the block to the canvas
     canvas[y][x].character = L'█';
     // store the color component
     canvas[y][x].foreground_color = get_fg_color(current_color_pair);
     canvas[y][x].background_color = get_bg_color(current_color_pair);
-    // this will soon go away once we have a function to render the canvas
-    // that way we dont have to write directly to stdscr
-    //mvaddstr(y, x, "█"); 
     //attroff(COLOR_PAIR(current_color_pair)); 
 }
+
 
 
 void incr_color_pair() 
@@ -308,6 +319,8 @@ void incr_color_pair()
 }
 
 
+
+
 void incr_color_pair_by_max() 
 { 
     for (int i = 0; i < max_colors; i++) 
@@ -315,6 +328,7 @@ void incr_color_pair_by_max()
         incr_color_pair();                                   
     }
 }
+
 
 
 void decr_color_pair() 
@@ -327,6 +341,7 @@ void decr_color_pair()
 }
 
 
+
 void decr_color_pair_by_max() 
 { 
     for (int i = 0; i < max_colors; i++) 
@@ -334,6 +349,7 @@ void decr_color_pair_by_max()
         decr_color_pair();                                   
     }
 }
+
 
 
 int convert_to_irc_color(int color) 
@@ -362,8 +378,6 @@ void handle_save_inner_loop(FILE *outfile)
         perror("Error opening file for writing");
         exit(-1);
     }
-    //int canvas_width = max_x; 
-    //int canvas_height = max_y-2;
     int prev_irc_fg_color = -1;
     int prev_irc_bg_color = -1;
     for (int i = 0; i < canvas_height; i++) 
@@ -373,14 +387,13 @@ void handle_save_inner_loop(FILE *outfile)
             // now, instead of grabbing characters from stdscr
             // and having to do all this shit on the fly
             // we can just render from the canvas
-            
             wchar_t wc = canvas[i][j].character;
             int foreground_color = canvas[i][j].foreground_color;
             int background_color = canvas[i][j].background_color;
             int irc_foreground_color = convert_to_irc_color(foreground_color);
             int irc_background_color = convert_to_irc_color(background_color);
             bool color_changed = prev_irc_fg_color != irc_foreground_color || prev_irc_bg_color != irc_background_color;
-
+            //old code here for historic reasons
             //cchar_t character;
             //mvwin_wch(stdscr, i, j, &character);  // Read wide character from the canvas
             //wchar_t wc = character.chars[0];
@@ -402,6 +415,7 @@ void handle_save_inner_loop(FILE *outfile)
 }
 
 
+
 void handle_save() 
 {
     // 1. filename is empty
@@ -419,6 +433,7 @@ void handle_save()
         fclose(outfile);
     }
 }
+
 
 
 void handle_input() 
@@ -490,6 +505,7 @@ void handle_input()
 }
 
 
+
 void switch_between_hud_and_current_color() 
 { 
     attroff(COLOR_PAIR(hud_color));  
@@ -497,11 +513,13 @@ void switch_between_hud_and_current_color()
 }
 
 
+
 void switch_between_current_and_hud_color() 
 { 
     attroff(COLOR_PAIR(current_color_pair));  
     attron(COLOR_PAIR(hud_color)); 
 }
+
 
 
 void draw_hud_row_1() 
@@ -528,6 +546,7 @@ void draw_hud_row_1()
     }
     free(str);
 }
+
 
 
 void draw_hud_row_2() 
@@ -557,6 +576,7 @@ void draw_hud_row_2()
 }
 
 
+
 void draw_hud_background() 
 {
     for (int j = max_y - 2; j < max_y; j++) 
@@ -569,6 +589,7 @@ void draw_hud_background()
 }
 
 
+
 void draw_hud() 
 {
     attron(COLOR_PAIR(hud_color));
@@ -576,6 +597,7 @@ void draw_hud()
     draw_hud_row_1();
     draw_hud_row_2();
 }
+
 
 
 void init_program() 
@@ -593,6 +615,7 @@ void init_program()
 }
 
 
+
 void init_canvas(int width, int height) 
 {
     // do some basic checks on the input parameters
@@ -604,11 +627,9 @@ void init_canvas(int width, int height)
 
     canvas_width  = width;
     canvas_height = height;
-    //canvas = malloc(sizeof(canvas_pixel_t *) * canvas_height);
     canvas = calloc(canvas_height, sizeof(canvas_pixel_t *));
     for (int i = 0; i < canvas_height; i++) 
     {
-        //canvas[i] = malloc(sizeof(canvas_pixel_t) * canvas_width);
         canvas[i] = calloc(canvas_width, sizeof(canvas_pixel_t));
 
         for (int j = 0; j < canvas_width; j++) 
@@ -620,6 +641,7 @@ void init_canvas(int width, int height)
     }
 
 }
+
 
 
 void free_canvas() 
