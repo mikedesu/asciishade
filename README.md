@@ -36,6 +36,10 @@ Highly dissatisfied with the complete lack of options in the ascii-creation depa
 
 The state of developers online is largely sided towards web applications. I admire the simplicity and purity of CLI and 'tui' tools and programs. They can often perform much better than their web counterparts. 
 
+### Update 2023-06-23
+
+One of the goals of `asciishade` is to support absurdly large or small console dimensions. At the moment, the smallest size supported is `20x11`. This is because the initial canvas size is automatically determined by your console's dimensions. Naturally, once loading asciis is supported, this will require managing a "view frame" that sits on top of the canvas, so that one can scroll-around their larger image.
+
 ### Update 2023
 
 Holy hell it has been a long time. The original version of asciishade was began as a Python3 project, but I later decided to start the project over in pure C to keep better in-line with my prefered style of development. Getting back into the swing of things is hard, but better to not subject yourself to the constraints of a language you learned later-on in life. While I *could* write asciishade in Python, C is just more fun!

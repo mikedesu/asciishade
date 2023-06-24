@@ -10,6 +10,7 @@
 #include <wchar.h>
 #include <getopt.h>
 
+#include "mPrint.h"
 
 
 
@@ -59,33 +60,38 @@ int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
 int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
 
 
-
-
 int convert_to_irc_color(int color);
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
-void handle_save_inner_loop(FILE *outfile);
-void handle_save();
+
+void add_block_and_move_right();
 void define_color_pairs();
-void draw_initial_ascii();
-void handle_input();
 void draw_hud();
 void draw_hud_background();
+void draw_initial_ascii();
 void draw_canvas();
-void reset_cursor();
-void parse_arguments(int argc, char **argv);
+void fail_with_msg(const char *msg);
+void free_canvas();
+void handle_input();
+void handle_move_right();
+void handle_move_left();
+void handle_move_up();
+void handle_move_down();
+void handle_save_inner_loop(FILE *outfile);
+void handle_save();
 void init_program();
 void init_canvas(int width, int height);
-void free_canvas();
-void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
-void fail_with_msg(const char *msg);
+void parse_arguments(int argc, char **argv);
 void print_help(char **argv);
-
+void reset_cursor();
+void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
 
 
 
 int main(int argc, char *argv[]) 
 {
+    mPrint("main()\n");
+
     parse_arguments(argc, argv);
     init_program();
     draw_initial_ascii();
@@ -114,7 +120,6 @@ void reset_cursor()
 
 void print_help(char **argv) 
 {
-    //printf("Usage: %s [-f filename]\n", argv[0]);
     printf("Usage: %s [OPTION]...\n", argv[0]);
     printf("  -f, --filename=FILENAME    specify a filename to save to\n");
     printf("  -h, --help                 display this help and exit\n");
@@ -124,6 +129,8 @@ void print_help(char **argv)
 
 void parse_arguments(int argc, char **argv) 
 {
+    mPrint("parse_arguments()\n");
+
     // parsing arguments using getopt_long
     int c = -1;
     int option_index = 0;
@@ -380,10 +387,10 @@ void handle_save_inner_loop(FILE *outfile)
         perror("Error opening file for writing");
         exit(-1);
     }
-    int prev_irc_fg_color = -1;
-    int prev_irc_bg_color = -1;
     for (int i = 0; i < canvas_height; i++) 
     {
+        int prev_irc_fg_color = -1;
+        int prev_irc_bg_color = -1;
         for (int j = 0; j < canvas_width; j++) 
         {
             // now, instead of grabbing characters from stdscr
@@ -437,72 +444,91 @@ void handle_save()
 }
 
 
+void handle_move_down() 
+{
+    if (y+1 < canvas_height) 
+    {
+        y++;
+    }
+}
+
+
+void handle_move_up() 
+{
+    if (y-1 >= 0) 
+    {
+        y--;
+    }
+}
+
+
+
+void handle_move_left() 
+{
+    if (x-1 >= 0) 
+    {
+        x--;
+    }
+}
+
+
+
+void handle_move_right() 
+{
+    if (x+1 < canvas_width) 
+    {
+        x++;
+    }
+}
+
+
+void add_block_and_move_right() 
+{
+    add_block();
+    handle_move_right();
+}
+
 
 void handle_input() 
 {
     int c = getch();
-    if (c == 'q') 
-    { 
-        quit = 1; 
-    }
-    else if (c == 's') 
+    switch (c) 
     {
-        handle_save();       
-    }
-    // movement keys
-    else if (c == MV_DOWN) 
-    {
-        if (y+1 < max_y-2) 
-        {
-            y++;
-        }
-    }
-    else if (c == MV_UP) 
-    {
-        if (y-1 >= 0) 
-        {
-            y--;
-        }
-    }
-    else if (c == MV_LEFT) 
-    {
-        if (x-1 >= 0) 
-        {
-            x--;
-        }
-    }
-    else if (c == MV_RIGHT) 
-    {
-        if (x+1 < max_x) 
-        {
-            x++;
-        }
-    }
-    // variations on adding blocks
-    else if (c == ' ') 
-    { 
-        add_block(); 
-        if (x+1 < max_x) 
-        {
-            x++;
-        }
-    }
-    // color changing
-    else if (c == 'o') 
-    { 
-        decr_color_pair(); 
-    }
-    else if (c == 'p') 
-    { 
-        incr_color_pair(); 
-    }
-    else if (c == 'O') 
-    { 
-        decr_color_pair_by_max(); 
-    }
-    else if (c == 'P') 
-    { 
-        incr_color_pair_by_max(); 
+        case 'q':
+            quit = 1;
+            break;
+        case 's':
+            handle_save();
+            break;
+        case MV_DOWN:
+            handle_move_down();
+            break;
+        case MV_UP:
+            handle_move_up();
+            break;
+        case MV_LEFT:
+            handle_move_left();
+            break;
+        case MV_RIGHT:
+            handle_move_right();
+            break;
+        case ' ':
+            add_block_and_move_right();
+            break;
+        //case '[':
+        //    decr_color_pair();
+        //    break;
+        //case ']':
+        //    incr_color_pair();
+        //    break;
+        //case '{':
+        //    decr_color_pair_by_max();
+        //    break;
+        //case '}':
+        //    incr_color_pair_by_max();
+        //    break;
+        default:
+            break;
     }
 }
 
@@ -526,19 +552,44 @@ void switch_between_current_and_hud_color()
 
 void draw_hud_row_1() 
 {
+    attron(COLOR_PAIR(hud_color));
+
     int hud_y     = max_y-2;
     int hud_x     = 0;
     int hud_max_x = max_x;
     int fg_color  = get_fg_color(current_color_pair);
-    char *str     = calloc(1, hud_max_x);
     int fg_color_cursor = canvas[y][x].foreground_color;
 
-    sprintf(str, "y: %03d | # %03d FG CurrentColorPair(%05d) FG %03d Filename: %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
+    // perhaps the string could be longer than the hud_max_x,
+    // since we are going to stop printing there anyway
+
+    // estimating length of the hud status row
+    int len_of_str = (24 + strlen(filename) + 1)*2;
+    char *str      = calloc(1, len_of_str);
+
+    // before we do this sprintf, we need to make sure the terminal is wide enough
+    // to display the entire string.  if it's not, we need to truncate the string
+    // and display a warning message
+
+    sprintf(str, "y:%03d|#%03d(%05d) FG%03d %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
+
+    // get the length of str
+    int str_len = strlen(str);
+    if (str_len > hud_max_x) 
+    {
+        // truncate the string
+        str[hud_max_x-1] = '\0';
+    }
 
     move(hud_y,hud_x);
     
     for (char c = str[0]; c != '\0'; c = str[hud_x]) 
     {
+        if (hud_x >= hud_max_x) 
+        {
+            break;
+        }
+
         if (c=='#') 
         {
             switch_between_hud_and_current_color();
@@ -552,34 +603,78 @@ void draw_hud_row_1()
         hud_x++;
     }
     free(str);
+    attroff(COLOR_PAIR(hud_color));
 }
 
 
 
 void draw_hud_row_2() 
 {
-    char str[16]  = {0};
-    char str2[64] = {0};
-    sprintf(str, "x: %03d | ", x);
-    mvaddstr(max_y-1, 0, str);
-    switch_between_hud_and_current_color();
-    addstr(" ");
-    switch_between_current_and_hud_color();
+    attron(COLOR_PAIR(hud_color));
+    
+    
+    int hud_y     = max_y-1;
+    int hud_x     = 0;
+    int hud_max_x = max_x;
+    
+    move(hud_y,hud_x);
+    
+    //int fg_color  = get_fg_color(current_color_pair);
+    char *str     = calloc(1, hud_max_x*2);
+    //char *str     = calloc(1, hud_max_x);
+    if (str == NULL) 
+    {
+        mPrint("Error allocating memory for str\n");
+        exit(EXIT_FAILURE);
+    }
+    
     int bg_color = get_bg_color(current_color_pair);
     int fg_color_cursor = canvas[y][x].foreground_color;
     int bg_color_cursor = canvas[y][x].background_color;
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
-    //move back to where the cursor was
-    sprintf(str2, " %03d BG PairUnderCursor (%05d) BG %03d %dx%d", bg_color, color_pair_num, bg_color_cursor, max_y, max_x);
-    addstr(str2);
+
+    sprintf(str, "x:%03d|#%03dBG(%05d)%03d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, max_y, max_x);
+
+    for (char c = str[0]; c != '\0'; c = str[hud_x]) 
+    {
+        if (hud_x >= hud_max_x) 
+        {
+            break;
+        }
+
+        if (c=='#') 
+        {
+            switch_between_hud_and_current_color();
+            addstr(" ");
+            switch_between_current_and_hud_color();
+        }
+        else 
+        {
+            addch(c);
+        }
+        hud_x++;
+    }
+
+    free(str);
     attroff(COLOR_PAIR(hud_color));
-    reset_cursor();
+
+    //mvaddstr(max_y-1, 0, str);
+    //switch_between_hud_and_current_color();
+    //addstr(" ");
+    //switch_between_current_and_hud_color();
+    //int bg_color = get_bg_color(current_color_pair);
+    //int fg_color_cursor = canvas[y][x].foreground_color;
+    //int bg_color_cursor = canvas[y][x].background_color;
+    //move back to where the cursor was
+    //sprintf(str2, "%03dBG(%05d)%03d %dx%d", bg_color, color_pair_num, bg_color_cursor, max_y, max_x);
+    //addstr(str2);
 }
 
 
 
 void draw_hud_background() 
 {
+    attron(COLOR_PAIR(hud_color));
     for (int j = max_y - 2; j < max_y; j++) 
     { 
         for (int i = 0; i < max_x-1; i++) 
@@ -587,16 +682,19 @@ void draw_hud_background()
             mvaddstr(j, i, " ");
         }
     }
+    attroff(COLOR_PAIR(hud_color));
 }
 
 
 
 void draw_hud() 
 {
-    attron(COLOR_PAIR(hud_color));
+    //attron(COLOR_PAIR(hud_color));
     draw_hud_background();
     draw_hud_row_1();
     draw_hud_row_2();
+    //attroff(COLOR_PAIR(hud_color));
+    reset_cursor();
 }
 
 
@@ -610,7 +708,19 @@ void init_program()
     start_color();
     use_default_colors();
     define_color_pairs();
+
     getmaxyx(stdscr, max_y, max_x);
+    // if the terminal is too small, exit
+    if (max_x < 4) 
+    {
+        fprintf(stderr, "Error: terminal too small\n");
+        exit(EXIT_FAILURE);
+    }
+    
+
+    // make the cursor visible
+    curs_set(1);
+
     // initialize the canvas
     init_canvas(max_x, max_y-2);
 }
