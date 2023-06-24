@@ -240,28 +240,39 @@ void draw_initial_ascii()
 
 void draw_canvas() 
 {
-    for (int i = 0; i < canvas_height; i++) 
+    wchar_t c      = L' ';
+    int fg_color   = 0;
+    int bg_color   = 0;
+    int color_pair = 0;
+    int i          = -1;
+    int j          = -1;
+
+    for (i = 0; i < canvas_height; i++) 
     {
-        for (int j = 0; j < canvas_width; j++) 
+        for (j = 0; j < canvas_width; j++) 
         {
             // set the color pair
             // first, get the color pair
             // it should be equal to fg_color + (bg_color * 16)
             //int color_pair = canvas[i][j].foreground_color + (canvas[i][j].background_color * 16);
 
-            int fg_color = canvas[i][j].foreground_color;
-            int bg_color = canvas[i][j].background_color;
-            int color_pair = color_pair_array[fg_color][bg_color];
+            fg_color   = canvas[i][j].foreground_color;
+            bg_color   = canvas[i][j].background_color;
+            color_pair = color_pair_array[fg_color][bg_color];
 
-            attron(COLOR_PAIR(color_pair));
             // draw the character
-
-            wchar_t c = canvas[i][j].character;
-            //char mbstr[2];
-            //mbstr[0] = c;
-            //mbstr[1] = '\0';
-            mvaddch(i, j, c);
-            //mvadd_wch(i, j, mbstr);
+            attron(COLOR_PAIR(color_pair));
+            c = canvas[i][j].character;
+            // this fixes the block-rendering bug for now...
+            // there has to be a better way to do this
+            if ( c == L'█' ) 
+            {
+                mvaddstr(i, j, "█");
+            }
+            else 
+            {
+                mvaddch(i, j, c);
+            }
 
             // turn off the color pair
             attroff(COLOR_PAIR(color_pair));
