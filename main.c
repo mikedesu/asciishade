@@ -42,6 +42,8 @@ bool is_text_mode = false;
 
 //canvas_pixel_t canvas[1024][1024] = { 0 };
 canvas_pixel_t **canvas = NULL;
+//wchar_t last_char_pressed   = -1;
+int last_char_pressed   = -1;
 int canvas_width        = -1;
 int canvas_height       = -1;
 int max_y               = -1;
@@ -78,8 +80,8 @@ void draw_canvas();
 void fail_with_msg(const char *msg);
 void free_canvas();
 void handle_input();
-void handle_text_mode_input();
-void handle_normal_mode_input();
+void handle_text_mode_input(int c);
+void handle_normal_mode_input(int c);
 void handle_move_right();
 void handle_move_left();
 void handle_move_up();
@@ -92,6 +94,7 @@ void parse_arguments(int argc, char **argv);
 void print_help(char **argv);
 void reset_cursor();
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
+void cleanup();
 
 
 
@@ -221,10 +224,16 @@ int get_bg_color(int color_pair)
 }
 
 
+void cleanup() 
+{
+    endwin();
+    free_canvas();
+}
+
 
 void fail_with_msg(const char *msg) 
 {
-    endwin();
+    cleanup();
     fprintf(stderr, "%s\n", msg);
     exit(EXIT_FAILURE);
 }
@@ -518,66 +527,93 @@ void add_block_and_move_right()
 
 
 
-void handle_normal_mode_input() 
+void handle_normal_mode_input(int c) 
 {
-    int c = getch();
-    switch (c) 
+    //int c = getch();
+
+    if (c == '`')
     {
-        case '`':
-            is_text_mode = true;
-            break;
-        case 'q':
-            quit = 1;
-            break;
-        case 's':
-            handle_save();
-            break;
-        case MV_DOWN:
-            handle_move_down();
-            break;
-        case MV_UP:
-            handle_move_up();
-            break;
-        case MV_LEFT:
-            handle_move_left();
-            break;
-        case MV_RIGHT:
-            handle_move_right();
-            break;
-        case ' ':
-            add_block_and_move_right();
-            break;
-        case 'o':
-            decr_color_pair();
-            break;
-        case 'p':
-            incr_color_pair();
-            break;
-        case 'O':
-            decr_color_pair_by_max();
-            break;
-        case 'P':
-            incr_color_pair_by_max();
-            break;
-        default:
-            break;
+        is_text_mode = true;
+    }
+    else if (c=='q') 
+    {
+        quit = 1;
+    }
+    else if (c=='s') 
+    {
+        handle_save();
+    }
+    else if (c==MV_DOWN)
+    {
+        handle_move_down();
+    }
+    else if (c==MV_UP)
+    {
+        handle_move_up();
+    }
+    else if (c==MV_LEFT)
+    {
+        handle_move_left();
+    }
+    else if (c==MV_RIGHT)
+    {
+        handle_move_right();
+    }
+    else if (c==' ')
+    {
+        add_block_and_move_right();
+    }
+    else if (c=='o')
+    {
+        decr_color_pair();
+    }
+    else if (c=='p')
+    {
+        incr_color_pair();
+    }
+    else if (c=='O')
+    {
+        decr_color_pair_by_max();
+    }
+    else if (c=='P') 
+    {
+        incr_color_pair_by_max();
     }
 }
 
 
 
-void handle_text_mode_input()
+void handle_text_mode_input(int c)
 {
-    int c = getch();
+    //int c = getch();
 
-    switch (c) 
+    if (c == '`') 
     {
-        case '`':
-            is_text_mode = false;
-            break;
-        default:
-            add_character_and_move_right(c);
-            break;
+        is_text_mode = false;
+    }
+    //else if (c==MV_LEFT) 
+    //else if (c==KEY_LEFT) 
+    //{
+        //handle_move_left();
+    //}
+    //else if (c==MV_RIGHT) 
+    //else if (c==KEY_RIGHT) 
+    //{
+        //handle_move_right();
+    //}
+    //else if (c==KEY_UP) 
+    //else if (c==MV_UP) 
+    //{
+        //handle_move_up();
+    //}
+    //else if (c==KEY_DOWN) 
+    //else if (c==MV_DOWN) 
+    //{
+        //handle_move_down();
+    //}
+    else if (c >= 32 && c <= 126)
+    {
+        add_character_and_move_right(c);
     }
 }
 
@@ -585,13 +621,18 @@ void handle_text_mode_input()
 
 void handle_input() 
 {
+    //wchar_t c = getch();
+    int c = getch();
+    
+    last_char_pressed = c;
+
     if (is_text_mode)
     {
-        handle_text_mode_input();
+        handle_text_mode_input(c);
     }
     else 
     {
-        handle_normal_mode_input();
+        handle_normal_mode_input(c);
     }
 }
 
@@ -634,7 +675,10 @@ void draw_hud_row_1()
     // to display the entire string.  if it's not, we need to truncate the string
     // and display a warning message
 
-    sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
+    //sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
+    sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, 
+        is_text_mode ? "TEXT" : "NORMAL"
+            );
 
     // get the length of str
     int str_len = strlen(str);
@@ -677,7 +721,7 @@ void draw_hud_row_2()
     int hud_y            = max_y-1;
     int hud_x            = 0;
     int hud_max_x        = max_x;
-    const int len_of_str = 30;
+    const int len_of_str = 40;
     
     move(hud_y,hud_x);
     
@@ -693,7 +737,8 @@ void draw_hud_row_2()
     int bg_color_cursor = canvas[y][x].background_color;
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
 
-    sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width);
+    //sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width);
+    sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d %d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width, last_char_pressed);
 
     for (char c = str[0]; c != '\0'; c = str[hud_x]) 
     {
