@@ -71,7 +71,20 @@ make
 This section is subject to change soon.
 
 ```
-./asciishade -f <filename>
+./asciishade --help
+Usage: ./asciishade [OPTION]...
+  -f, --filename=FILENAME    specify a filename to save to
+  -h, --help                 display this help and exit
+```
+
+#### Examples
+
+```
+./asciishade 
+
+./asciishade -f test.ascii
+
+./asciishade --filename=test.ascii
 ```
 
 

@@ -90,8 +90,6 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
 
 int main(int argc, char *argv[]) 
 {
-    mPrint("main()\n");
-
     parse_arguments(argc, argv);
     init_program();
     draw_initial_ascii();
@@ -129,8 +127,6 @@ void print_help(char **argv)
 
 void parse_arguments(int argc, char **argv) 
 {
-    mPrint("parse_arguments()\n");
-
     // parsing arguments using getopt_long
     int c = -1;
     int option_index = 0;
@@ -515,18 +511,18 @@ void handle_input()
         case ' ':
             add_block_and_move_right();
             break;
-        //case '[':
-        //    decr_color_pair();
-        //    break;
-        //case ']':
-        //    incr_color_pair();
-        //    break;
-        //case '{':
-        //    decr_color_pair_by_max();
-        //    break;
-        //case '}':
-        //    incr_color_pair_by_max();
-        //    break;
+        case 'o':
+            decr_color_pair();
+            break;
+        case 'p':
+            incr_color_pair();
+            break;
+        case 'O':
+            decr_color_pair_by_max();
+            break;
+        case 'P':
+            incr_color_pair_by_max();
+            break;
         default:
             break;
     }
@@ -571,7 +567,7 @@ void draw_hud_row_1()
     // to display the entire string.  if it's not, we need to truncate the string
     // and display a warning message
 
-    sprintf(str, "y:%03d|#%03d(%05d) FG%03d %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
+    sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
 
     // get the length of str
     int str_len = strlen(str);
@@ -611,7 +607,6 @@ void draw_hud_row_1()
 void draw_hud_row_2() 
 {
     attron(COLOR_PAIR(hud_color));
-    
     int hud_y            = max_y-1;
     int hud_x            = 0;
     int hud_max_x        = max_x;
@@ -631,7 +626,7 @@ void draw_hud_row_2()
     int bg_color_cursor = canvas[y][x].background_color;
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
 
-    sprintf(str, "x:%03d|#%03dBG(%05d)%03d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width);
+    sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width);
 
     for (char c = str[0]; c != '\0'; c = str[hud_x]) 
     {
@@ -639,8 +634,7 @@ void draw_hud_row_2()
         {
             break;
         }
-
-        if (c=='#') 
+        else if (c=='#') 
         {
             switch_between_hud_and_current_color();
             addstr(" ");
@@ -655,17 +649,6 @@ void draw_hud_row_2()
 
     free(str);
     attroff(COLOR_PAIR(hud_color));
-
-    //mvaddstr(max_y-1, 0, str);
-    //switch_between_hud_and_current_color();
-    //addstr(" ");
-    //switch_between_current_and_hud_color();
-    //int bg_color = get_bg_color(current_color_pair);
-    //int fg_color_cursor = canvas[y][x].foreground_color;
-    //int bg_color_cursor = canvas[y][x].background_color;
-    //move back to where the cursor was
-    //sprintf(str2, "%03dBG(%05d)%03d %dx%d", bg_color, color_pair_num, bg_color_cursor, max_y, max_x);
-    //addstr(str2);
 }
 
 
@@ -687,11 +670,9 @@ void draw_hud_background()
 
 void draw_hud() 
 {
-    //attron(COLOR_PAIR(hud_color));
     draw_hud_background();
     draw_hud_row_1();
     draw_hud_row_2();
-    //attroff(COLOR_PAIR(hud_color));
     reset_cursor();
 }
 
@@ -715,10 +696,8 @@ void init_program()
         exit(EXIT_FAILURE);
     }
     
-
     // make the cursor visible
     curs_set(1);
-
     // initialize the canvas
     init_canvas(max_x, max_y-2);
 }
