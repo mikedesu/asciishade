@@ -37,6 +37,9 @@ typedef struct
 
 
 
+bool is_text_mode = false;
+
+
 //canvas_pixel_t canvas[1024][1024] = { 0 };
 canvas_pixel_t **canvas = NULL;
 int canvas_width        = -1;
@@ -64,6 +67,8 @@ int convert_to_irc_color(int color);
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
 
+void add_character(wchar_t c);
+void add_character_and_move_right(wchar_t c);
 void add_block_and_move_right();
 void define_color_pairs();
 void draw_hud();
@@ -73,6 +78,8 @@ void draw_canvas();
 void fail_with_msg(const char *msg);
 void free_canvas();
 void handle_input();
+void handle_text_mode_input();
+void handle_normal_mode_input();
 void handle_move_right();
 void handle_move_left();
 void handle_move_up();
@@ -302,13 +309,37 @@ void draw_canvas()
 
 
 
-void add_block() 
-{ 
-    // add the block to the canvas
-    canvas[y][x].character = L'█';
+void add_character(wchar_t c) 
+{
+    // add the character to the canvas
+    canvas[y][x].character = c;
     // store the color component
     canvas[y][x].foreground_color = get_fg_color(current_color_pair);
     canvas[y][x].background_color = get_bg_color(current_color_pair);
+}
+
+
+
+void add_character_and_move_right(wchar_t c) 
+{
+    add_character(c);
+
+    if (x < canvas_width) 
+    {
+        x++;
+    }
+}
+
+
+
+void add_block() 
+{ 
+    add_character(L'█');
+    // add the block to the canvas
+    //canvas[y][x].character = L'█';
+    // store the color component
+    //canvas[y][x].foreground_color = get_fg_color(current_color_pair);
+    //canvas[y][x].background_color = get_bg_color(current_color_pair);
     //attroff(COLOR_PAIR(current_color_pair)); 
 }
 
@@ -380,9 +411,9 @@ void handle_save_inner_loop(FILE *outfile)
 {
     if (outfile == NULL) 
     {
-        perror("Error opening file for writing");
-        exit(-1);
+        fail_with_msg("Error opening file for writing");
     }
+
     for (int i = 0; i < canvas_height; i++) 
     {
         int prev_irc_fg_color = -1;
@@ -485,11 +516,16 @@ void add_block_and_move_right()
 }
 
 
-void handle_input() 
+
+
+void handle_normal_mode_input() 
 {
     int c = getch();
     switch (c) 
     {
+        case '`':
+            is_text_mode = true;
+            break;
         case 'q':
             quit = 1;
             break;
@@ -525,6 +561,37 @@ void handle_input()
             break;
         default:
             break;
+    }
+}
+
+
+
+void handle_text_mode_input()
+{
+    int c = getch();
+
+    switch (c) 
+    {
+        case '`':
+            is_text_mode = false;
+            break;
+        default:
+            add_character_and_move_right(c);
+            break;
+    }
+}
+
+
+
+void handle_input() 
+{
+    if (is_text_mode)
+    {
+        handle_text_mode_input();
+    }
+    else 
+    {
+        handle_normal_mode_input();
     }
 }
 
