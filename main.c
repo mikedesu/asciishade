@@ -176,7 +176,8 @@ void parse_arguments(int argc, char **argv)
 void define_color_pairs() 
 {
     int current_pair = 0;
-    const int local_max_colors = 16; // for now...
+    const int local_max_colors = MAX_FG_COLORS; // for now...
+
     for (int bg_color = 0; bg_color < local_max_colors; bg_color++) 
     {
         for (int fg_color = 0; fg_color < local_max_colors; fg_color++) 
@@ -190,6 +191,7 @@ void define_color_pairs()
             current_pair++;
         }
     }
+
     max_color_pairs = current_pair;
     max_colors = local_max_colors;
 }
@@ -524,14 +526,18 @@ void switch_between_current_and_hud_color()
 
 void draw_hud_row_1() 
 {
-    int hud_y = max_y-2;
-    int hud_x = 0;
+    int hud_y     = max_y-2;
+    int hud_x     = 0;
     int hud_max_x = max_x;
-    int fg_color = current_color_pair % max_colors;
-    char *str = calloc(1, hud_max_x);
-    sprintf(str, "y: %03d | # %03d FG CurrentColorPair(%05d) FG %03d Filename: %s", y, fg_color, current_color_pair, 0, filename );
+    int fg_color  = get_fg_color(current_color_pair);
+    char *str     = calloc(1, hud_max_x);
+    int fg_color_cursor = canvas[y][x].foreground_color;
+
+    sprintf(str, "y: %03d | # %03d FG CurrentColorPair(%05d) FG %03d Filename: %s", y, fg_color, current_color_pair, fg_color_cursor, filename );
+
     move(hud_y,hud_x);
-    for (char c = str[0]; c != '\0'; c = str[++hud_x]) 
+    
+    for (char c = str[0]; c != '\0'; c = str[hud_x]) 
     {
         if (c=='#') 
         {
@@ -543,6 +549,7 @@ void draw_hud_row_1()
         {
             addch(c);
         }
+        hud_x++;
     }
     free(str);
 }
@@ -551,25 +558,19 @@ void draw_hud_row_1()
 
 void draw_hud_row_2() 
 {
-    int cursor_y = -1;
-    int cursor_x = -1;
-    char str[16] = {0};
+    char str[16]  = {0};
+    char str2[64] = {0};
     sprintf(str, "x: %03d | ", x);
     mvaddstr(max_y-1, 0, str);
     switch_between_hud_and_current_color();
     addstr(" ");
     switch_between_current_and_hud_color();
-    char str2[64] = {0};
-    int bg_color = current_color_pair / max_colors;
-    // get where our cursor is
-    getyx(stdscr, cursor_y, cursor_x);
-    // now that we have memory of where we stopped drawing...
-    chtype character = mvinch(y, x);
-    attr_t attribute = character & A_COLOR;
-    int color_pair_number = PAIR_NUMBER(attribute);
+    int bg_color = get_bg_color(current_color_pair);
+    int fg_color_cursor = canvas[y][x].foreground_color;
+    int bg_color_cursor = canvas[y][x].background_color;
+    int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
     //move back to where the cursor was
-    move(cursor_y, cursor_x);
-    sprintf(str2, " %03d BG PairUnderCursor (%05d) BG %03d %dx%d", bg_color, color_pair_number, 0, max_y, max_x);
+    sprintf(str2, " %03d BG PairUnderCursor (%05d) BG %03d %dx%d", bg_color, color_pair_num, bg_color_cursor, max_y, max_x);
     addstr(str2);
     attroff(COLOR_PAIR(hud_color));
     reset_cursor();
