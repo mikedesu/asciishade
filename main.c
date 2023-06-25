@@ -23,7 +23,7 @@
 #define MAX_BG_COLORS 16
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 
-
+#define DEFAULT_COLOR_PAIR 1
 
 
 // this is the base of the canvas
@@ -67,6 +67,8 @@ int convert_to_irc_color(int color);
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
 
+void add_block();
+void delete_block();
 void add_character(wchar_t c);
 void add_character_and_move_right(wchar_t c);
 void add_block_and_move_right();
@@ -268,7 +270,10 @@ void draw_initial_ascii()
         "by darkmage", 
         "www.evildojo.com" 
     };
-    current_color_pair = 1;
+
+    // this would set the current color pair in order to draw the ascii
+    current_color_pair = DEFAULT_COLOR_PAIR;
+    
     int fg_color = get_fg_color(current_color_pair);
     int bg_color = get_bg_color(current_color_pair);
     for (int i=0; i < 3; i++) {
@@ -345,6 +350,21 @@ void add_character_and_move_right(wchar_t c)
 void add_block() 
 { 
     add_character(L'█');
+}
+
+
+
+void delete_block() 
+{
+    // delete the character from the canvas
+    canvas[y][x].character = L' ';
+    // store the color component
+    // this should be set to the default color pair
+    // what was the initial ascii drawn in?
+    canvas[y][x].foreground_color = 0;
+    //canvas[y][x].foreground_color = get_fg_color(DEFAULT_COLOR_PAIR);
+    canvas[y][x].background_color = 0;
+    //canvas[y][x].background_color = get_bg_color(DEFAULT_COLOR_PAIR);
 }
 
 
@@ -553,6 +573,16 @@ void handle_normal_mode_input(int c)
     {
         quit = 1;
     }
+    else if (c==KEY_DC) 
+    {
+        // delete a block from the current location on the canvas
+        delete_block();
+    }
+    else if (c==KEY_BACKSPACE) 
+    {
+        delete_block();
+        handle_move_left();
+    }
     else if (c=='S') 
     {
         handle_save();
@@ -619,6 +649,16 @@ void handle_text_mode_input(int c)
     if (c == '`') 
     {
         is_text_mode = false;
+    }
+    else if (c==KEY_DC) 
+    {
+        // delete a block from the current location on the canvas
+        delete_block();
+    }
+    else if (c==KEY_BACKSPACE) 
+    {
+        delete_block();
+        handle_move_left();
     }
     else if (c==KEY_LEFT) 
     {
