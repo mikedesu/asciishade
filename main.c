@@ -13,14 +13,10 @@
 #include "mPrint.h"
 
 
-
-// something broken about ncurses movement keys but i hacked this together
-#define MV_DOWN 66
-#define MV_UP 65
-#define MV_LEFT 68
-#define MV_RIGHT 67
-#define MAX_FG_COLORS 16
-#define MAX_BG_COLORS 16
+#define MAX_FG_COLORS 8
+#define MAX_BG_COLORS 8
+//#define MAX_FG_COLORS 16
+//#define MAX_BG_COLORS 16
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 
 #define DEFAULT_COLOR_PAIR 1
@@ -411,7 +407,11 @@ void decr_color_pair_by_max()
 }
 
 
-
+// this is not an accurate function
+// it is close, but we are:
+//
+// 1. not defining all 16 colors
+// 2. not scaling up to all of the colors that ncurses OR irc can handle
 int convert_to_irc_color(int color) 
 {
     switch (color) 
@@ -461,7 +461,7 @@ void handle_save_inner_loop(FILE *outfile)
             //int color_pair_number = PAIR_NUMBER(attribute);
             if (color_changed) 
             {
-                fprintf(outfile, "\x03%d,%d%lc", irc_foreground_color, irc_background_color, wc);
+                fprintf(outfile, "\x03%02d,%02d%lc", irc_foreground_color, irc_background_color, wc);
             }
             else 
             {
