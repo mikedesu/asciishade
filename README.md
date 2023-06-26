@@ -90,17 +90,34 @@ Usage: ./asciishade [OPTION]...
 
 **Keyboard Controls**
 
-- 's': save to file 'test.txt'
-- 'o': go back one color pair
-- 'p': go forward one color pair
+**Normal Mode**
+
+- '`': Switch to text mode
+- 'w': place a block and move up
+- 'a': place a block and move left
+- 's': place a block and move down
+- 'd': place a block and move right
+- 'S': save to file 'test.txt'
+- 'o': go back one color pair / one foreground color
+- 'p': go forward one color pair / one foreground color
+- 'O': go back one background color
+- 'P': go forward one background color
 - 'q': quit
 - arrow keys: cursor navigation
-- space bar: 
-    - place a block
+- space bar: place a block
+- delete: delete a block
+- backspace: delete a block and move left one
+
+
+**Text Mode**
+
+- '`': Switch back to normal mode
+- delete: delete a block
+- backspace: delete a block and move left one
+
 
 ### Features On The Way
 
-- Saving your current work
 - Loading from file
 - Exporting to:
     - irc
