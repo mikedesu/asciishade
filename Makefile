@@ -5,6 +5,7 @@ LINKS=-lncursesw
 BINARY=asciishade
 UNITTEST_BINARY=unittest_driver
 OBJECTS=tools.o
+JUNK=a.out
 
 all: $(BINARY) $(UNITTEST_BINARY)
 
@@ -24,5 +25,5 @@ tools.o: tools.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 clean:
-	rm -rfv $(BINARY) $(OBJECTS) $(UNITTEST_BINARY)
+	rm -rfv $(BINARY) $(OBJECTS) $(UNITTEST_BINARY) $(JUNK) *.o *.dSYM
 

@@ -1,6 +1,7 @@
 #pragma once
 
-#define mPrint(s) (printf("%s:%s:%d:%s\n",__DATE__,__FILE__,__LINE__,s))
+#define mPrint(s) (printf("%s:%d:%s\n",__FILE__,__LINE__,s))
+//#define mPrint(s) (printf("%s:%s:%d:%s\n",__DATE__,__FILE__,__LINE__,s))
 
 //#include <iostream>
 //using std::cout;

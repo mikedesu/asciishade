@@ -413,6 +413,17 @@ void decr_color_pair_by_max()
 //
 // 1. not defining all 16 colors
 // 2. not scaling up to all of the colors that ncurses OR irc can handle
+
+#define COLOR_BRIGHT_BLACK   8
+#define COLOR_BRIGHT_BLUE    9
+#define COLOR_BRIGHT_GREEN   10
+#define COLOR_BRIGHT_CYAN    11
+#define COLOR_BRIGHT_RED     12
+#define COLOR_BRIGHT_MAGENTA 13
+#define COLOR_BRIGHT_YELLOW  14
+#define COLOR_BRIGHT_WHITE   15
+
+// https://modern.ircdocs.horse/formatting.html
 int convert_to_irc_color(int color) 
 {
     switch (color) 
@@ -425,6 +436,17 @@ int convert_to_irc_color(int color)
         case COLOR_MAGENTA: return 6;
         case COLOR_CYAN:    return 10;
         case COLOR_WHITE:   return 0;
+
+        // attempting to handle colors 8-15
+        //case COLOR_BRIGHT_BLACK:   return 14;
+        //case COLOR_BRIGHT_BLUE:    return 12;
+        //case COLOR_BRIGHT_GREEN:   return 9;
+        //case COLOR_BRIGHT_CYAN:    return 11;
+        //case COLOR_BRIGHT_RED:     return 5;
+        //case COLOR_BRIGHT_MAGENTA: return 6;
+        //case COLOR_BRIGHT_YELLOW:  return 8;
+        //case COLOR_BRIGHT_WHITE:   return 15;
+
         default:            return color;
     }
     return 0;
@@ -463,9 +485,11 @@ void handle_save_inner_loop(FILE *outfile)
             if (color_changed) 
             {
                 fprintf(outfile, "\x03%02d,%02d%lc", irc_foreground_color, irc_background_color, wc);
+                //fwprintf(outfile, L"\x03%02d,%02d%c", irc_foreground_color, irc_background_color, wc);
             }
             else 
             {
+                //fwprintf(outfile, L"%c", wc);
                 fprintf(outfile, "%lc", wc);
             }
             prev_irc_fg_color = irc_foreground_color;
@@ -867,7 +891,6 @@ void init_program()
     use_default_colors();
     keypad(stdscr, true);
 
-
     define_color_pairs();
 
     getmaxyx(stdscr, max_y, max_x);
@@ -901,7 +924,6 @@ void init_canvas(int width, int height)
     for (int i = 0; i < canvas_height; i++) 
     {
         canvas[i] = calloc(canvas_width, sizeof(canvas_pixel_t));
-
         for (int j = 0; j < canvas_width; j++) 
         {
             canvas[i][j].foreground_color = 0;
@@ -909,7 +931,6 @@ void init_canvas(int width, int height)
             canvas[i][j].character = ' ';
         }
     }
-
 }
 
 

@@ -7,8 +7,9 @@
 
 int main() 
 {
-    char *filename = "test.ascii";
-    read_ascii_from_filepath(filename);
+    //char *filename = "small.ascii";
+    read_ascii_from_filepath("small.ascii");
+    read_ascii_from_filepath("test.ascii");
 
     return EXIT_SUCCESS;
 }
