@@ -323,10 +323,11 @@ void draw_canvas()
 void add_character(wchar_t c) 
 {
     // add the character to the canvas
-    canvas[y][x].character = c;
+    //canvas[y][x].character = c;
     // store the color component
-    canvas[y][x].foreground_color = get_fg_color(current_color_pair);
-    canvas[y][x].background_color = get_bg_color(current_color_pair);
+    //canvas[y][x].foreground_color = get_fg_color(current_color_pair);
+    //canvas[y][x].background_color = get_bg_color(current_color_pair);
+    write_char_to_canvas(y, x, c, get_fg_color(current_color_pair), get_bg_color(current_color_pair));
 }
 
 
@@ -470,7 +471,8 @@ void handle_save_inner_loop(FILE *outfile)
             prev_irc_fg_color = irc_foreground_color;
             prev_irc_bg_color = irc_background_color;
         }
-        fprintf(outfile, "\x03\n");
+        //fprintf(outfile, "\x03\n");
+        fprintf(outfile, "\n");
     }   
 }
 

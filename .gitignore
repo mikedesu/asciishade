@@ -3,3 +3,5 @@ main
 .git
 .git/*
 asciishade
+*.o
+unittest_driver
