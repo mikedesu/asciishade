@@ -9,11 +9,29 @@
 #include "mPrint.h"
 
 
-void read_ascii_by_byte(FILE *fp)
+void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width)
 {
     if (fp == NULL)
     {
         printf("Error: fp is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas == NULL)
+    {
+        printf("Error: canvas is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas_height <= 0)
+    {
+        printf("Error: canvas_height is <= 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas_width <= 0)
+    {
+        printf("Error: canvas_width is <= 0\n");
         exit(EXIT_FAILURE);
     }
 
@@ -58,11 +76,7 @@ void read_ascii_by_byte(FILE *fp)
                     0
                 };
 
-                //char c2 = buffer[i+1]; // 0-9
-                //char c3 = buffer[i+2]; // 0-9
                 char comma = buffer[i+3]; // ,
-                //char c5 = buffer[i+4]; // 0-9
-                //char c6 = buffer[i+5]; // 0-9
 
                 // the state machine for colors is a bit more complicated than this...
                 if (fg_chars[0] >= '0' && fg_chars[0] <= '9' && 
@@ -202,9 +216,13 @@ void read_ascii_from_filepath(char *path)
     printf("w: %d\n", w);
     printf("h: %d\n", h);
 
-    read_ascii_by_byte(fp);
+    canvas_pixel_t **canvas = init_canvas(w, h);
+
+    read_ascii_into_canvas(fp, canvas, w, h);
 
     fclose(fp);
+
+    free_canvas(canvas, h);
 }
 
 

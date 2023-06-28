@@ -1,5 +1,6 @@
+#pragma once
 
-
+#include <wchar.h>
 
 // this is the base of the canvas
 typedef struct 
