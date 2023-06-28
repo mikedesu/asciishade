@@ -11,6 +11,7 @@
 #include <getopt.h>
 
 #include "mPrint.h"
+#include "canvas.h"
 
 
 #define MAX_FG_COLORS 8
@@ -20,16 +21,6 @@
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 
 #define DEFAULT_COLOR_PAIR 1
-
-
-// this is the base of the canvas
-typedef struct 
-{
-    wchar_t character;
-    int foreground_color;
-    int background_color;
-} canvas_pixel_t;
-
 
 
 
@@ -77,7 +68,6 @@ void draw_hud_background();
 void draw_initial_ascii();
 void draw_canvas();
 void fail_with_msg(const char *msg);
-void free_canvas();
 void handle_input();
 void handle_text_mode_input(int c);
 void handle_normal_mode_input(int c);
@@ -88,7 +78,6 @@ void handle_move_down();
 void handle_save_inner_loop(FILE *outfile);
 void handle_save();
 void init_program();
-void init_canvas(int width, int height);
 void parse_arguments(int argc, char **argv);
 void print_help(char **argv);
 void reset_cursor();
@@ -99,6 +88,7 @@ void cleanup();
 
 int main(int argc, char *argv[]) 
 {
+
     parse_arguments(argc, argv);
     init_program();
     draw_initial_ascii();
@@ -112,7 +102,7 @@ int main(int argc, char *argv[])
         refresh();
     }
     endwin();
-    free_canvas();
+    free_canvas(canvas, canvas_height);
     return EXIT_SUCCESS;
 }
 
@@ -136,6 +126,7 @@ void print_help(char **argv)
 
 void parse_arguments(int argc, char **argv) 
 {
+    mPrint("Parsing arguments...\n");
     // parsing arguments using getopt_long
     int c = -1;
     int option_index = 0;
@@ -226,7 +217,7 @@ int get_bg_color(int color_pair)
 void cleanup() 
 {
     endwin();
-    free_canvas();
+    free_canvas(canvas, canvas_height);
 }
 
 
@@ -883,14 +874,17 @@ void draw_hud()
 
 void init_program() 
 {
+    mPrint("Initializing program\n");
+
     setlocale(LC_ALL, "");
+
     initscr();
+    
     clear();
     noecho();
     start_color();
     use_default_colors();
     keypad(stdscr, true);
-
     define_color_pairs();
 
     getmaxyx(stdscr, max_y, max_x);
@@ -904,45 +898,13 @@ void init_program()
     // make the cursor visible
     curs_set(1);
     // initialize the canvas
-    init_canvas(max_x, max_y-2);
-}
-
-
-
-void init_canvas(int width, int height) 
-{
-    // do some basic checks on the input parameters
-    if (width < 1 || height < 1) 
-    {
-        fprintf(stderr, "Error: width and height must be greater than 0\n");
-        exit(EXIT_FAILURE);
-    }
-
-    canvas_width  = width;
-    canvas_height = height;
-    canvas = calloc(canvas_height, sizeof(canvas_pixel_t *));
-    for (int i = 0; i < canvas_height; i++) 
-    {
-        canvas[i] = calloc(canvas_width, sizeof(canvas_pixel_t));
-        for (int j = 0; j < canvas_width; j++) 
-        {
-            canvas[i][j].foreground_color = 0;
-            canvas[i][j].background_color = 0;
-            canvas[i][j].character = ' ';
-        }
-    }
-}
-
-
-
-void free_canvas() 
-{
-    printf("Freeing the canvas memory...\n");
-    for (int i = 0; i < canvas_height; i++) 
-    {
-        free(canvas[i]);
-    }
-    free(canvas);
+    // for now, we are going to make the canvas the same size as the terminal
+    // when we go to read in ascii files,
+    //canvas_height = max_y - 2;
+    //canvas_width  = max_x;
+    canvas_height = 20;
+    canvas_width  = 80;
+    canvas = init_canvas(canvas_height, canvas_width);
 }
 
 
