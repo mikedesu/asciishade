@@ -23,7 +23,7 @@ canvas.o: canvas.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 tools.o: tools.c
-	$(CC) $(FLAGS) -c $^ -o $@
+	$(CC) $(FLAGS) -c $^ $(LINKS) -o $@
 
 clean:
 	rm -rfv $(BINARY) $(OBJECTS) $(UNITTEST_BINARY) $(JUNK) *.o *.dSYM

@@ -12,6 +12,7 @@
 
 #include "mPrint.h"
 #include "canvas.h"
+#include "tools.h"
 
 
 #define MAX_FG_COLORS 8
@@ -50,7 +51,6 @@ int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
 int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
 
 
-int convert_to_irc_color(int color);
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
 
@@ -415,33 +415,7 @@ void decr_color_pair_by_max()
 #define COLOR_BRIGHT_WHITE   15
 
 // https://modern.ircdocs.horse/formatting.html
-int convert_to_irc_color(int color) 
-{
-    switch (color) 
-    {
-        case COLOR_BLACK:   return 1;
-        case COLOR_RED:     return 4;
-        case COLOR_GREEN:   return 3;
-        case COLOR_YELLOW:  return 8;
-        case COLOR_BLUE:    return 2;
-        case COLOR_MAGENTA: return 6;
-        case COLOR_CYAN:    return 10;
-        case COLOR_WHITE:   return 0;
 
-        // attempting to handle colors 8-15
-        //case COLOR_BRIGHT_BLACK:   return 14;
-        //case COLOR_BRIGHT_BLUE:    return 12;
-        //case COLOR_BRIGHT_GREEN:   return 9;
-        //case COLOR_BRIGHT_CYAN:    return 11;
-        //case COLOR_BRIGHT_RED:     return 5;
-        //case COLOR_BRIGHT_MAGENTA: return 6;
-        //case COLOR_BRIGHT_YELLOW:  return 8;
-        //case COLOR_BRIGHT_WHITE:   return 15;
-
-        default:            return color;
-    }
-    return 0;
-}
 
 
 
@@ -900,10 +874,10 @@ void init_program()
     // initialize the canvas
     // for now, we are going to make the canvas the same size as the terminal
     // when we go to read in ascii files,
-    //canvas_height = max_y - 2;
-    //canvas_width  = max_x;
-    canvas_height = 20;
-    canvas_width  = 80;
+    canvas_height = max_y - 2;
+    canvas_width  = max_x;
+    //canvas_height = 20;
+    //canvas_width  = 80;
     canvas = init_canvas(canvas_height, canvas_width);
 }
 

@@ -1,10 +1,12 @@
 
+#include "tools.h"
+
+#include <ncurses.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 //#include <wchar.h>
 #include "mPrint.h"
-
 
 
 void read_ascii_by_byte(FILE *fp)
@@ -20,6 +22,12 @@ void read_ascii_by_byte(FILE *fp)
 
     int max_w = -1;
     int h = 0;
+
+
+#define DEFAULT_FG_COLOR 7
+#define DEFAULT_BG_COLOR 0
+    //int current_fg_color = DEFAULT_FG_COLOR;
+    //int current_bg_color = DEFAULT_BG_COLOR;
 
     char buffer[1024] = {0};
     while (fgets(buffer, 1024, fp) != NULL)
@@ -38,20 +46,55 @@ void read_ascii_by_byte(FILE *fp)
                 // 00,00
                 // where the first 00 is the foreground color and the second 00 is the background color
 
-                char c2 = buffer[i+1]; // 0-9
-                char c3 = buffer[i+2]; // 0-9
-                char c4 = buffer[i+3]; // ,
-                char c5 = buffer[i+4]; // 0-9
-                char c6 = buffer[i+5]; // 0-9
+                char fg_chars[3] = {
+                    buffer[i+1],
+                    buffer[i+2],
+                    0
+                };
+
+                char bg_chars[3] = {
+                    buffer[i+4],
+                    buffer[i+5],
+                    0
+                };
+
+                //char c2 = buffer[i+1]; // 0-9
+                //char c3 = buffer[i+2]; // 0-9
+                char comma = buffer[i+3]; // ,
+                //char c5 = buffer[i+4]; // 0-9
+                //char c6 = buffer[i+5]; // 0-9
 
                 // the state machine for colors is a bit more complicated than this...
-                if (c2 >= '0' && c2 <= '9' && 
-                    c3 >= '0' && c3 <= '9' && 
-                    c4 == ',' && 
-                    c5 >= '0' && c5 <= '9' && 
-                    c6 >= '0' && c6 <= '9')
+                if (fg_chars[0] >= '0' && fg_chars[0] <= '9' && 
+                    fg_chars[1] >= '0' && fg_chars[1] <= '9' && 
+                    comma == ',' && 
+                    bg_chars[0] >= '0' && bg_chars[0] <= '9' && 
+                    bg_chars[1] >= '0' && bg_chars[1] <= '9')
                 {
                     i += 5;
+
+                    int fg_irc_color = -1;
+                    int bg_irc_color = -1;
+
+                    sscanf(fg_chars, "%d", &fg_irc_color);
+                    sscanf(bg_chars, "%d", &bg_irc_color);
+
+                    if (fg_irc_color < 0 || fg_irc_color > 15)
+                    {
+                        printf("Error: invalid foreground color code: %d\n", fg_irc_color);
+                        exit(EXIT_FAILURE);
+                    }
+
+                    if (bg_irc_color < 0 || bg_irc_color > 15)
+                    {
+                        printf("Error: invalid background color code: %d\n", bg_irc_color);
+                        exit(EXIT_FAILURE);
+                    }
+
+                    // convert the irc color code to ncurses color code
+                    //current_fg_color = convert_to_ncurses_color(fg_irc_color);
+                    //current_bg_color = convert_to_ncurses_color(bg_irc_color);
+
                     continue;
                 }
 
@@ -163,3 +206,70 @@ void read_ascii_from_filepath(char *path)
 
     fclose(fp);
 }
+
+
+
+
+int convert_to_irc_color(int color) 
+{
+    switch (color) 
+    {
+        case COLOR_BLACK:   return 1;
+        case COLOR_RED:     return 4;
+        case COLOR_GREEN:   return 3;
+        case COLOR_YELLOW:  return 8;
+        case COLOR_BLUE:    return 2;
+        case COLOR_MAGENTA: return 6;
+        case COLOR_CYAN:    return 10;
+        case COLOR_WHITE:   return 0;
+
+        // attempting to handle colors 8-15
+        //case COLOR_BRIGHT_BLACK:   return 14;
+        //case COLOR_BRIGHT_BLUE:    return 12;
+        //case COLOR_BRIGHT_GREEN:   return 9;
+        //case COLOR_BRIGHT_CYAN:    return 11;
+        //case COLOR_BRIGHT_RED:     return 5;
+        //case COLOR_BRIGHT_MAGENTA: return 6;
+        //case COLOR_BRIGHT_YELLOW:  return 8;
+        //case COLOR_BRIGHT_WHITE:   return 15;
+
+        default:            return color;
+    }
+    return 0;
+}
+
+
+
+
+int convert_to_ncurses_color(int irc_color)
+{
+    // this is the inverse-function of convert_to_irc_color
+
+    switch (irc_color) 
+    {
+        case 1:  return COLOR_BLACK;
+        case 4:  return COLOR_RED;
+        case 3:  return COLOR_GREEN;
+        case 8:  return COLOR_YELLOW;
+        case 2:  return COLOR_BLUE;
+        case 6:  return COLOR_MAGENTA;
+        case 10: return COLOR_CYAN;
+        case 0:  return COLOR_WHITE;
+
+        // attempting to handle colors 8-15
+        //case 14: return COLOR_BRIGHT_BLACK;
+        //case 12: return COLOR_BRIGHT_BLUE;
+        //case 9:  return COLOR_BRIGHT_GREEN;
+        //case 11: return COLOR_BRIGHT_CYAN;
+        //case 5:  return COLOR_BRIGHT_RED;
+        //case 6:  return COLOR_BRIGHT_MAGENTA;
+        //case 8:  return COLOR_BRIGHT_YELLOW;
+        //case 15: return COLOR_BRIGHT_WHITE;
+
+        default: return irc_color;
+    }
+    return 0;
+}
+
+
+
