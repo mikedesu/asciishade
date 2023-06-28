@@ -220,9 +220,21 @@ void read_ascii_from_filepath(char *path)
 
     read_ascii_into_canvas(fp, canvas, w, h);
 
+    canvas_t *c = calloc(1, sizeof(canvas_t));
+    if (c == NULL)
+    {
+        printf("Error: calloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    c->canvas = canvas;
+    c->width = w;
+    c->height = h;
+
     fclose(fp);
 
-    free_canvas(canvas, h);
+    free_canvas(c->canvas, h);
+    free(c);
 }
 
 

@@ -11,6 +11,14 @@ typedef struct
 } canvas_pixel_t;
 
 
+typedef struct 
+{
+    int width;
+    int height;
+    canvas_pixel_t **canvas;
+} canvas_t;
+
+
 canvas_pixel_t **init_canvas(int width, int height);
 void free_canvas(canvas_pixel_t **canvas, int canvas_height);
 
