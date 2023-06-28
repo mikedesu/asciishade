@@ -33,6 +33,28 @@ void read_ascii_by_byte(FILE *fp)
             if (c == 0x03) 
             {
                 // we will have to read color codes to skip past them when computing width
+
+                // we can expect after a ctrl char that the color code is of format:
+                // 00,00
+                // where the first 00 is the foreground color and the second 00 is the background color
+
+                char c2 = buffer[i+1]; // 0-9
+                char c3 = buffer[i+2]; // 0-9
+                char c4 = buffer[i+3]; // ,
+                char c5 = buffer[i+4]; // 0-9
+                char c6 = buffer[i+5]; // 0-9
+
+                // the state machine for colors is a bit more complicated than this...
+                if (c2 >= '0' && c2 <= '9' && 
+                    c3 >= '0' && c3 <= '9' && 
+                    c4 == ',' && 
+                    c5 >= '0' && c5 <= '9' && 
+                    c6 >= '0' && c6 <= '9')
+                {
+                    i += 5;
+                    continue;
+                }
+
                 continue;
             }
 
