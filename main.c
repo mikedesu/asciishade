@@ -213,33 +213,22 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
     canvas[y][x].background_color = bg_color;
 } 
 
-void draw_initial_ascii() 
-{
-    /*
-    char *lines[3] = 
-    { 
+void draw_initial_ascii() {
+#define INITIAL_ASCII_LINE_COUNT 3
+    char *lines[INITIAL_ASCII_LINE_COUNT] = { 
         "Welcome to asciishade", 
         "by darkmage", 
         "www.evildojo.com" 
     };
-    // this would set the current color pair in order to draw the ascii
     current_color_pair = DEFAULT_COLOR_PAIR;
     int fg_color = get_fg_color(current_color_pair);
     int bg_color = get_bg_color(current_color_pair);
-    */
-    // read in test2.ascii
-    //FILE *fp = fopen("test2.ascii", "r");
-    canvas = read_ascii_from_filepath("test2.ascii", &canvas_height, &canvas_width);
-    //for (int i=0; i < canvas_height; i++) {
-    //    for (int j=0; j < canvas_width; j++) {
-            // convert the lines[i][j] to a wchar_t and store in the canvas
-            //write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
-    //        canvas_pixel_t pixel = my_canvas[i][j];
-    //        write_char_to_canvas(i, j, pixel.character, pixel.foreground_color, pixel.background_color);
-            //write_char_to_canvas(i, j, , fg_color, bg_color);
-    //    }
-    //}
-    //free_canvas(my_canvas, canvas_height);
+    for (int i=0; i < 3; i++) {
+        for (int j=0; j < strlen(lines[i]); j++) {
+            write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
+        }
+    }
+    //canvas = read_ascii_from_filepath("test2.ascii", &canvas_height, &canvas_width);
 }
 
 void draw_canvas() {
@@ -662,6 +651,6 @@ void init_program() {
     // when we go to read in ascii files,
     canvas_height = max_y - 2;
     canvas_width  = max_x;
-    //canvas = init_canvas(canvas_height, canvas_width);
+    canvas = init_canvas(canvas_height, canvas_width);
 }
 
