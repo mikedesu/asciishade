@@ -80,6 +80,7 @@ void print_help(char **argv);
 void reset_cursor();
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
 void cleanup();
+void show_error(char *error_msg);
 
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
@@ -482,6 +483,11 @@ void handle_normal_mode_input(int c) {
     else if (c=='P') {
         incr_color_pair_by_max();
     }
+
+    // experimental
+    else if (c=='E') {
+        show_error("This is an error message");
+    }
 }
 
 void handle_text_mode_input(int c) {
@@ -652,5 +658,17 @@ void init_program() {
     canvas_height = max_y - 2;
     canvas_width  = max_x;
     canvas = init_canvas(canvas_height, canvas_width);
+}
+
+void show_error(char *error_msg) {
+    if (error_msg != NULL) {
+
+        clear();
+        mvaddstr(0,0,error_msg);
+        refresh();
+        getch();
+        clear();
+        refresh();
+    }
 }
 
