@@ -51,14 +51,11 @@ int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
 
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
+
 void add_block();
 void delete_block();
 void add_character(wchar_t c);
 void add_character_and_move_right(wchar_t c);
-void add_block_and_move_right();
-void add_block_and_move_left();
-void add_block_and_move_up();
-void add_block_and_move_down();
 void define_color_pairs();
 void draw_hud();
 void draw_hud_background();
@@ -135,12 +132,10 @@ void parse_arguments(int argc, char **argv) {
                 if (optopt == 'f') {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 }
-                else if (isprint(optopt)) 
-                {
+                else if (isprint(optopt)) {
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 }
-                else 
-                {
+                else {
                     fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
                 }
                 exit(EXIT_FAILURE);
@@ -274,9 +269,7 @@ void add_character(wchar_t c) {
 
 void add_character_and_move_right(wchar_t c) {
     add_character(c);
-    if (x < canvas_width) {
-        x++;
-    }
+    handle_move_right();
 }
 
 void add_block() { 
@@ -406,26 +399,6 @@ void handle_move_right() {
     }
 }
 
-void add_block_and_move_right() {
-    add_block();
-    handle_move_right();
-}
-
-void add_block_and_move_left() {
-    add_block();
-    handle_move_left();
-}
-
-void add_block_and_move_up() {
-    add_block();
-    handle_move_up();
-}
-
-void add_block_and_move_down() {
-    add_block();
-    handle_move_down();
-}
-
 void handle_normal_mode_input(int c) {
     if (c == '`') {
         is_text_mode = true;
@@ -457,19 +430,24 @@ void handle_normal_mode_input(int c) {
         handle_move_right();
     }
     else if (c==' ') {
-        add_block_and_move_right();
+        add_block();
+        handle_move_right();
     }
     else if (c=='a') {
-        add_block_and_move_left();
+        add_block();
+        handle_move_left();
     }
     else if (c=='w') {
-        add_block_and_move_up();
+        add_block();
+        handle_move_up();
     }
     else if (c=='s') {
-        add_block_and_move_down();
+        add_block();
+        handle_move_down();
     }
     else if (c=='d') {
-        add_block_and_move_right();
+        add_block();
+        handle_move_right();
     }
     else if (c=='o') {
         decr_color_pair();
@@ -483,6 +461,53 @@ void handle_normal_mode_input(int c) {
     else if (c=='P') {
         incr_color_pair_by_max();
     }
+
+    //numpad
+    //up-left
+    else if (c=='7') {
+        add_block();
+        handle_move_left();
+        handle_move_up();
+    }
+    //up
+    else if (c=='8') {
+        add_block();
+        handle_move_up();
+    }
+    //up-right
+    else if (c=='9') {
+        add_block();
+        handle_move_right();
+        handle_move_up();
+    }  
+    //left
+    else if (c=='4') {
+        add_block();
+        handle_move_left();
+    }
+    //right
+    else if (c=='6') {
+        add_block();
+        handle_move_right();
+    }  
+    //down-left
+    else if (c=='1') {
+        add_block();
+        handle_move_left();
+        handle_move_down();
+    }  
+    //down
+    else if (c=='2') {
+        add_block();
+        handle_move_down();
+    }  
+    //down-right
+    else if (c=='3') {
+        add_block();
+        handle_move_right();
+        handle_move_down();
+    }  
+
 
     // experimental
     else if (c=='E') {
@@ -539,6 +564,7 @@ void switch_between_current_and_hud_color() {
     attroff(COLOR_PAIR(current_color_pair));  
     attron(COLOR_PAIR(hud_color)); 
 }
+
 
 void draw_hud_row_1() {
     attron(COLOR_PAIR(hud_color));
@@ -618,7 +644,9 @@ void draw_hud_row_2() {
 
 void draw_hud_background() {
     attron(COLOR_PAIR(hud_color));
-    for (int j = max_y - 2; j < max_y; j++) { 
+    int num_of_rows = 3;
+    int starting_row = max_y - num_of_rows;
+    for (int j = starting_row; j < max_y; j++) { 
         for (int i = 0; i < max_x; i++) {
             mvaddstr(j, i, " ");
         }
@@ -655,14 +683,14 @@ void init_program() {
     // initialize the canvas
     // for now, we are going to make the canvas the same size as the terminal
     // when we go to read in ascii files,
-    canvas_height = max_y - 2;
+    int num_of_hud_rows = 3;
+    canvas_height = max_y - num_of_hud_rows;
     canvas_width  = max_x;
     canvas = init_canvas(canvas_height, canvas_width);
 }
 
 void show_error(char *error_msg) {
     if (error_msg != NULL) {
-
         clear();
         mvaddstr(0,0,error_msg);
         refresh();
