@@ -235,13 +235,29 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color)
     // check to make sure y,x is within the canvas
     if (y < 0 || y >= canvas_height || x < 0 || x >= canvas_width) 
     {
-        fail_with_msg("write_char_to_canvas: y,x is out of bounds");
+        cleanup();
+        fprintf(stderr, "y: %d\nx: %d\n", y, x);
+        mPrint("write_char_to_canvas: y,x is out of bounds");
+        exit(EXIT_FAILURE);
     }
+
     // make sure the other parameters arent absurd
-    if (fg_color < 0 || fg_color >= max_colors || bg_color < 0 || bg_color >= max_colors) 
+    if (fg_color < 0 || fg_color >= max_colors) 
     {
-        fail_with_msg("write_char_to_canvas: fg_color or bg_color is out of bounds");
+        cleanup();
+        fprintf(stderr, "fg_color: %d\n", fg_color);
+        mPrint("write_char_to_canvas: fg_color is out of bounds");
+        exit(EXIT_FAILURE);
     }
+
+    if (bg_color < 0 || bg_color >= max_colors) 
+    {
+        cleanup();
+        fprintf(stderr, "bg_color: %d\n", bg_color);
+        mPrint("write_char_to_canvas: bg_color is out of bounds");
+        exit(EXIT_FAILURE);
+    }
+
     canvas[y][x].character = c;
     canvas[y][x].foreground_color = fg_color;
     canvas[y][x].background_color = bg_color;
@@ -251,6 +267,9 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color)
 
 void draw_initial_ascii() 
 {
+
+
+    /*
     char *lines[3] = 
     { 
         "Welcome to asciishade", 
@@ -263,12 +282,25 @@ void draw_initial_ascii()
     
     int fg_color = get_fg_color(current_color_pair);
     int bg_color = get_bg_color(current_color_pair);
-    for (int i=0; i < 3; i++) {
-        for (int j=0; j < strlen(lines[i]); j++) {
+    */
+
+    // read in test2.ascii
+
+    //FILE *fp = fopen("test2.ascii", "r");
+    canvas = read_ascii_from_filepath("test2.ascii", &canvas_height, &canvas_width);
+
+    //for (int i=0; i < canvas_height; i++) {
+    //    for (int j=0; j < canvas_width; j++) {
             // convert the lines[i][j] to a wchar_t and store in the canvas
-            write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
-        }
-    }
+            //write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
+            
+    //        canvas_pixel_t pixel = my_canvas[i][j];
+    //        write_char_to_canvas(i, j, pixel.character, pixel.foreground_color, pixel.background_color);
+            //write_char_to_canvas(i, j, , fg_color, bg_color);
+    //    }
+    //}
+
+    //free_canvas(my_canvas, canvas_height);
 }
 
 
@@ -291,6 +323,7 @@ void draw_canvas()
             fg_color   = canvas[i][j].foreground_color;
             bg_color   = canvas[i][j].background_color;
             color_pair = color_pair_array[fg_color][bg_color];
+            
             // draw the character
             attron(COLOR_PAIR(color_pair));
             c = canvas[i][j].character;
@@ -878,7 +911,8 @@ void init_program()
     canvas_width  = max_x;
     //canvas_height = 20;
     //canvas_width  = 80;
-    canvas = init_canvas(canvas_height, canvas_width);
+    
+    //canvas = init_canvas(canvas_height, canvas_width);
 }
 
 

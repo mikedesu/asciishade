@@ -9,6 +9,53 @@
 #include "mPrint.h"
 
 
+
+
+void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
+{
+    if (canvas == NULL)
+    {
+        printf("Error: canvas is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas_height <= 0)
+    {
+        printf("Error: canvas_height is <= 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas_width <= 0)
+    {
+        printf("Error: canvas_width is <= 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // we are printing the ascii to stdout
+    // so we will be using ANSI terminal escape sequences to handle color
+    // old-school style
+
+
+    for (int i=0; i<canvas_height; i++) 
+    {
+        for (int j=0; j<canvas_width; j++)
+        {
+            canvas_pixel_t pixel = canvas[i][j];
+
+            //int fg_color = pixel.foreground_color;
+            //int bg_color = pixel.background_color;
+            wchar_t c = pixel.character;
+
+            printf("%c", c);
+        }
+        printf("\n");
+    }
+}
+
+
+
+
+
 void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width)
 {
     if (fp == NULL)
@@ -46,6 +93,11 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
 #define DEFAULT_BG_COLOR 0
     //int current_fg_color = DEFAULT_FG_COLOR;
     //int current_bg_color = DEFAULT_BG_COLOR;
+
+    int canvas_y = 0;
+    int canvas_x = 0;
+    int current_fg_color = DEFAULT_FG_COLOR;
+    int current_bg_color = DEFAULT_BG_COLOR;
 
     char buffer[1024] = {0};
     while (fgets(buffer, 1024, fp) != NULL)
@@ -90,8 +142,8 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     int fg_irc_color = -1;
                     int bg_irc_color = -1;
 
-                    sscanf(fg_chars, "%d", &fg_irc_color);
-                    sscanf(bg_chars, "%d", &bg_irc_color);
+                    sscanf(fg_chars, "%02d", &fg_irc_color);
+                    sscanf(bg_chars, "%02d", &bg_irc_color);
 
                     if (fg_irc_color < 0 || fg_irc_color > 15)
                     {
@@ -106,17 +158,27 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     }
 
                     // convert the irc color code to ncurses color code
-                    //current_fg_color = convert_to_ncurses_color(fg_irc_color);
-                    //current_bg_color = convert_to_ncurses_color(bg_irc_color);
+                    current_fg_color = convert_to_ncurses_color(fg_irc_color);
+                    current_bg_color = convert_to_ncurses_color(bg_irc_color);
+
+                    if (current_fg_color < 0 || current_fg_color > 15)
+                    {
+                        printf("Error: invalid foreground color code: %d\n", current_fg_color);
+                        exit(EXIT_FAILURE);
+                    }
+
+                    if (current_bg_color < 0 || current_bg_color > 15)
+                    {
+                        printf("Error: invalid background color code: %d\n", current_bg_color);
+                        exit(EXIT_FAILURE);
+                    }
 
                     continue;
                 }
 
                 continue;
             }
-
-
-            if (c == 0xFFFFFFE2 && i <= strlen(buffer)-3)
+            else if (c == 0xFFFFFFE2 && i <= strlen(buffer)-3)
             {
                 char c2 = buffer[i+1];
                 char c3 = buffer[i+2];
@@ -128,12 +190,34 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     putchar(c3);
                     i += 2;
 
+                    // write the block to the canvas
+                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
+                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
+                    canvas[canvas_y][canvas_x].character = L'█';
+
+                    canvas_x++;
+                    
                     w++;
                 }
             }
-            else 
+            else if (c == '\n') 
             {
                 putchar(c);
+                canvas_y++;
+                canvas_x = 0;
+            }
+            else 
+            {
+
+                putchar(c);
+
+                // write the block to the canvas
+                canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
+                canvas[canvas_y][canvas_x].background_color = current_bg_color;
+                canvas[canvas_y][canvas_x].character = c;
+
+                canvas_x++;
+
                 w++;
             }
         }
@@ -151,7 +235,7 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
 
 
 
-void get_ascii_width_height_from_file(FILE *fp, int *w, int *h) 
+void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) 
 {
     if (fp == NULL)
     {
@@ -193,13 +277,26 @@ void get_ascii_width_height_from_file(FILE *fp, int *w, int *h)
 }
 
 
-void read_ascii_from_filepath(char *path)
+canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width)
 {
     if (path == NULL)
     {
         printf("Error: path is NULL\n");
         exit(EXIT_FAILURE);
     }
+
+    if (height == NULL)
+    {
+        printf("Error: height is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (width == NULL)
+    {
+        printf("Error: width is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
 
     FILE *fp = fopen(path, "r");
     int w = -1;
@@ -211,31 +308,40 @@ void read_ascii_from_filepath(char *path)
         exit(EXIT_FAILURE);
     }
 
-    get_ascii_width_height_from_file(fp, &w, &h);
+    get_ascii_width_height_from_file(fp, &h, &w);
 
     printf("w: %d\n", w);
     printf("h: %d\n", h);
 
-    canvas_pixel_t **canvas = init_canvas(w, h);
+    canvas_pixel_t **canvas = init_canvas(h, w);
 
-    read_ascii_into_canvas(fp, canvas, w, h);
+    read_ascii_into_canvas(fp, canvas, h, w);
 
-    canvas_t *c = calloc(1, sizeof(canvas_t));
-    if (c == NULL)
-    {
-        printf("Error: calloc failed\n");
-        exit(EXIT_FAILURE);
-    }
+    *height = h;
+    *width = w;
 
-    c->canvas = canvas;
-    c->width = w;
-    c->height = h;
+    //canvas_t *c = calloc(1, sizeof(canvas_t));
+    //if (c == NULL)
+    //{
+    //    printf("Error: calloc failed\n");
+    //    exit(EXIT_FAILURE);
+    //}
+
+    //c->canvas = canvas;
+    //c->width = w;
+    //c->height = h;
 
     fclose(fp);
 
-    free_canvas(c->canvas, h);
-    free(c);
+    //free_canvas(c->canvas, h);
+    //free(c);
+
+    return canvas;  
 }
+
+
+
+
 
 
 
@@ -254,14 +360,14 @@ int convert_to_irc_color(int color)
         case COLOR_WHITE:   return 0;
 
         // attempting to handle colors 8-15
-        //case COLOR_BRIGHT_BLACK:   return 14;
-        //case COLOR_BRIGHT_BLUE:    return 12;
-        //case COLOR_BRIGHT_GREEN:   return 9;
-        //case COLOR_BRIGHT_CYAN:    return 11;
-        //case COLOR_BRIGHT_RED:     return 5;
-        //case COLOR_BRIGHT_MAGENTA: return 6;
-        //case COLOR_BRIGHT_YELLOW:  return 8;
-        //case COLOR_BRIGHT_WHITE:   return 15;
+        case COLOR_BRIGHT_BLACK:   return 14;
+        case COLOR_BRIGHT_BLUE:    return 12;
+        case COLOR_BRIGHT_GREEN:   return 9;
+        case COLOR_BRIGHT_CYAN:    return 11;
+        case COLOR_BRIGHT_RED:     return 5;
+        case COLOR_BRIGHT_MAGENTA: return 6;
+        case COLOR_BRIGHT_YELLOW:  return 8;
+        case COLOR_BRIGHT_WHITE:   return 15;
 
         default:            return color;
     }
@@ -277,29 +383,53 @@ int convert_to_ncurses_color(int irc_color)
 
     switch (irc_color) 
     {
-        case 1:  return COLOR_BLACK;
-        case 4:  return COLOR_RED;
-        case 3:  return COLOR_GREEN;
-        case 8:  return COLOR_YELLOW;
-        case 2:  return COLOR_BLUE;
-        case 6:  return COLOR_MAGENTA;
-        case 10: return COLOR_CYAN;
         case 0:  return COLOR_WHITE;
+        case 1:  return COLOR_BLACK;
+        case 2:  return COLOR_BLUE;
+        case 3:  return COLOR_GREEN;
+        case 4:  return COLOR_RED;
+        case 5:  return COLOR_RED;   // brown
+        case 6:  return COLOR_MAGENTA;
+        case 7:  return COLOR_YELLOW; // orange
+        case 8:  return COLOR_YELLOW;
+        case 9:  return COLOR_GREEN;
 
-        // attempting to handle colors 8-15
-        //case 14: return COLOR_BRIGHT_BLACK;
-        //case 12: return COLOR_BRIGHT_BLUE;
-        //case 9:  return COLOR_BRIGHT_GREEN;
-        //case 11: return COLOR_BRIGHT_CYAN;
-        //case 5:  return COLOR_BRIGHT_RED;
-        //case 6:  return COLOR_BRIGHT_MAGENTA;
-        //case 8:  return COLOR_BRIGHT_YELLOW;
-        //case 15: return COLOR_BRIGHT_WHITE;
+        case 10: return COLOR_CYAN;
+        case 11: return COLOR_BRIGHT_CYAN;
+        case 12: return COLOR_BRIGHT_BLUE;
+        case 13: return COLOR_BRIGHT_MAGENTA;
+        case 14: return COLOR_BRIGHT_BLACK;
+        case 15: return COLOR_BRIGHT_WHITE;
 
         default: return irc_color;
     }
     return 0;
 }
 
+
+
+void print_ncurses_color_codes()
+{
+    printf("COLOR_BLACK: %d\n", COLOR_BLACK);
+    printf("COLOR_RED: %d\n", COLOR_RED);
+    printf("COLOR_GREEN: %d\n", COLOR_GREEN);
+    printf("COLOR_YELLOW: %d\n", COLOR_YELLOW);
+    printf("COLOR_BLUE: %d\n", COLOR_BLUE);
+    printf("COLOR_MAGENTA: %d\n", COLOR_MAGENTA);
+    printf("COLOR_CYAN: %d\n", COLOR_CYAN);
+    printf("COLOR_WHITE: %d\n", COLOR_WHITE);
+    printf("COLOR_BRIGHT_BLACK: %d\n", COLOR_BRIGHT_BLACK);
+    printf("COLOR_BRIGHT_BLUE: %d\n", COLOR_BRIGHT_BLUE);
+    printf("COLOR_BRIGHT_GREEN: %d\n", COLOR_BRIGHT_GREEN);
+    printf("COLOR_BRIGHT_CYAN: %d\n", COLOR_BRIGHT_CYAN);
+    printf("COLOR_BRIGHT_RED: %d\n", COLOR_BRIGHT_RED);
+    printf("COLOR_BRIGHT_MAGENTA: %d\n", COLOR_BRIGHT_MAGENTA);
+    printf("COLOR_BRIGHT_YELLOW: %d\n", COLOR_BRIGHT_YELLOW);
+    printf("COLOR_BRIGHT_WHITE: %d\n", COLOR_BRIGHT_WHITE);
+    /*
+    */
+
+
+}
 
 
