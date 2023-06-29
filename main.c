@@ -17,12 +17,9 @@
 
 #define MAX_FG_COLORS 8
 #define MAX_BG_COLORS 8
-//#define MAX_FG_COLORS 16
-//#define MAX_BG_COLORS 16
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 
 #define DEFAULT_COLOR_PAIR 1
-
 
 
 bool is_text_mode = false;
@@ -127,7 +124,7 @@ void print_help(char **argv)
 void parse_arguments(int argc, char **argv) 
 {
     mPrint("Parsing arguments...\n");
-    // parsing arguments using getopt_long
+// parsing arguments using getopt_long
     int c = -1;
     int option_index = 0;
     static struct option longoptions[] = 
@@ -882,18 +879,14 @@ void draw_hud()
 void init_program() 
 {
     mPrint("Initializing program\n");
-
     setlocale(LC_ALL, "");
-
     initscr();
-    
     clear();
     noecho();
     start_color();
     use_default_colors();
     keypad(stdscr, true);
     define_color_pairs();
-
     getmaxyx(stdscr, max_y, max_x);
     // if the terminal is too small, exit
     if (max_x < 4) 
@@ -901,7 +894,6 @@ void init_program()
         fprintf(stderr, "Error: terminal too small\n");
         exit(EXIT_FAILURE);
     }
-    
     // make the cursor visible
     curs_set(1);
     // initialize the canvas
@@ -911,7 +903,6 @@ void init_program()
     canvas_width  = max_x;
     //canvas_height = 20;
     //canvas_width  = 80;
-    
     //canvas = init_canvas(canvas_height, canvas_width);
 }
 
