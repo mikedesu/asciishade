@@ -12,13 +12,16 @@ int main() {
     print_canvas(canvas, h, w);
     free_canvas(canvas, h);
     
-    canvas = read_ascii_from_filepath("test2.ascii", &h, &w);
-    print_canvas(canvas, h, w);
-    free_canvas(canvas, h);
+    //canvas = read_ascii_from_filepath("test2.ascii", &h, &w);
+    //print_canvas(canvas, h, w);
+    //free_canvas(canvas, h);
     
-    canvas = read_ascii_from_filepath("test.ascii", &h, &w);
-    print_canvas(canvas, h, w);
-    free_canvas(canvas, h);
+    //canvas = read_ascii_from_filepath("test.ascii", &h, &w);
+    //print_canvas(canvas, h, w);
+    //free_canvas(canvas, h);
+
+
+    print_ncurses_color_codes();
 
     return EXIT_SUCCESS;
 }

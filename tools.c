@@ -221,26 +221,43 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width) 
 }
 
 
+#define IRC_COLOR_WHITE 0
+#define IRC_COLOR_BLACK 1
+#define IRC_COLOR_BLUE 2
+#define IRC_COLOR_GREEN 3
+#define IRC_COLOR_RED 4
+/#define IRC_COLOR_BROWN 5
+#define IRC_COLOR_MAGENTA 6
+#define IRC_COLOR_ORANGE 7
+#define IRC_COLOR_YELLOW 8
+#define IRC_COLOR_LIGHT_GREEN 9
+#define IRC_COLOR_CYAN 10
+#define IRC_COLOR_LIGHT_CYAN 11
+#define IRC_COLOR_LIGHT_BLUE 12
+#define IRC_COLOR_PINK 13
+#define IRC_COLOR_GREY 14
+#define IRC_COLOR_LIGHT_GREY 15
+
 int convert_to_irc_color(int color) {
     switch (color) {
-        case COLOR_BLACK:   return 1;
-        case COLOR_RED:     return 4;
-        case COLOR_GREEN:   return 3;
-        case COLOR_YELLOW:  return 8;
-        case COLOR_BLUE:    return 2;
-        case COLOR_MAGENTA: return 6;
-        case COLOR_CYAN:    return 10;
-        case COLOR_WHITE:   return 0;
+        case COLOR_BLACK:   return IRC_COLOR_BLACK;
+        case COLOR_RED:     return IRC_COLOR_RED;
+        case COLOR_GREEN:   return IRC_COLOR_GREEN;
+        case COLOR_YELLOW:  return IRC_COLOR_YELLOW;
+        case COLOR_BLUE:    return IRC_COLOR_BLUE;
+        case COLOR_MAGENTA: return IRC_COLOR_MAGENTA;
+        case COLOR_CYAN:    return IRC_COLOR_CYAN;
+        case COLOR_WHITE:   return IRC_COLOR_WHITE;   // 7 returns orange
         // attempting to handle colors 8-15
-        case COLOR_BRIGHT_BLACK:   return 14;
-        case COLOR_BRIGHT_BLUE:    return 12;
-        case COLOR_BRIGHT_GREEN:   return 9;
-        case COLOR_BRIGHT_CYAN:    return 11;
-        case COLOR_BRIGHT_RED:     return 5;
-        case COLOR_BRIGHT_MAGENTA: return 6;
-        case COLOR_BRIGHT_YELLOW:  return 8;
-        case COLOR_BRIGHT_WHITE:   return 15;
-        default:            return color;
+        //case COLOR_BRIGHT_BLACK:   return 14;
+        //case COLOR_BRIGHT_BLUE:    return 12;
+        //case COLOR_BRIGHT_GREEN:   return 9;
+        //case COLOR_BRIGHT_CYAN:    return 11;
+        //case COLOR_BRIGHT_RED:     return 5;
+        //case COLOR_BRIGHT_MAGENTA: return 6;
+        //case COLOR_BRIGHT_YELLOW:  return 8;
+        //case COLOR_BRIGHT_WHITE:   return 15;
+        default: return color;
     }
     return 0;
 }
@@ -249,22 +266,22 @@ int convert_to_irc_color(int color) {
 int convert_to_ncurses_color(int irc_color) {
     // this is the inverse-function of convert_to_irc_color
     switch (irc_color) {
-        case 0:  return COLOR_WHITE;
-        case 1:  return COLOR_BLACK;
-        case 2:  return COLOR_BLUE;
-        case 3:  return COLOR_GREEN;
-        case 4:  return COLOR_RED;
-        case 5:  return COLOR_RED;   // brown
-        case 6:  return COLOR_MAGENTA;
-        case 7:  return COLOR_YELLOW; // orange
-        case 8:  return COLOR_YELLOW;
-        case 9:  return COLOR_GREEN;
-        case 10: return COLOR_CYAN;
-        case 11: return COLOR_BRIGHT_CYAN;
-        case 12: return COLOR_BRIGHT_BLUE;
-        case 13: return COLOR_BRIGHT_MAGENTA;
-        case 14: return COLOR_BRIGHT_BLACK;
-        case 15: return COLOR_BRIGHT_WHITE;
+        case IRC_COLOR_WHITE:   return COLOR_WHITE;
+        case IRC_COLOR_BLACK:   return COLOR_BLACK;
+        case IRC_COLOR_BLUE:    return COLOR_BLUE;
+        case IRC_COLOR_GREEN:   return COLOR_GREEN;
+        case IRC_COLOR_RED:     return COLOR_RED;
+        case IRC_COLOR_BROWN:   return COLOR_RED;   // brown
+        case IRC_COLOR_MAGENTA: return COLOR_MAGENTA;
+        case IRC_COLOR_ORANGE:  return COLOR_YELLOW; // orange
+        //case 8:  return COLOR_YELLOW;
+        //case 9:  return COLOR_GREEN;
+        //case 10: return COLOR_CYAN;
+        //case 11: return COLOR_BRIGHT_CYAN;
+        //case 12: return COLOR_BRIGHT_BLUE;
+        //case 13: return COLOR_BRIGHT_MAGENTA;
+        //case 14: return COLOR_BRIGHT_BLACK;
+        //case 15: return COLOR_BRIGHT_WHITE;
         default: return irc_color;
     }
     return 0;
