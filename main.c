@@ -13,8 +13,8 @@
 #include "canvas.h"
 #include "tools.h"
 
-#define MAX_FG_COLORS 8
-#define MAX_BG_COLORS 8
+#define MAX_FG_COLORS 16
+#define MAX_BG_COLORS 16
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 #define DEFAULT_COLOR_PAIR 1
 #define COLOR_BRIGHT_BLACK   8
@@ -148,9 +148,10 @@ void parse_arguments(int argc, char **argv) {
 
 void define_color_pairs() {
     int current_pair = 0;
-    const int local_max_colors = MAX_FG_COLORS; // for now...
-    for (int bg_color = 0; bg_color < local_max_colors; bg_color++) {
-        for (int fg_color = 0; fg_color < local_max_colors; fg_color++) {
+    const int local_max_fg_colors = MAX_FG_COLORS; // for now...
+    const int local_max_bg_colors = MAX_BG_COLORS; // for now...
+    for (int bg_color = 0; bg_color < local_max_bg_colors; bg_color++) {
+        for (int fg_color = 0; fg_color < local_max_fg_colors; fg_color++) {
             init_pair(current_pair, fg_color, bg_color);
             // store the color pair in the array
             color_array[current_pair][0] = fg_color;
@@ -161,7 +162,7 @@ void define_color_pairs() {
         }
     }
     max_color_pairs = current_pair;
-    max_colors = local_max_colors;
+    max_colors = local_max_fg_colors;
 }
 
 int get_fg_color(int color_pair) {
@@ -667,9 +668,10 @@ void init_program() {
     initscr();
     clear();
     noecho();
+    keypad(stdscr, true);
     start_color();
     use_default_colors();
-    keypad(stdscr, true);
+    define_colors();
     define_color_pairs();
     getmaxyx(stdscr, max_y, max_x);
     // if the terminal is too small, exit

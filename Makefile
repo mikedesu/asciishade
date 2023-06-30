@@ -1,4 +1,3 @@
-
 CC=gcc
 FLAGS=-Wall -Werror
 LINKS=-lncursesw 
@@ -10,9 +9,6 @@ JUNK=a.out
 
 all: $(BINARY) $(UNITTEST_BINARY) $(UNITTEST_COLORS)
 
-
-
-
 asciishade: main.c $(OBJECTS)
 	$(CC) $(FLAGS) $^ $(LINKS) -o $@
 
@@ -21,7 +17,6 @@ unittest_driver: unittest_driver.c $(OBJECTS)
 
 unittest_colors: unittest_colors.c 
 	$(CC) $(FLAGS) $^ $(LINKS) -o $@
-
 
 canvas.o: canvas.c
 	$(CC) $(FLAGS) -c $^ -o $@
@@ -33,11 +28,5 @@ colors.o: colors.c
 	$(CC) $(FLAGS) -c $^ $(LINKS) -o $@
 
 clean:
-	rm -rfv $(BINARY) \
-		$(OBJECTS) \
-		$(UNITTEST_BINARY) \
-		$(JUNK) \
-		$(UNITTEST_COLORS) \
-		*.o \
-		*.dSYM
+	rm -rfv $(BINARY) $(OBJECTS) $(UNITTEST_BINARY) $(JUNK) $(UNITTEST_COLORS) *.o *.dSYM
 

@@ -17,20 +17,27 @@ int main() {
         exit(1);
     }
 
+    // as it turns out, tmux doesn't allow for color changing
+    // so we need to check for that
+    if (can_change_color() == FALSE) {
+        endwin();
+        printf("Your terminal can not change color\n");
+        exit(1);
+    }
+
     start_color();
-    
+    use_default_colors();
 
-
-#define COLOR_BROWN 8
+//#define COLOR_BROWN 8
 
     //int colors_definitions[1][4] = {
     //    
     //    {COLOR_BROWN, 500, 300, 0}
     //};
     
-    init_color(COLOR_BROWN, 500, 300, 0);
+    init_color(COLORS-1, 647, 164, 164);
 
-    init_pair(1, COLOR_BLACK, COLOR_BROWN);
+    init_pair(1, COLORS-1, COLORS-1);
 
     attron(COLOR_PAIR(1));
 

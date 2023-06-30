@@ -78,3 +78,33 @@ void print_ncurses_color_codes() {
 }
 
 
+// https://stackoverflow.com/questions/18551558/how-to-use-terminal-color-palette-with-curses
+void define_colors() {
+    // default colors already defined via use_default_colors()
+    // colors below define the remaining 8 colors used by irc
+
+    //int _127 = convert_to_ncurses_color_channel(127);
+    //int _192 = convert_to_ncurses_color_channel(192);
+    //int _252 = convert_to_ncurses_color_channel(252);
+    //int _ff = convert_to_ncurses_color_channel(255);
+    //int _a5 = convert_to_ncurses_color_channel(0xA5);
+
+    init_color(COLOR_BROWN,       647,  164,  164 );
+    init_color(COLOR_ORANGE,      1000, 647,  0   );
+    init_color(COLOR_LIGHT_GREEN, 564,  933,  564 );
+    init_color(COLOR_LIGHT_CYAN,  878,  1000, 1000);
+    init_color(COLOR_LIGHT_BLUE,  678,  847,  901 );
+    init_color(COLOR_PINK,        1000, 752,  796 );
+    init_color(COLOR_GREY,        501,  501,  501 );
+    init_color(COLOR_LIGHT_GREY,  827,  827,  827 );
+ 
+}
+
+
+// color_value is a value between 0 and 255
+int convert_to_ncurses_color_channel(int color_value) {
+    // is there a fast way to divide by 255?
+    int fast_division = color_value >> 8;
+    return fast_division * 1000;
+}
+
