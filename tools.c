@@ -24,6 +24,7 @@ void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
     // we are printing the ascii to stdout
     // so we will be using ANSI terminal escape sequences to handle color
     // old-school style
+    
     for (int i=0; i<canvas_height; i++) {
         for (int j=0; j<canvas_width; j++) {
             canvas_pixel_t pixel = canvas[i][j];
