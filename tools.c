@@ -4,9 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mPrint.h"
+#include "colors.h"
 
-#define DEFAULT_FG_COLOR 7
-#define DEFAULT_BG_COLOR 0
 
 void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
     if (canvas == NULL) {
@@ -24,7 +23,6 @@ void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
     // we are printing the ascii to stdout
     // so we will be using ANSI terminal escape sequences to handle color
     // old-school style
-    
     for (int i=0; i<canvas_height; i++) {
         for (int j=0; j<canvas_width; j++) {
             canvas_pixel_t pixel = canvas[i][j];
@@ -36,9 +34,6 @@ void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
         printf("\n");
     }
 }
-
-
-
 
 
 void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
@@ -220,91 +215,5 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width) 
     return canvas;  
 }
 
-
-#define IRC_COLOR_WHITE 0
-#define IRC_COLOR_BLACK 1
-#define IRC_COLOR_BLUE 2
-#define IRC_COLOR_GREEN 3
-#define IRC_COLOR_RED 4
-/#define IRC_COLOR_BROWN 5
-#define IRC_COLOR_MAGENTA 6
-#define IRC_COLOR_ORANGE 7
-#define IRC_COLOR_YELLOW 8
-#define IRC_COLOR_LIGHT_GREEN 9
-#define IRC_COLOR_CYAN 10
-#define IRC_COLOR_LIGHT_CYAN 11
-#define IRC_COLOR_LIGHT_BLUE 12
-#define IRC_COLOR_PINK 13
-#define IRC_COLOR_GREY 14
-#define IRC_COLOR_LIGHT_GREY 15
-
-int convert_to_irc_color(int color) {
-    switch (color) {
-        case COLOR_BLACK:   return IRC_COLOR_BLACK;
-        case COLOR_RED:     return IRC_COLOR_RED;
-        case COLOR_GREEN:   return IRC_COLOR_GREEN;
-        case COLOR_YELLOW:  return IRC_COLOR_YELLOW;
-        case COLOR_BLUE:    return IRC_COLOR_BLUE;
-        case COLOR_MAGENTA: return IRC_COLOR_MAGENTA;
-        case COLOR_CYAN:    return IRC_COLOR_CYAN;
-        case COLOR_WHITE:   return IRC_COLOR_WHITE;   // 7 returns orange
-        // attempting to handle colors 8-15
-        //case COLOR_BRIGHT_BLACK:   return 14;
-        //case COLOR_BRIGHT_BLUE:    return 12;
-        //case COLOR_BRIGHT_GREEN:   return 9;
-        //case COLOR_BRIGHT_CYAN:    return 11;
-        //case COLOR_BRIGHT_RED:     return 5;
-        //case COLOR_BRIGHT_MAGENTA: return 6;
-        //case COLOR_BRIGHT_YELLOW:  return 8;
-        //case COLOR_BRIGHT_WHITE:   return 15;
-        default: return color;
-    }
-    return 0;
-}
-
-
-int convert_to_ncurses_color(int irc_color) {
-    // this is the inverse-function of convert_to_irc_color
-    switch (irc_color) {
-        case IRC_COLOR_WHITE:   return COLOR_WHITE;
-        case IRC_COLOR_BLACK:   return COLOR_BLACK;
-        case IRC_COLOR_BLUE:    return COLOR_BLUE;
-        case IRC_COLOR_GREEN:   return COLOR_GREEN;
-        case IRC_COLOR_RED:     return COLOR_RED;
-        case IRC_COLOR_BROWN:   return COLOR_RED;   // brown
-        case IRC_COLOR_MAGENTA: return COLOR_MAGENTA;
-        case IRC_COLOR_ORANGE:  return COLOR_YELLOW; // orange
-        //case 8:  return COLOR_YELLOW;
-        //case 9:  return COLOR_GREEN;
-        //case 10: return COLOR_CYAN;
-        //case 11: return COLOR_BRIGHT_CYAN;
-        //case 12: return COLOR_BRIGHT_BLUE;
-        //case 13: return COLOR_BRIGHT_MAGENTA;
-        //case 14: return COLOR_BRIGHT_BLACK;
-        //case 15: return COLOR_BRIGHT_WHITE;
-        default: return irc_color;
-    }
-    return 0;
-}
-
-
-void print_ncurses_color_codes() {
-    printf("COLOR_BLACK: %d\n", COLOR_BLACK);
-    printf("COLOR_RED: %d\n", COLOR_RED);
-    printf("COLOR_GREEN: %d\n", COLOR_GREEN);
-    printf("COLOR_YELLOW: %d\n", COLOR_YELLOW);
-    printf("COLOR_BLUE: %d\n", COLOR_BLUE);
-    printf("COLOR_MAGENTA: %d\n", COLOR_MAGENTA);
-    printf("COLOR_CYAN: %d\n", COLOR_CYAN);
-    printf("COLOR_WHITE: %d\n", COLOR_WHITE);
-    printf("COLOR_BRIGHT_BLACK: %d\n", COLOR_BRIGHT_BLACK);
-    printf("COLOR_BRIGHT_BLUE: %d\n", COLOR_BRIGHT_BLUE);
-    printf("COLOR_BRIGHT_GREEN: %d\n", COLOR_BRIGHT_GREEN);
-    printf("COLOR_BRIGHT_CYAN: %d\n", COLOR_BRIGHT_CYAN);
-    printf("COLOR_BRIGHT_RED: %d\n", COLOR_BRIGHT_RED);
-    printf("COLOR_BRIGHT_MAGENTA: %d\n", COLOR_BRIGHT_MAGENTA);
-    printf("COLOR_BRIGHT_YELLOW: %d\n", COLOR_BRIGHT_YELLOW);
-    printf("COLOR_BRIGHT_WHITE: %d\n", COLOR_BRIGHT_WHITE);
-}
 
 
