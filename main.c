@@ -17,14 +17,6 @@
 #define MAX_BG_COLORS 16
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 #define DEFAULT_COLOR_PAIR 1
-#define COLOR_BRIGHT_BLACK   8
-#define COLOR_BRIGHT_BLUE    9
-#define COLOR_BRIGHT_GREEN   10
-#define COLOR_BRIGHT_CYAN    11
-#define COLOR_BRIGHT_RED     12
-#define COLOR_BRIGHT_MAGENTA 13
-#define COLOR_BRIGHT_YELLOW  14
-#define COLOR_BRIGHT_WHITE   15
 
 bool is_text_mode       = false;
 canvas_pixel_t **canvas = NULL;
@@ -49,6 +41,8 @@ char filename[1024]     = {0};
 int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
 int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
 
+bool check_if_file_exists(char *filename);
+
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
 
@@ -62,6 +56,7 @@ void draw_hud_background();
 void draw_initial_ascii();
 void draw_canvas();
 void fail_with_msg(const char *msg);
+void handle_canvas_load();
 void handle_input();
 void handle_text_mode_input(int c);
 void handle_normal_mode_input(int c);
@@ -363,6 +358,10 @@ void handle_save_inner_loop(FILE *outfile) {
 
 void handle_save() {
     // 1. filename is empty
+    if (strcmp(filename, "") == 0) { 
+        // set a default filename
+        strncpy(filename, "untitled.ascii", 1024);
+    }
     // 2. filename is not empty
     if (strcmp(filename, "") != 0) { 
         // test writing out file
@@ -508,8 +507,6 @@ void handle_normal_mode_input(int c) {
         handle_move_right();
         handle_move_down();
     }  
-
-
     // experimental
     else if (c=='E') {
         show_error("This is an error message");
@@ -565,7 +562,6 @@ void switch_between_current_and_hud_color() {
     attroff(COLOR_PAIR(current_color_pair));  
     attron(COLOR_PAIR(hud_color)); 
 }
-
 
 void draw_hud_row_1() {
     attron(COLOR_PAIR(hud_color));
@@ -685,11 +681,26 @@ void init_program() {
     // initialize the canvas
     // for now, we are going to make the canvas the same size as the terminal
     // when we go to read in ascii files,
+    handle_canvas_load();
+}
+
+
+void handle_canvas_load() {
     int num_of_hud_rows = 3;
     canvas_height = max_y - num_of_hud_rows;
     canvas_width  = max_x;
-    canvas = init_canvas(canvas_height, canvas_width);
+    // at this point, if we passed a filename
+    if (strcmp(filename, "")!=0 && check_if_file_exists(filename)) {
+            // we will load this file into the canvas
+            canvas = read_ascii_from_filepath(filename, &canvas_height, &canvas_width);
+            // eventually we will have to be able to handle moving around a 
+            // canvas that might be much larger than our terminal size
+    }
+    else {
+        canvas = init_canvas(canvas_height, canvas_width);
+    }
 }
+
 
 void show_error(char *error_msg) {
     if (error_msg != NULL) {
@@ -700,5 +711,14 @@ void show_error(char *error_msg) {
         clear();
         refresh();
     }
+}
+
+bool check_if_file_exists(char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        return false;
+    }
+    fclose(fp);
+    return true;
 }
 

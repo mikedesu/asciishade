@@ -147,8 +147,8 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
             max_w = w;
         }
     }
-    printf("w: %d\n", max_w);
-    printf("h: %d\n", h);
+    //printf("w: %d\n", max_w);
+    //printf("h: %d\n", h);
 }
 
 
@@ -205,8 +205,8 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width) 
         exit(EXIT_FAILURE);
     }
     get_ascii_width_height_from_file(fp, &h, &w);
-    printf("w: %d\n", w);
-    printf("h: %d\n", h);
+    //printf("w: %d\n", w);
+    //printf("h: %d\n", h);
     canvas_pixel_t **canvas = init_canvas(h, w);
     read_ascii_into_canvas(fp, canvas, h, w);
     *height = h;
