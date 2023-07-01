@@ -5,3 +5,4 @@ main
 asciishade
 *.o
 unittest_driver
+unittest_colors

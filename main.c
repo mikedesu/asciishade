@@ -77,7 +77,7 @@ void show_error(char *error_msg);
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
     init_program();
-    draw_initial_ascii();
+    //draw_initial_ascii();
     refresh();
     while (!quit) {
         clear();
