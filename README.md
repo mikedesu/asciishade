@@ -59,11 +59,16 @@ A good number of people care about ASCII art.
 ### Using asciishade
 
 ##### Building
+The Meson build system requires one to build outside of the tree to reduce
+clutter. From the project root folder, execute the following:
 
-From the project root folder, execute:
+```sh
+mkdir build/
+cd    build/
 
-```
-make
+meson setup ../
+
+ninja -j`nproc`
 ```
 
 ##### Running
