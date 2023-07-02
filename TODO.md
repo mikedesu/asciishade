@@ -8,6 +8,12 @@
 - need support for other unicode characters besides the block
 - another program that is simply an ascii viewer and not an editor
 - updates to the HUD
+- layers
+- frames (inspired by aseprite, for possible animated gif and/or spritesheet export?)
+- export to different file formats
+- file name on untitled save
+- scripting
+- it would be interesting to read from stdin
 
 **noted on 6/28/23**
 
