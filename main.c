@@ -406,6 +406,9 @@ void handle_normal_mode_input(int c) {
     else if (c=='q') {
         quit = 1;
     }
+    else if (c=='c') {
+        clear_canvas(canvas, canvas_height, canvas_width);
+    }
     else if (c==KEY_DC) {
         // delete a block from the current location on the canvas
         delete_block();
