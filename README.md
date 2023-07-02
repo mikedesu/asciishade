@@ -85,6 +85,10 @@ Usage: ./asciishade [OPTION]...
 ./asciishade -f test.ascii
 
 ./asciishade --filename=test.ascii
+
+./asciishade -h
+
+./asciishade --help
 ```
 
 
@@ -97,11 +101,21 @@ Usage: ./asciishade [OPTION]...
 - 'a': place a block and move left
 - 's': place a block and move down
 - 'd': place a block and move right
-- 'S': save to file 'test.txt'
+- '1': place a block and move down left
+- '2': place a block and move down
+- '3': place a block and move down right
+- '4': place a block and move left
+- '6': place a block and move right
+- '7': place a block and move up left
+- '8': place a block and move up
+- '9': place a block and move up right
+- 'S': save to file
+    - if the filename was not specified on program run, it will save to `untitled.ascii`
 - 'o': go back one color pair / one foreground color
 - 'p': go forward one color pair / one foreground color
 - 'O': go back one background color
 - 'P': go forward one background color
+- 'c': clear canvas
 - 'q': quit
 - arrow keys: cursor navigation
 - space bar: place a block
@@ -115,7 +129,6 @@ Usage: ./asciishade [OPTION]...
 - delete: delete a block
 - backspace: delete a block and move left one
 
-
 ### Features On The Way
 
 - Loading from file
@@ -126,10 +139,14 @@ Usage: ./asciishade [OPTION]...
     - gif
 - Upload to:
     - termbin
-- Half-block support
+- Half-block and quarter-block support
+- Full Unicode / UTF-8 support
 - Copy / paste
 - Multiple tabs
-- Easy switching of foreground / background colors
+- Layers
+- Frames
+- Custom Palettes
+- Support for beyond 16 colors
 - More!
 
 ### Any plans for mouse support?
