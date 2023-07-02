@@ -11,4 +11,6 @@ typedef struct {
 
 canvas_pixel_t **init_canvas(int height, int width);
 void free_canvas(canvas_pixel_t **canvas, int canvas_height);
+void clear_canvas_row_unsafe(canvas_pixel_t *row, int width);
+void clear_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width);
 
