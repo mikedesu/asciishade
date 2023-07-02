@@ -9,6 +9,6 @@ typedef struct {
     int background_color;
 } canvas_pixel_t;
 
-canvas_pixel_t **init_canvas(int width, int height);
+canvas_pixel_t **init_canvas(int height, int width);
 void free_canvas(canvas_pixel_t **canvas, int canvas_height);
 
