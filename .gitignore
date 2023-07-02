@@ -7,3 +7,4 @@ asciishade
 unittest_driver
 unittest_colors
 *.cast
+asciis/*

@@ -6,6 +6,7 @@
 - need paintbucket fill-tool
 - need other block support (half, quarter)
 - need support for other unicode characters besides the block
+- another program that is simply an ascii viewer and not an editor
 - updates to the HUD
 
 **noted on 6/28/23**
