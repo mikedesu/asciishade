@@ -1,5 +1,13 @@
 # TODO
 
+**noted on 7/02/23**
+
+- need clear canvas ('c' key perhaps?)
+- need paintbucket fill-tool
+- need other block support (half, quarter)
+- need support for other unicode characters besides the block
+- updates to the HUD
+
 **noted on 6/28/23**
 
 - confirm on quit (to prevent accidental quits!)
