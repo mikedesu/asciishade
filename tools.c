@@ -216,4 +216,12 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width) 
 }
 
 
+bool check_if_file_exists(char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        return false;
+    }
+    fclose(fp);
+    return true;
+}
 

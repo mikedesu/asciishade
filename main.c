@@ -41,8 +41,6 @@ char filename[1024]     = {0};
 int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
 int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
 
-bool check_if_file_exists(char *filename);
-
 int get_fg_color(int color_pair);
 int get_bg_color(int color_pair);
 
@@ -716,12 +714,4 @@ void show_error(char *error_msg) {
     }
 }
 
-bool check_if_file_exists(char *filename) {
-    FILE *fp = fopen(filename, "r");
-    if (fp == NULL) {
-        return false;
-    }
-    fclose(fp);
-    return true;
-}
 
