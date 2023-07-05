@@ -12,6 +12,7 @@
 #include "mPrint.h"
 #include "canvas.h"
 #include "tools.h"
+#include "hud.h"
 
 #define MAX_FG_COLORS 16
 #define MAX_BG_COLORS 16
@@ -41,12 +42,16 @@ char filename[1024]     = {0};
 // fg and bg color is based on the current "color pair"
 // 128x128 = 16384
 // 16x16 = 256
-int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
-int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
+//
 
-int get_fg_color(int color_pair);
-int get_bg_color(int color_pair);
+//int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
+//int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
 
+int **color_array = NULL;
+int **color_pair_array = NULL;
+
+
+void init_color_arrays();
 void add_block();
 void delete_block();
 void add_character(wchar_t c);
@@ -87,7 +92,21 @@ int main(int argc, char *argv[]) {
         refresh();
     }
     endwin();
+
     free_canvas(canvas, canvas_height);
+    
+    // free the color_array
+    for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
+        free(color_array[i]);
+    }
+    free(color_array);
+
+    // free the color_pair_array
+    for (int i = 0; i < MAX_FG_COLORS; i++) {
+        free(color_pair_array[i]);
+    }
+    free(color_pair_array);
+
     return EXIT_SUCCESS;
 }
 
@@ -141,6 +160,36 @@ void parse_arguments(int argc, char **argv) {
     }
 }
 
+void init_color_arrays() {
+    color_array = calloc(MAX_COLOR_PAIRS, sizeof(int *));
+    if (color_array == NULL) {
+        mPrint("Failed to allocate memory for color_array\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
+        color_array[i] = calloc(2, sizeof(int));
+        if (color_array[i] == NULL) {
+            mPrint("Failed to allocate memory for color_array\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    color_pair_array = calloc(MAX_FG_COLORS, sizeof(int *));
+    if (color_pair_array == NULL) {
+        mPrint("Failed to allocate memory for color_pair_array\n");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < MAX_FG_COLORS; i++) {
+        color_pair_array[i] = calloc(MAX_BG_COLORS, sizeof(int));
+        if (color_pair_array[i] == NULL) {
+            mPrint("Failed to allocate memory for color_pair_array\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+
 void define_color_pairs() {
     int current_pair = 0;
     const int local_max_fg_colors = MAX_FG_COLORS; // for now...
@@ -160,13 +209,6 @@ void define_color_pairs() {
     max_colors = local_max_fg_colors;
 }
 
-int get_fg_color(int color_pair) {
-    return color_array[color_pair][0];
-}
-
-int get_bg_color(int color_pair) {
-    return color_array[color_pair][1];
-}
 
 void cleanup() {
     endwin();
@@ -213,8 +255,8 @@ void draw_initial_ascii() {
         "www.evildojo.com" 
     };
     current_color_pair = DEFAULT_COLOR_PAIR;
-    int fg_color = get_fg_color(current_color_pair);
-    int bg_color = get_bg_color(current_color_pair);
+    int fg_color = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
+    int bg_color = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
     for (int i=0; i < 3; i++) {
         for (int j=0; j < strlen(lines[i]); j++) {
             write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
@@ -260,7 +302,9 @@ void add_character(wchar_t c) {
     // store the color component
     //canvas[y][x].foreground_color = get_fg_color(current_color_pair);
     //canvas[y][x].background_color = get_bg_color(current_color_pair);
-    write_char_to_canvas(y, x, c, get_fg_color(current_color_pair), get_bg_color(current_color_pair));
+    int fg_color = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
+    int bg_color = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
+    write_char_to_canvas(y, x, c, fg_color, bg_color);
 }
 
 void add_character_and_move_right(wchar_t c) {
@@ -556,114 +600,42 @@ void handle_input() {
     }
 }
 
-void switch_between_hud_and_current_color() { 
-    attroff(COLOR_PAIR(hud_color));  
-    attron(COLOR_PAIR(current_color_pair)); 
-}
 
-void switch_between_current_and_hud_color() { 
-    attroff(COLOR_PAIR(current_color_pair));  
-    attron(COLOR_PAIR(hud_color)); 
-}
-
-// canvas
-// y
-// x
-// terminal_height
-// terminal_width
-void draw_hud_row_1() {
-    attron(COLOR_PAIR(hud_color));
-    int hud_y     = terminal_height-2;
-    int hud_x     = 0;
-    int hud_terminal_width = terminal_width;
-    int fg_color  = get_fg_color(current_color_pair);
-    int fg_color_cursor = canvas[y][x].foreground_color;
-    // perhaps the string could be longer than the hud_terminal_width,
-    // since we are going to stop printing there anyway
-    // estimating length of the hud status row
-    int len_of_str = (24 + strlen(filename) + 1)*2;
-    char *str = calloc(1, len_of_str);
-    // before we do this sprintf, we need to make sure the terminal is wide enough
-    // to display the entire string.  if it's not, we need to truncate the string
-    // and display a warning message
-    sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, is_text_mode ? "TEXT" : "NORMAL");
-    // get the length of str
-    int str_len = strlen(str);
-    if (str_len > hud_terminal_width) {
-        // truncate the string
-        str[hud_terminal_width-1] = '\0';
-    }
-    move(hud_y,hud_x);
-    for (char c = str[0]; c != '\0'; c = str[hud_x]) {
-        if (hud_x >= hud_terminal_width) {
-            break;
-        }
-        if (c=='#') {
-            switch_between_hud_and_current_color();
-            addstr("█");
-            switch_between_current_and_hud_color();
-        }
-        else {
-            addch(c);
-        }
-        hud_x++;
-    }
-    free(str);
-    attroff(COLOR_PAIR(hud_color));
-}
-
-void draw_hud_row_2() {
-    attron(COLOR_PAIR(hud_color));
-    int hud_y            = terminal_height-1;
-    int hud_x            = 0;
-    int hud_terminal_width        = terminal_width;
-    const int len_of_str = 40;
-    move(hud_y,hud_x);
-    char *str = calloc(1, len_of_str);
-    if (str == NULL) {
-        mPrint("Error allocating memory for str\n");
-        exit(EXIT_FAILURE);
-    }
-    int bg_color = get_bg_color(current_color_pair);
-    int fg_color_cursor = canvas[y][x].foreground_color;
-    int bg_color_cursor = canvas[y][x].background_color;
-    int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
-    
-    sprintf(str, 
-        "x:%03d|#%02d(%02x)B%02d %dx%d %d", 
-        x, 
-        bg_color, 
-        color_pair_num, 
-        bg_color_cursor, 
-        canvas_height, 
-        canvas_width, 
-        last_char_pressed
-    );
-    
-    for (char c = str[0]; c != '\0'; c = str[hud_x]) {
-        if (hud_x >= hud_terminal_width) {
-            break;
-        }
-        else if (c=='#') {
-            switch_between_hud_and_current_color();
-            addstr(" ");
-            switch_between_current_and_hud_color();
-        }
-        else {
-            addch(c);
-        }
-        hud_x++;
-    }
-    free(str);
-    attroff(COLOR_PAIR(hud_color));
-}
 
 
 
 void draw_hud() {
     draw_hud_background(hud_color, terminal_height, terminal_width);
-    draw_hud_row_1();
-    draw_hud_row_2();
+
+    draw_hud_row_1(canvas, 
+        color_array, 
+        MAX_COLOR_PAIRS, 
+        filename, 
+        y, 
+        x, 
+        hud_color, 
+        terminal_height, 
+        terminal_width, 
+        current_color_pair,
+        is_text_mode
+    );
+
+    /*
+    draw_hud_row_2(canvas, 
+            color_array, 
+            MAX_COLOR_PAIRS, 
+            color_pair_array, 
+            MAX_FG_COLORS ,
+            hud_color, 
+            terminal_height, 
+            terminal_width, 
+            current_color_pair, 
+            y, 
+            x, 
+            last_char_pressed
+        );
+    */
+
     reset_cursor();
 }
 
@@ -677,6 +649,7 @@ void init_program() {
     start_color();
     use_default_colors();
     define_colors();
+    init_color_arrays();
     define_color_pairs();
     getmaxyx(stdscr, terminal_height, terminal_width);
     // if the terminal is too small, exit

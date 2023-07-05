@@ -225,3 +225,33 @@ bool check_if_file_exists(char *filename) {
     return true;
 }
 
+
+int get_fg_color(int **color_array, int array_len, int color_pair) {
+    if (color_array == NULL) {
+        mPrint("color_array is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (color_pair >= array_len) {
+        mPrint("color_pair is out of bounds\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return color_array[color_pair][0];
+}
+
+
+int get_bg_color(int **color_array, int array_len, int color_pair) {
+    if (color_array == NULL) {
+        mPrint("color_array is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (color_pair >= array_len) {
+        mPrint("color_pair is out of bounds\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return color_array[color_pair][1];
+}
+

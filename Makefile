@@ -4,7 +4,7 @@ LINKS=-lncursesw
 BINARY=asciishade
 UNITTEST_BINARY=unittest_driver
 UNITTEST_COLORS=unittest_colors
-OBJECTS=tools.o canvas.o colors.o
+OBJECTS=tools.o canvas.o colors.o hud.o
 JUNK=a.out
 
 all: $(BINARY) $(UNITTEST_BINARY) $(UNITTEST_COLORS)
@@ -25,6 +25,9 @@ tools.o: tools.c
 	$(CC) $(FLAGS) -c $^ $(LINKS) -o $@
 
 colors.o: colors.c
+	$(CC) $(FLAGS) -c $^ $(LINKS) -o $@
+
+hud.o: hud.c
 	$(CC) $(FLAGS) -c $^ $(LINKS) -o $@
 
 clean:
