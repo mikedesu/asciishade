@@ -619,21 +619,23 @@ void draw_hud() {
         current_color_pair,
         is_text_mode
     );
+    
+    reset_cursor();
 
-    /*
     draw_hud_row_2(canvas, 
             color_array, 
             MAX_COLOR_PAIRS, 
             color_pair_array, 
             MAX_FG_COLORS ,
-            hud_color, 
             terminal_height, 
             terminal_width, 
+            hud_color, 
             current_color_pair, 
             y, 
             x, 
             last_char_pressed
         );
+    /*
     */
 
     reset_cursor();
