@@ -53,7 +53,6 @@ void add_character(wchar_t c);
 void add_character_and_move_right(wchar_t c);
 void define_color_pairs();
 void draw_hud();
-void draw_hud_background();
 void draw_initial_ascii();
 void draw_canvas();
 void fail_with_msg(const char *msg);
@@ -567,6 +566,11 @@ void switch_between_current_and_hud_color() {
     attron(COLOR_PAIR(hud_color)); 
 }
 
+// canvas
+// y
+// x
+// terminal_height
+// terminal_width
 void draw_hud_row_1() {
     attron(COLOR_PAIR(hud_color));
     int hud_y     = terminal_height-2;
@@ -654,20 +658,10 @@ void draw_hud_row_2() {
     attroff(COLOR_PAIR(hud_color));
 }
 
-void draw_hud_background() {
-    attron(COLOR_PAIR(hud_color));
-    int num_of_rows = 3;
-    int starting_row = terminal_height - num_of_rows;
-    for (int j = starting_row; j < terminal_height; j++) { 
-        for (int i = 0; i < terminal_width; i++) {
-            mvaddstr(j, i, " ");
-        }
-    }
-    attroff(COLOR_PAIR(hud_color));
-}
+
 
 void draw_hud() {
-    draw_hud_background();
+    draw_hud_background(hud_color, terminal_height, terminal_width);
     draw_hud_row_1();
     draw_hud_row_2();
     reset_cursor();
