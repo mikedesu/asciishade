@@ -218,5 +218,3 @@ void switch_between_current_and_hud_color(int hud_color, int current_color_pair)
 }
 
 
-
-

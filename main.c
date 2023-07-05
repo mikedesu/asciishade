@@ -285,8 +285,17 @@ void draw_canvas() {
             c = canvas[i][j].character;
             // this fixes the block-rendering bug for now...
             // there has to be a better way to do this
-            if ( c == L'█' ) {
+            if ( c == L'▀' ) {
+                mvaddstr(i, j, "▀");
+            }           
+            else if ( c == L'▄' ) {
+                mvaddstr(i, j, "▄");
+            }
+            else if ( c == L'█' ) {
                 mvaddstr(i, j, "█");
+            }
+            else if (c == L'░' ) {
+                mvaddstr(i, j, "░");
             }
             else {
                 mvaddch(i, j, c);

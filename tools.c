@@ -115,7 +115,35 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
             else if (c == 0xFFFFFFE2 && i <= strlen(buffer)-3) {
                 char c2 = buffer[i+1];
                 char c3 = buffer[i+2];
-                if (c2 == 0xFFFFFF96 && c3 == 0xFFFFFF88) {
+
+                // top-half block
+                if (c2 == 0xFFFFFF96 && c3== 0xFFFFFF80) {
+                    putchar(c);
+                    putchar(c2);
+                    putchar(c3);
+                    i += 2;
+                    // write the block to the canvas
+                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
+                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
+                    canvas[canvas_y][canvas_x].character = L'▀';
+                    canvas_x++;
+                    w++;
+                }
+                // bottom-half block
+                else if (c2 == 0xFFFFFF96 && c3 == 0xFFFFFF84) {
+                    putchar(c);
+                    putchar(c2);
+                    putchar(c3);
+                    i += 2;
+                    // write the block to the canvas
+                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
+                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
+                    canvas[canvas_y][canvas_x].character = L'▄';
+                    canvas_x++;
+                    w++;
+                }
+                // full block
+                else if (c2 == 0xFFFFFF96 && c3 == 0xFFFFFF88) {
                     putchar(c);
                     putchar(c2);
                     putchar(c3);
@@ -127,6 +155,20 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     canvas_x++;
                     w++;
                 }
+                // light shading
+                else if (c2 == 0xFFFFFF96 && c3== 0xFFFFFF91) {
+                    putchar(c);
+                    putchar(c2);
+                    putchar(c3);
+                    i += 2;
+                    // write the block to the canvas
+                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
+                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
+                    canvas[canvas_y][canvas_x].character = L'░';
+                    canvas_x++;
+                    w++;
+                }
+
             }
             else if (c == '\n') {
                 putchar(c);
