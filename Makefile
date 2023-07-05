@@ -4,10 +4,11 @@ LINKS=-lncursesw
 BINARY=asciishade
 UNITTEST_BINARY=unittest_driver
 UNITTEST_COLORS=unittest_colors
+UNITTEST_WIDE_CHARS=unittest_wide_chars
 OBJECTS=tools.o canvas.o colors.o hud.o
 JUNK=a.out
 
-all: $(BINARY) $(UNITTEST_BINARY) $(UNITTEST_COLORS)
+all: $(BINARY) $(UNITTEST_BINARY) $(UNITTEST_COLORS) $(UNITTEST_WIDE_CHARS)
 
 asciishade: main.c $(OBJECTS)
 	$(CC) $(FLAGS) $^ $(LINKS) -o $@
@@ -16,6 +17,9 @@ unittest_driver: unittest_driver.c $(OBJECTS)
 	$(CC) $(FLAGS) $^ $(LINKS) -o $@
 
 unittest_colors: unittest_colors.c 
+	$(CC) $(FLAGS) $^ $(LINKS) -o $@
+
+unittest_wide_chars: unittest_wide_chars.c
 	$(CC) $(FLAGS) $^ $(LINKS) -o $@
 
 canvas.o: canvas.c
@@ -31,5 +35,5 @@ hud.o: hud.c
 	$(CC) $(FLAGS) -c $^ $(LINKS) -o $@
 
 clean:
-	rm -rfv $(BINARY) $(OBJECTS) $(UNITTEST_BINARY) $(JUNK) $(UNITTEST_COLORS) *.o *.dSYM
+	rm -rfv $(BINARY) $(OBJECTS) $(UNITTEST_BINARY) $(JUNK) $(UNITTEST_COLORS) *.o *.dSYM $(UNITTEST_WIDE_CHARS)
 
