@@ -21,10 +21,13 @@
 bool is_text_mode       = false;
 canvas_pixel_t **canvas = NULL;
 int last_char_pressed   = -1;
+
 int canvas_width        = -1;
 int canvas_height       = -1;
-int max_y               = -1;
-int max_x               = -1;
+int terminal_height               = -1;
+int terminal_width               = -1;
+
+
 int y                   = 0;
 int x                   = 0;
 int quit                = 0;
@@ -566,12 +569,12 @@ void switch_between_current_and_hud_color() {
 
 void draw_hud_row_1() {
     attron(COLOR_PAIR(hud_color));
-    int hud_y     = max_y-2;
+    int hud_y     = terminal_height-2;
     int hud_x     = 0;
-    int hud_max_x = max_x;
+    int hud_terminal_width = terminal_width;
     int fg_color  = get_fg_color(current_color_pair);
     int fg_color_cursor = canvas[y][x].foreground_color;
-    // perhaps the string could be longer than the hud_max_x,
+    // perhaps the string could be longer than the hud_terminal_width,
     // since we are going to stop printing there anyway
     // estimating length of the hud status row
     int len_of_str = (24 + strlen(filename) + 1)*2;
@@ -582,13 +585,13 @@ void draw_hud_row_1() {
     sprintf(str, "y:%03d|#%02d(%02x)F%02d %s", y, fg_color, current_color_pair, fg_color_cursor, is_text_mode ? "TEXT" : "NORMAL");
     // get the length of str
     int str_len = strlen(str);
-    if (str_len > hud_max_x) {
+    if (str_len > hud_terminal_width) {
         // truncate the string
-        str[hud_max_x-1] = '\0';
+        str[hud_terminal_width-1] = '\0';
     }
     move(hud_y,hud_x);
     for (char c = str[0]; c != '\0'; c = str[hud_x]) {
-        if (hud_x >= hud_max_x) {
+        if (hud_x >= hud_terminal_width) {
             break;
         }
         if (c=='#') {
@@ -607,9 +610,9 @@ void draw_hud_row_1() {
 
 void draw_hud_row_2() {
     attron(COLOR_PAIR(hud_color));
-    int hud_y            = max_y-1;
+    int hud_y            = terminal_height-1;
     int hud_x            = 0;
-    int hud_max_x        = max_x;
+    int hud_terminal_width        = terminal_width;
     const int len_of_str = 40;
     move(hud_y,hud_x);
     char *str = calloc(1, len_of_str);
@@ -621,9 +624,20 @@ void draw_hud_row_2() {
     int fg_color_cursor = canvas[y][x].foreground_color;
     int bg_color_cursor = canvas[y][x].background_color;
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
-    sprintf(str, "x:%03d|#%02d(%02x)B%02d %dx%d %d", x, bg_color, color_pair_num, bg_color_cursor, canvas_height, canvas_width, last_char_pressed);
+    
+    sprintf(str, 
+        "x:%03d|#%02d(%02x)B%02d %dx%d %d", 
+        x, 
+        bg_color, 
+        color_pair_num, 
+        bg_color_cursor, 
+        canvas_height, 
+        canvas_width, 
+        last_char_pressed
+    );
+    
     for (char c = str[0]; c != '\0'; c = str[hud_x]) {
-        if (hud_x >= hud_max_x) {
+        if (hud_x >= hud_terminal_width) {
             break;
         }
         else if (c=='#') {
@@ -643,9 +657,9 @@ void draw_hud_row_2() {
 void draw_hud_background() {
     attron(COLOR_PAIR(hud_color));
     int num_of_rows = 3;
-    int starting_row = max_y - num_of_rows;
-    for (int j = starting_row; j < max_y; j++) { 
-        for (int i = 0; i < max_x; i++) {
+    int starting_row = terminal_height - num_of_rows;
+    for (int j = starting_row; j < terminal_height; j++) { 
+        for (int i = 0; i < terminal_width; i++) {
             mvaddstr(j, i, " ");
         }
     }
@@ -670,9 +684,9 @@ void init_program() {
     use_default_colors();
     define_colors();
     define_color_pairs();
-    getmaxyx(stdscr, max_y, max_x);
+    getmaxyx(stdscr, terminal_height, terminal_width);
     // if the terminal is too small, exit
-    if (max_x < 4) 
+    if (terminal_width < 4) 
     {
         fprintf(stderr, "Error: terminal too small\n");
         exit(EXIT_FAILURE);
@@ -688,8 +702,8 @@ void init_program() {
 
 void handle_canvas_load() {
     int num_of_hud_rows = 3;
-    canvas_height = max_y - num_of_hud_rows;
-    canvas_width  = max_x;
+    canvas_height = terminal_height - num_of_hud_rows;
+    canvas_width  = terminal_width;
     // at this point, if we passed a filename
     if (strcmp(filename, "")!=0 && check_if_file_exists(filename)) {
             // we will load this file into the canvas
