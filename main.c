@@ -460,7 +460,8 @@ void handle_move_right() {
 }
 
 void handle_normal_mode_input(int c) {
-    if (c == '`') {
+    //if (c == '`') {
+    if (c == 27) {
         is_text_mode = true;
     }
     else if (c=='q') {
@@ -577,7 +578,8 @@ void handle_normal_mode_input(int c) {
 }
 
 void handle_text_mode_input(int c) {
-    if (c == '`') {
+    //if (c == '`') {
+    if (c == 27) {
         is_text_mode = false;
     }
     else if (c==KEY_DC) {
