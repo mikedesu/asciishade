@@ -11,8 +11,13 @@ int main() {
     wchar_t *wstr = L"█";
 
     for (int i = 0; str[i] != '\0'; i++) {
-        
-        printf("%x\n", (unsigned char)str[i]);
+        unsigned char c = str[i];   
+        //printf("%x\n", (unsigned char)str[i]);
+        printf("%x\n", c);
+        //if (c == 0xe2) {
+        //    printf("nice\n");
+        //}
+
     }
 
     for (int i = 0; wstr[i] != '\0'; i++) {

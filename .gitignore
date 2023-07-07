@@ -4,8 +4,9 @@ main
 .git/*
 asciishade
 *.o
-unittest_driver
 unittest_colors
+unittest_driver
+unittest_wide_chars
 *.cast
 asciis
 asciis/*

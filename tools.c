@@ -66,7 +66,8 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
         h++;
         int w = 0;
         for (int i = 0; i < strlen(buffer); i++) {
-            char c = buffer[i];
+            //char c = buffer[i];
+            unsigned char c = buffer[i];
             if (c == 0x03) {
                 // we will have to read color codes to skip past them when computing width
                 // we can expect after a ctrl char that the color code is of format:
@@ -112,12 +113,12 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
                 continue;
             }
-            else if (c == 0xFFFFFFE2 && i <= strlen(buffer)-3) {
-                char c2 = buffer[i+1];
-                char c3 = buffer[i+2];
-
+            //else if (c == 0xFFFFFFE2 && i <= strlen(buffer)-3) {
+            else if (c == 0xE2 && i <= strlen(buffer)-3) {
+                unsigned char c2 = buffer[i+1];
+                unsigned char c3 = buffer[i+2];
                 // top-half block
-                if (c2 == 0xFFFFFF96 && c3== 0xFFFFFF80) {
+                if (c2 == 0x96 && c3== 0x80) {
                     putchar(c);
                     putchar(c2);
                     putchar(c3);
@@ -130,7 +131,7 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     w++;
                 }
                 // bottom-half block
-                else if (c2 == 0xFFFFFF96 && c3 == 0xFFFFFF84) {
+                else if (c2 == 0x96 && c3 == 0x84) {
                     putchar(c);
                     putchar(c2);
                     putchar(c3);
@@ -143,7 +144,7 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     w++;
                 }
                 // full block
-                else if (c2 == 0xFFFFFF96 && c3 == 0xFFFFFF88) {
+                else if (c2 == 0x96 && c3 == 0x88) {
                     putchar(c);
                     putchar(c2);
                     putchar(c3);
@@ -156,7 +157,7 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     w++;
                 }
                 // light shading
-                else if (c2 == 0xFFFFFF96 && c3== 0xFFFFFF91) {
+                else if (c2 == 0x96 && c3== 0x91) {
                     putchar(c);
                     putchar(c2);
                     putchar(c3);
@@ -168,7 +169,6 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     canvas_x++;
                     w++;
                 }
-
             }
             else if (c == '\n') {
                 putchar(c);
@@ -189,8 +189,6 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
             max_w = w;
         }
     }
-    //printf("w: %d\n", max_w);
-    //printf("h: %d\n", h);
 }
 
 
