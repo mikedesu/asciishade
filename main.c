@@ -13,6 +13,7 @@
 #include "canvas.h"
 #include "tools.h"
 #include "hud.h"
+#include <time.h>
 
 #define MAX_FG_COLORS 16
 #define MAX_BG_COLORS 16
@@ -27,6 +28,12 @@ int canvas_width        = -1;
 int canvas_height       = -1;
 int terminal_height               = -1;
 int terminal_width               = -1;
+
+struct timespec ts0;
+struct timespec ts1;
+//long last_cmd_ms = -1;
+long last_cmd_ns = -1;
+
 
 
 int y                   = 0;
@@ -600,6 +607,8 @@ void handle_text_mode_input(int c) {
 
 void handle_input() {
     int c = getch();
+    // start the clock
+    clock_gettime(CLOCK_MONOTONIC, &ts0);
     last_char_pressed = c;
     if (is_text_mode) {
         handle_text_mode_input(c);
@@ -607,6 +616,13 @@ void handle_input() {
     else {
         handle_normal_mode_input(c);
     }
+    // stop the clock
+    clock_gettime(CLOCK_MONOTONIC, &ts1);
+    //last_cmd_ms = (ts1.tv_sec - ts0.tv_sec) * 1000 + (ts1.tv_nsec - ts0.tv_nsec) / 1000000;
+    // do nanoseconds
+    last_cmd_ns = (ts1.tv_sec - ts0.tv_sec) * 1000000000 + (ts1.tv_nsec - ts0.tv_nsec);
+    // do microseconds
+    //last_cmd_ns = last_cmd_ns / 1000;
 }
 
 
@@ -644,9 +660,11 @@ void draw_hud() {
             x, 
             last_char_pressed
         );
+
+    //draw_hud_row_3(terminal_height, terminal_width, hud_color, last_cmd_ms);
+    draw_hud_row_3(terminal_height, terminal_width, hud_color, last_cmd_ns);
     /*
     */
-
     reset_cursor();
 }
 

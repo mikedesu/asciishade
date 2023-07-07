@@ -1,5 +1,11 @@
 # TODO
 
+**noted on 7/07/23**
+
+- want to track how long individual actions/commands take to execute
+- want to display how long each action takes on the HUD
+- want to start logging each run in verbose mode or debug mode
+
 **noted on 7/02/23**
 
 - need clear canvas ('c' key perhaps?)
