@@ -128,35 +128,35 @@ void draw_hud_row_2(
         mPrint("Error: canvas is NULL\n");
         exit(EXIT_FAILURE);
     }
-    else if (terminal_height < 0) {
+    if (terminal_height < 0) {
         mPrint("Error: terminal_height is negative\n");
         exit(EXIT_FAILURE);
     }
-    else if (terminal_width < 0) {
+    if (terminal_width < 0) {
         mPrint("Error: terminal_width is negative\n");
         exit(EXIT_FAILURE);
     }
-    else if (hud_color < 0) {
+    if (hud_color < 0) {
         mPrint("Error: hud_color is negative\n");
         exit(EXIT_FAILURE);
     }
-    else if (current_color_pair < 0) {
+    if (current_color_pair < 0) {
         mPrint("Error: current_color_pair is negative\n");
         exit(EXIT_FAILURE);
     }
-    else if (color_array == NULL) {
+    if (color_array == NULL) {
         mPrint("Error: color_array is NULL\n");
         exit(EXIT_FAILURE);
     }
-    else if (color_array_len <= 0) {
+    if (color_array_len <= 0) {
         mPrint("Error: color_array_len is less than or equal to 0\n");
         exit(EXIT_FAILURE);
     }
-    else if (color_pair_array == NULL) {
+    if (color_pair_array == NULL) {
         mPrint("Error: color_pair_array is NULL\n");
         exit(EXIT_FAILURE);
     }
-    else if (color_pair_array_len <= 0) {
+    if (color_pair_array_len <= 0) {
         mPrint("Error: color_pair_array_len is less than or equal to 0\n");
         exit(EXIT_FAILURE);
     }
