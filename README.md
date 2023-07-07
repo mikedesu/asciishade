@@ -96,19 +96,11 @@ Usage: ./asciishade [OPTION]...
 
 **Normal Mode**
 
-- '`': Switch to text mode
+- 'escape': Switch to text mode
 - 'w': place a block and move up
 - 'a': place a block and move left
 - 's': place a block and move down
 - 'd': place a block and move right
-- '1': place a block and move down left
-- '2': place a block and move down
-- '3': place a block and move down right
-- '4': place a block and move left
-- '6': place a block and move right
-- '7': place a block and move up left
-- '8': place a block and move up
-- '9': place a block and move up right
 - 'S': save to file
     - if the filename was not specified on program run, it will save to `untitled.ascii`
 - 'o': go back one color pair / one foreground color
@@ -122,10 +114,20 @@ Usage: ./asciishade [OPTION]...
 - delete: delete a block
 - backspace: delete a block and move left one
 
+`if the numpad is on...`
+
+- '1': place a block and move down left
+- '2': place a block and move down
+- '3': place a block and move down right
+- '4': place a block and move left
+- '6': place a block and move right
+- '7': place a block and move up left
+- '8': place a block and move up
+- '9': place a block and move up right
 
 **Text Mode**
 
-- '`': Switch back to normal mode
+- 'escape': Switch back to normal mode
 - delete: delete a block
 - backspace: delete a block and move left one
 
