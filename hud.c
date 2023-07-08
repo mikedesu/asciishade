@@ -128,40 +128,6 @@ void draw_hud_row_1(
 }
 
 
-void draw_hud_row_3(
-    int terminal_height,
-    int terminal_width,
-    int hud_color,
-    long last_cmd_ns
-) {
-    
-    if (terminal_height < 0) {
-        mPrint("Error: terminal_height is negative\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (terminal_width < 0) {
-        mPrint("Error: terminal_width is negative\n");
-        exit(EXIT_FAILURE);
-    }
-
-
-    int starting_row = terminal_height - HUD_NUM_ROWS + 2;
-
-    char *str = calloc(1, terminal_width);
-    if (str == NULL) {
-        mPrint("Error: calloc failed\n");
-        exit(EXIT_FAILURE);
-    }
-
-    snprintf(str, terminal_width, "Press q to quit | %ldns", last_cmd_ns);
-
-    attron(COLOR_PAIR(hud_color));
-    mvaddstr(starting_row, 0, str);
-    attroff(COLOR_PAIR(hud_color));
-}
-
-
 void draw_hud_row_2(
     canvas_pixel_t **canvas, 
     int **color_array, 
@@ -255,6 +221,42 @@ void draw_hud_row_2(
     free(str);
     attroff(COLOR_PAIR(hud_color));
 }
+
+
+
+void draw_hud_row_3(
+    int terminal_height,
+    int terminal_width,
+    int hud_color,
+    long last_cmd_ns
+) {
+    
+    if (terminal_height < 0) {
+        mPrint("Error: terminal_height is negative\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (terminal_width < 0) {
+        mPrint("Error: terminal_width is negative\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    int starting_row = terminal_height - HUD_NUM_ROWS + 2;
+
+    char *str = calloc(1, terminal_width);
+    if (str == NULL) {
+        mPrint("Error: calloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    snprintf(str, terminal_width, "Press q to quit | %ldns", last_cmd_ns);
+
+    attron(COLOR_PAIR(hud_color));
+    mvaddstr(starting_row, 0, str);
+    attroff(COLOR_PAIR(hud_color));
+}
+
 
 
 void switch_between_hud_and_current_color(int hud_color, int current_color_pair) { 

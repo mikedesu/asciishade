@@ -29,7 +29,7 @@ void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
             //int fg_color = pixel.foreground_color;
             //int bg_color = pixel.background_color;
             wchar_t c = pixel.character;
-            printf("%c", c);
+            printf("[%lc]", c);
         }
         printf("\n");
     }
@@ -55,7 +55,7 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
     }
     // reset the file pointer to the beginning of the file
     fseek(fp, 0, SEEK_SET);
-    int max_w = -1;
+    //int max_w = -1;
     int h = 0;
     int canvas_y = 0;
     int canvas_x = 0;
@@ -91,22 +91,22 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     sscanf(fg_chars, "%02d", &fg_irc_color);
                     sscanf(bg_chars, "%02d", &bg_irc_color);
                     if (fg_irc_color < 0 || fg_irc_color > 15) {
-                        printf("Error: invalid foreground color code: %d\n", fg_irc_color);
+                        //printf("Error: invalid foreground color code: %d\n", fg_irc_color);
                         exit(EXIT_FAILURE);
                     }
                     if (bg_irc_color < 0 || bg_irc_color > 15) {
-                        printf("Error: invalid background color code: %d\n", bg_irc_color);
+                        //printf("Error: invalid background color code: %d\n", bg_irc_color);
                         exit(EXIT_FAILURE);
                     }
                     // convert the irc color code to ncurses color code
                     current_fg_color = convert_to_ncurses_color(fg_irc_color);
                     current_bg_color = convert_to_ncurses_color(bg_irc_color);
                     if (current_fg_color < 0 || current_fg_color > 15) {
-                        printf("Error: invalid foreground color code: %d\n", current_fg_color);
+                        //printf("Error: invalid foreground color code: %d\n", current_fg_color);
                         exit(EXIT_FAILURE);
                     }
                     if (current_bg_color < 0 || current_bg_color > 15) {
-                        printf("Error: invalid background color code: %d\n", current_bg_color);
+                        //printf("Error: invalid background color code: %d\n", current_bg_color);
                         exit(EXIT_FAILURE);
                     }
                     continue;
@@ -119,9 +119,9 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 unsigned char c3 = buffer[i+2];
                 // top-half block
                 if (c2 == 0x96 && c3== 0x80) {
-                    putchar(c);
-                    putchar(c2);
-                    putchar(c3);
+                    //putchar(c);
+                    //putchar(c2);
+                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -132,9 +132,9 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
                 // bottom-half block
                 else if (c2 == 0x96 && c3 == 0x84) {
-                    putchar(c);
-                    putchar(c2);
-                    putchar(c3);
+                    //putchar(c);
+                    //putchar(c2);
+                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -145,9 +145,9 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
                 // full block
                 else if (c2 == 0x96 && c3 == 0x88) {
-                    putchar(c);
-                    putchar(c2);
-                    putchar(c3);
+                    //putchar(c);
+                    //putchar(c2);
+                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -158,9 +158,9 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
                 // light shading
                 else if (c2 == 0x96 && c3== 0x91) {
-                    putchar(c);
-                    putchar(c2);
-                    putchar(c3);
+                    //putchar(c);
+                    //putchar(c2);
+                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -171,12 +171,12 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
             }
             else if (c == '\n') {
-                putchar(c);
+                //putchar(c);
                 canvas_y++;
                 canvas_x = 0;
             }
             else {
-                putchar(c);
+                //putchar(c);
                 // write the block to the canvas
                 canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
                 canvas[canvas_y][canvas_x].background_color = current_bg_color;
@@ -185,9 +185,9 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 w++;
             }
         }
-        if (w > max_w) {
-            max_w = w;
-        }
+        //if (w > max_w) {
+        //    max_w = w;
+        //}
     }
 }
 
@@ -245,8 +245,8 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width) 
         exit(EXIT_FAILURE);
     }
     get_ascii_width_height_from_file(fp, &h, &w);
-    //printf("w: %d\n", w);
-    //printf("h: %d\n", h);
+    printf("ascii width: %d\n", w);
+    printf("ascii height: %d\n", h);
     canvas_pixel_t **canvas = init_canvas(h, w);
     read_ascii_into_canvas(fp, canvas, h, w);
     *height = h;
