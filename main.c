@@ -57,6 +57,8 @@ char filename[1024]     = {0};
 int **color_array = NULL;
 int **color_pair_array = NULL;
 
+int get_current_fg_color();
+int get_current_bg_color();
 
 void init_color_arrays();
 void add_block();
@@ -253,6 +255,15 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
     canvas[y][x].foreground_color = fg_color;
     canvas[y][x].background_color = bg_color;
 } 
+
+
+int get_current_fg_color() {
+    return color_array[current_color_pair][0];
+}
+
+int get_current_bg_color() {
+    return color_array[current_color_pair][1];
+}
 
 void draw_initial_ascii() {
 #define INITIAL_ASCII_LINE_COUNT 3
@@ -460,7 +471,7 @@ void handle_move_right() {
 }
 
 void handle_normal_mode_input(int c) {
-    //if (c == '`') {
+    // escape key switches back and forth between normal & text modes
     if (c == 27) {
         is_text_mode = true;
     }
@@ -469,6 +480,12 @@ void handle_normal_mode_input(int c) {
     }
     else if (c=='c') {
         clear_canvas(canvas, canvas_height, canvas_width);
+    }
+    else if (c=='f') {
+        // get the currently selected fg and bg colors
+        int fg = get_current_fg_color();
+        int bg = get_current_bg_color();
+        fill_canvas(canvas, canvas_height, canvas_width, fg, bg);
     }
     else if (c==KEY_DC) {
         // delete a block from the current location on the canvas
@@ -578,7 +595,6 @@ void handle_normal_mode_input(int c) {
 }
 
 void handle_text_mode_input(int c) {
-    //if (c == '`') {
     if (c == 27) {
         is_text_mode = false;
     }

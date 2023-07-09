@@ -62,6 +62,43 @@ void clear_canvas_row_unsafe(canvas_pixel_t *row, int width) {
 }
 
 
+void fill_canvas_row_unsafe(canvas_pixel_t *row, int width, int fgcolor, int bgcolor) {
+    if (row == NULL) {
+        fprintf(stderr, "Error: row is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (width < 1) {
+        fprintf(stderr, "Error: row width must be greater than 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < width; i++) {
+        row[i].foreground_color = fgcolor;
+        row[i].background_color = bgcolor;
+        row[i].character = ' ';
+    }
+}
+
+
+
+void fill_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width, int fgcolor, int bgcolor) {
+    if (canvas == NULL) {
+        fprintf(stderr, "Error: canvas is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas_height < 1 || canvas_width < 1) {
+        fprintf(stderr, "Error: canvas height and width must be greater than 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < canvas_height; i++) {
+        fill_canvas_row_unsafe(canvas[i], canvas_width, fgcolor, bgcolor);
+    }
+}
+
+
 void free_canvas(canvas_pixel_t **canvas, int canvas_height) {
     printf("Freeing the canvas memory...\n");
     for (int i = 0; i < canvas_height; i++) {
