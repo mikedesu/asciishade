@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
     print_canvas(canvas, h, w);
     printf("Freeing canvas:\n");
     free_canvas(canvas, h);
+
     
     //canvas = read_ascii_from_filepath("test2.ascii", &h, &w);
     //print_canvas(canvas, h, w);

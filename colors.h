@@ -29,6 +29,8 @@
 #define IRC_COLOR_GREY        14
 #define IRC_COLOR_LIGHT_GREY  15
 
+
+
 int convert_to_irc_color(int color);
 int convert_to_ncurses_color(int irc_color);
 void print_ncurses_color_codes();
