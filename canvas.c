@@ -10,8 +10,16 @@ canvas_pixel_t **init_canvas(int height, int width) {
         exit(EXIT_FAILURE);
     }
     canvas = calloc(height, sizeof(canvas_pixel_t *));
+    if (!canvas) {
+	    fprintf(stderr, "Error: in calloc\n");
+	    exit(EXIT_FAILURE);
+    }
     for (int i = 0; i < height; i++) {
         canvas[i] = calloc(width, sizeof(canvas_pixel_t));
+        if (!canvas[i]) {
+            fprintf(stderr, "Error: in calloc\n");
+            exit(EXIT_FAILURE);
+        }
     }
     clear_canvas(canvas, height, width);
     return canvas;
