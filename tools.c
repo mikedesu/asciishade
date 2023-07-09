@@ -210,11 +210,35 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
     int max_width = 0;
     int max_height = 0;
     char buffer[1024] = {0};
+
+
     while (fgets(buffer, 1024, fp) != NULL) {
-        int width = strlen(buffer);
-        if (width > max_width) {
-            max_width = width;
+        int width_for_this_line = 0;
+        for(int i=0; i<strlen(buffer); i++) {
+            char c = buffer[i];   
+
+            // color-codes are preceded by 0x03 and do not count towards width total
+            if (c == 0x03 && i <= strlen(buffer)-3) {
+                // skip the next 5 chars
+                i += 5;
+            }
+            // skip newlines
+            else if (c == '\n') {
+                continue;
+            }
+            else {
+                width_for_this_line++;       
+            }
         }
+
+        if (width_for_this_line > max_width) {
+            max_width = width_for_this_line;
+        }
+
+        //int width = strlen(buffer);
+        //if (width > max_width) {
+        //    max_width = width;
+        //}
         max_height++;
     }
     // this does not account for control-characters, wide-characters, or color-codes
