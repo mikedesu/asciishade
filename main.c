@@ -265,7 +265,7 @@ void draw_initial_ascii() {
     int fg_color = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
     int bg_color = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
     for (int i=0; i < 3; i++) {
-        for (int j=0; j < strlen(lines[i]); j++) {
+        for (size_t j=0; j < strlen(lines[i]); j++) {
             write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
         }
     }
