@@ -65,7 +65,7 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
     while (fgets(buffer, 1024, fp) != NULL) {
         h++;
         int w = 0;
-        for (int i = 0; i < strlen(buffer); i++) {
+        for (size_t i = 0; i < strlen(buffer); i++) {
             //char c = buffer[i];
             unsigned char c = buffer[i];
             if (c == 0x03) {
@@ -214,7 +214,7 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
 
     while (fgets(buffer, 1024, fp) != NULL) {
         int width_for_this_line = 0;
-        for(int i=0; i<strlen(buffer); i++) {
+        for(size_t i=0; i<strlen(buffer); i++) {
             char c = buffer[i];   
 
             // color-codes are preceded by 0x03 and do not count towards width total

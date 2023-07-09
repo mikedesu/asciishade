@@ -46,6 +46,8 @@ void draw_hud_row_1(
     int term_w, 
     int current_color_pair, 
     bool is_text_mode) {
+
+    (void)filename;
     
     if (canvas == NULL) {
         mPrint("canvas is null");
