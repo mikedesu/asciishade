@@ -197,7 +197,7 @@ void draw_hud_row_2(
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
     //sprintf(str, 
     snprintf(str, terminal_width,
-        "x:%03d|#%02d(%02x)B%02d %dx%d %d", 
+        "x:%03d|#%02d(%02x)B%02d %dx%d (0x%04X)", 
         x, 
         bg_color, 
         color_pair_num, 
