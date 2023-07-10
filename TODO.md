@@ -1,5 +1,17 @@
 # TODO
 
+**noted on 7/10/23**
+
+- while implementing 99 colors, realized that ncurses can only have 256 active color pairs at any given moment (verified by enumerating the color pairs and watching the palette reset after 0xff)
+    - one possible solution is to section-off every 256 color pairs or something in order to manage having all 99x99 color pairs in palette but this will likely cause the rendered screen colors to shift when rotating into a new section
+    - another realistic solution is to allow the user to define their own color palette via a config file
+- resizing of canvas still needed
+- navigating outside of terminal bounds for larger canvases still needed
+- we need a tool that can calculate how many different color pairs are present in a given ascii
+- another idea is that, when loading asciis from file, we can calculate what colors are used and generate a set of color pairs based off of that input
+- in other words: our palette might be limited, even though we can still support 99x99 colors on output
+- we could have a flag that sets how many colors we are supporting in this run and have it be dynamic like that
+
 **noted on 7/07/23**
 
 - want to track how long individual actions/commands take to execute

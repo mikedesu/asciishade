@@ -14,9 +14,16 @@
 #include "tools.h"
 #include "hud.h"
 #include <time.h>
+#include <assert.h>
+
+// we can technically handle 99 colors and have defined them
+// BUT we can only have 256 color pairs (16x16) active at a time
+//#define MAX_FG_COLORS 99
+//#define MAX_BG_COLORS 99
 
 #define MAX_FG_COLORS 16
 #define MAX_BG_COLORS 16
+
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 #define DEFAULT_COLOR_PAIR 1
 
@@ -185,6 +192,7 @@ void init_color_arrays() {
     }
 
     color_pair_array = calloc(MAX_FG_COLORS, sizeof(int *));
+    
     if (color_pair_array == NULL) {
         mPrint("Failed to allocate memory for color_pair_array\n");
         exit(EXIT_FAILURE);
@@ -216,6 +224,8 @@ void define_color_pairs() {
     }
     max_color_pairs = current_pair;
     max_colors = local_max_fg_colors;
+
+    assert(max_color_pairs == MAX_COLOR_PAIRS);
 }
 
 
@@ -357,7 +367,7 @@ void delete_block() {
 
 void incr_color_pair() { 
     current_color_pair++; 
-    if (current_color_pair >= max_color_pairs) {
+    if (current_color_pair > max_color_pairs) {
         current_color_pair = 0;  
     }
 }
