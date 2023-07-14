@@ -94,6 +94,9 @@ void reset_cursor();
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
 void cleanup();
 void show_error(char *error_msg);
+void exit_with_error(char *error_msg);
+
+
 
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
@@ -137,7 +140,7 @@ void print_help(char **argv) {
 }
 
 void parse_arguments(int argc, char **argv) {
-    mPrint("Parsing arguments...\n");
+    //mPrint("Parsing arguments...\n");
     // parsing arguments using getopt_long
     int c = -1;
     int option_index = 0;
@@ -697,14 +700,20 @@ void draw_hud() {
 }
 
 void init_program() {
-    mPrint("Initializing program\n");
+    //mPrint("Initializing program\n");
     setlocale(LC_ALL, "");
     initscr();
     clear();
     noecho();
     keypad(stdscr, true);
+    if (!has_colors()) {
+        exit_with_error("Your terminal does not support color\nPlaintext ASCII mode is not yet implemented");
+    }
     start_color();
     use_default_colors();
+    if (!can_change_color()) {
+        exit_with_error("Your terminal does not support changing colors\nYou are likely using tmux or something else\nA mode to handle this is not yet implemented");
+    }
     define_colors();
     init_color_arrays();
     define_color_pairs();
@@ -753,3 +762,8 @@ void show_error(char *error_msg) {
 }
 
 
+void exit_with_error(char *error_msg) {
+    endwin();
+    fprintf(stderr, "%s\n", error_msg);
+    exit(EXIT_FAILURE);
+}
