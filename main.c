@@ -1,5 +1,4 @@
 #define _XOPEN_SOURCE_EXTENDED 1
-
 #include <ncurses.h>
 #include <ctype.h>
 #include <locale.h>
@@ -20,32 +19,23 @@
 // BUT we can only have 256 color pairs (16x16) active at a time
 //#define MAX_FG_COLORS 99
 //#define MAX_BG_COLORS 99
-
 #define MAX_FG_COLORS 16
 #define MAX_BG_COLORS 16
-
 #define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
 #define DEFAULT_COLOR_PAIR 1
 
+struct timespec ts0;
+struct timespec ts1;
+
 bool is_text_mode       = false;
 bool is_cam_mode        = false;
-canvas_pixel_t **canvas = NULL;
+long last_cmd_ns = -1;
 int last_char_pressed   = -1;
-
 int canvas_width        = -1;
 int canvas_height       = -1;
 int terminal_height               = -1;
 int terminal_width               = -1;
-
-struct timespec ts0;
-struct timespec ts1;
 //long last_cmd_ms = -1;
-long last_cmd_ns = -1;
-
-
-
-
-
 int y                   = 0;
 int x                   = 0;
 // "camera" offsets
@@ -62,12 +52,12 @@ char filename[1024]     = {0};
 // fg and bg color is based on the current "color pair"
 // 128x128 = 16384
 // 16x16 = 256
+canvas_pixel_t **canvas = NULL;
 int **color_array = NULL;
 int **color_pair_array = NULL;
 
 int get_current_fg_color();
 int get_current_bg_color();
-
 void init_color_arrays();
 void add_block();
 void delete_block();
@@ -79,6 +69,8 @@ void draw_initial_ascii();
 void draw_canvas();
 void fail_with_msg(const char *msg);
 void handle_canvas_load();
+void handle_color_pair_change(int c);
+void handle_normal_mode_arrow_keys(int c);
 void handle_input();
 void handle_text_mode_input(int c);
 void handle_normal_mode_input(int c);
@@ -102,11 +94,6 @@ void incr_cam_y();
 void decr_cam_y();
 void incr_cam_x();
 void decr_cam_x();
-
-
-
-
-
 
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
@@ -133,10 +120,6 @@ void print_help(char **argv) {
     printf("  -f, --filename=FILENAME    specify a filename to save to\n");
     printf("  -h, --help                 display this help and exit\n");
 }
-
-
-
-
 
 void parse_arguments(int argc, char **argv) {
     //mPrint("Parsing arguments...\n");
@@ -196,17 +179,12 @@ void parse_arguments(int argc, char **argv) {
     }
 }
 
-
-
-
-
 void init_color_arrays() {
     color_array = calloc(MAX_COLOR_PAIRS, sizeof(int *));
     if (color_array == NULL) {
         mPrint("Failed to allocate memory for color_array\n");
         exit(EXIT_FAILURE);
     }
-
     for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
         color_array[i] = calloc(2, sizeof(int));
         if (color_array[i] == NULL) {
@@ -214,9 +192,7 @@ void init_color_arrays() {
             exit(EXIT_FAILURE);
         }
     }
-
     color_pair_array = calloc(MAX_FG_COLORS, sizeof(int *));
-    
     if (color_pair_array == NULL) {
         mPrint("Failed to allocate memory for color_pair_array\n");
         exit(EXIT_FAILURE);
@@ -229,7 +205,6 @@ void init_color_arrays() {
         }
     }
 }
-
 
 void define_color_pairs() {
     int current_pair = 0;
@@ -248,10 +223,8 @@ void define_color_pairs() {
     }
     max_color_pairs = current_pair;
     max_colors = local_max_fg_colors;
-
     assert(max_color_pairs == MAX_COLOR_PAIRS);
 }
-
 
 void cleanup() {
     endwin();
@@ -276,31 +249,26 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
         //mPrint("write_char_to_canvas: y,x is out of bounds");
         //exit(EXIT_FAILURE);
         return;
-    }
-    // make sure the other parameters arent absurd
-    else if (fg_color < 0 || fg_color >= max_colors) {
+    } else if (fg_color < 0 || fg_color >= max_colors) {
         clear();
         refresh();
         cleanup();
         fprintf(stderr, "fg_color: %d\n", fg_color);
         mPrint("write_char_to_canvas: fg_color is out of bounds");
         exit(EXIT_FAILURE);
-    }
-    else if (bg_color < 0 || bg_color >= max_colors) {
+    }else if (bg_color < 0 || bg_color >= max_colors) {
         clear();
         refresh();
         cleanup();
         fprintf(stderr, "bg_color: %d\n", bg_color);
         mPrint("write_char_to_canvas: bg_color is out of bounds");
         exit(EXIT_FAILURE);
-    }
-    else {
+    }else {
         canvas[y][x].character = c;
         canvas[y][x].foreground_color = fg_color;
         canvas[y][x].background_color = bg_color;
     }
 } 
-
 
 int get_current_fg_color() {
     return color_array[current_color_pair][0];
@@ -344,11 +312,9 @@ void draw_canvas() {
             // first, get the color pair
             // it should be equal to fg_color + (bg_color * 16)
             x = j + cx;
-            
             if (x < 0 || x >= canvas_width || y < 0 || y >= canvas_height) {
                 continue;
             }
-
             //fg_color   = canvas[i][j].foreground_color;
             //bg_color   = canvas[i][j].background_color;
             fg_color   = canvas[y][x].foreground_color;
@@ -383,7 +349,6 @@ void add_character(wchar_t c) {
     //canvas[y][x].background_color = get_bg_color(current_color_pair);
     int fg_color = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
     int bg_color = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
-    
     //write_char_to_canvas(y, x, c, fg_color, bg_color);
     int my = cy + y;
     int mx = cx + x;
@@ -473,8 +438,7 @@ void handle_save_inner_loop(FILE *outfile) {
             {
                 fprintf(outfile, "\x03%02d,%02d%lc", irc_foreground_color, irc_background_color, wc);
                 //fwprintf(outfile, L"\x03%02d,%02d%c", irc_foreground_color, irc_background_color, wc);
-            }
-            else {
+            }else {
                 //fwprintf(outfile, L"%c", wc);
                 fprintf(outfile, "%lc", wc);
             }
@@ -549,126 +513,76 @@ void decr_cam_y() {
     }
 }
 
+void handle_normal_mode_arrow_keys(int c) {
+    if (c==KEY_DOWN) {
+        if (! is_cam_mode) {
+            handle_move_down();
+        } else {
+            incr_cam_y();
+        }
+    } else if (c==KEY_UP) {
+        if (! is_cam_mode) {
+            handle_move_up();
+        } else {
+            decr_cam_y();
+        }
+    } else if (c==KEY_LEFT) {
+        if (! is_cam_mode) {
+            handle_move_left();
+        } else {
+            decr_cam_x();
+        }
+    } else if (c==KEY_RIGHT) {
+        if (! is_cam_mode) {
+            handle_move_right();
+        } else {
+            incr_cam_x();
+        }
+    }
+}
+
+void handle_color_pair_change(int c) {
+    if (c=='o') {
+        decr_color_pair();
+    } else if (c=='p') {
+        incr_color_pair();
+    } else if (c=='O') {
+        decr_color_pair_by_max();
+    } else if (c=='P') {
+        incr_color_pair_by_max();
+    }
+}
+
 void handle_normal_mode_input(int c) {
     // escape key switches back and forth between normal & text modes
     if (c == 27) {
         is_text_mode = true;
-    }
-    else if (c=='q') {
+    } else if (c=='q') {
         quit = 1;
-    }
-    else if (c=='c') {
+    } else if (c=='c') {
         clear_canvas(canvas, canvas_height, canvas_width);
-    }
-    else if (c=='f') {
-        // get the currently selected fg and bg colors
+    } else if (c=='C') {
+        is_cam_mode = ! is_cam_mode;
+        is_text_mode = false;
+    } else if (c=='f') {
         int fg = get_current_fg_color();
         int bg = get_current_bg_color();
         fill_canvas(canvas, canvas_height, canvas_width, fg, bg);
-    }
-    else if (c==KEY_DC) {
-        // delete a block from the current location on the canvas
+    } else if (c==KEY_DC) {
         delete_block();
-    }
-    else if (c==KEY_BACKSPACE) {
+    } else if (c==KEY_BACKSPACE) {
         delete_block();
         handle_move_left();
-    }
-    else if (c=='S')  {
+    } else if (c=='S')  {
         handle_save();
-    }
-    else if (c==KEY_DOWN) {
-        handle_move_down();
-    }
-    else if (c==KEY_UP) {
-        handle_move_up();
-    }
-    else if (c==KEY_LEFT) {
-        handle_move_left();
-    }
-    else if (c==KEY_RIGHT) {
-        handle_move_right();
-    }
-    else if (c==' ') {
+    } else if (c==KEY_DOWN || c==KEY_UP || c==KEY_RIGHT || c==KEY_LEFT) {
+        handle_normal_mode_arrow_keys(c);
+    } else if (c==' ') {
         add_block();
         handle_move_right();
-    }
-    else if (c=='a') {
-        add_block();
-        handle_move_left();
-    }
-    else if (c=='w') {
-        add_block();
-        handle_move_up();
-    }
-    else if (c=='s') {
-        add_block();
-        handle_move_down();
-    }
-    else if (c=='d') {
-        add_block();
-        handle_move_right();
-    }
-    else if (c=='o') {
-        decr_color_pair();
-    }
-    else if (c=='p') {
-        incr_color_pair();
-    }
-    else if (c=='O') {
-        decr_color_pair_by_max();
-    }
-    else if (c=='P') {
-        incr_color_pair_by_max();
-    }
-
-    //numpad
-    //up-left
-    else if (c=='7') {
-        add_block();
-        handle_move_left();
-        handle_move_up();
-    }
-    //up
-    else if (c=='8') {
-        add_block();
-        handle_move_up();
-    }
-    //up-right
-    else if (c=='9') {
-        add_block();
-        handle_move_right();
-        handle_move_up();
-    }  
-    //left
-    else if (c=='4') {
-        add_block();
-        handle_move_left();
-    }
-    //right
-    else if (c=='6') {
-        add_block();
-        handle_move_right();
-    }  
-    //down-left
-    else if (c=='1') {
-        add_block();
-        handle_move_left();
-        handle_move_down();
-    }  
-    //down
-    else if (c=='2') {
-        add_block();
-        handle_move_down();
-    }  
-    //down-right
-    else if (c=='3') {
-        add_block();
-        handle_move_right();
-        handle_move_down();
-    }  
-    // experimental
-    else if (c=='E') {
+    } else if (c=='o' || c=='O' || c=='p' || c=='P') {
+        handle_color_pair_change(c);
+    } else if (c=='E') { // experimental
         show_error("This is an error message");
     }
 }
@@ -676,28 +590,21 @@ void handle_normal_mode_input(int c) {
 void handle_text_mode_input(int c) {
     if (c == 27) {
         is_text_mode = false;
-    }
-    else if (c==KEY_DC) {
+    }else if (c==KEY_DC) {
         // delete a block from the current location on the canvas
         delete_block();
-    }
-    else if (c==KEY_BACKSPACE) {
+    }else if (c==KEY_BACKSPACE) {
         delete_block();
         handle_move_left();
-    }
-    else if (c==KEY_LEFT) {
+    }else if (c==KEY_LEFT) {
         handle_move_left();
-    }
-    else if (c==KEY_RIGHT) {
+    }else if (c==KEY_RIGHT) {
         handle_move_right();
-    }
-    else if (c==KEY_UP) {
+    }else if (c==KEY_UP) {
         handle_move_up();
-    }
-    else if (c==KEY_DOWN) {
+    }else if (c==KEY_DOWN) {
         handle_move_down();
-    }
-    else {
+    } else {
         add_character_and_move_right(c);
     }
 }
@@ -709,8 +616,7 @@ void handle_input() {
     last_char_pressed = c;
     if (is_text_mode) {
         handle_text_mode_input(c);
-    }
-    else {
+    } else {
         handle_normal_mode_input(c);
     }
     // stop the clock
@@ -722,13 +628,8 @@ void handle_input() {
     //last_cmd_ns = last_cmd_ns / 1000;
 }
 
-
-
-
-
 void draw_hud() {
     draw_hud_background(hud_color, terminal_height, terminal_width);
-
     draw_hud_row_1(canvas, 
         color_array, 
         MAX_COLOR_PAIRS, 
@@ -744,9 +645,7 @@ void draw_hud() {
         current_color_pair,
         is_text_mode
     );
-    
     reset_cursor();
-
     draw_hud_row_2(canvas, 
             color_array, 
             MAX_COLOR_PAIRS, 
@@ -761,8 +660,6 @@ void draw_hud() {
             cx,
             last_char_pressed
         );
-
-    //draw_hud_row_3(terminal_height, terminal_width, hud_color, last_cmd_ms);
     draw_hud_row_3(terminal_height, terminal_width, hud_color, last_cmd_ns);
     /*
     */
@@ -787,7 +684,6 @@ void init_program() {
     define_colors();
     init_color_arrays();
     define_color_pairs();
-
     getmaxyx(stdscr, terminal_height, terminal_width);
     // if the terminal is too small, exit
     // what is "too small"? IDFK GDI 1 pixel would be kind of PoC tho
@@ -808,23 +704,18 @@ void init_program() {
     handle_canvas_load();
 }
 
-
 void handle_canvas_load() {
     int num_of_hud_rows = 3;
-    
     // ok, initializing the canvas size
     // we already know the term width/height which is good
- 
     // if no size information is available...
     // like, not passed in from the commandline...
-
     if (canvas_height == -1) {
         canvas_height = terminal_height - num_of_hud_rows;
     }
     if (canvas_width == -1) {
         canvas_width = terminal_width;
     }
-
     // now, it is possible that I pass in a width or height for the canvas
     // that exceeds the size of the terminal
     // or that an ascii image was read in with width or height
@@ -834,19 +725,16 @@ void handle_canvas_load() {
     // canvas
     // we may not need to do anything here, but rather when the user's cursor
     // attempts to navigate offscreen
-    
     // at this point, if we passed a filename
     if (strcmp(filename, "")!=0 && check_if_file_exists(filename)) {
             // we will load this file into the canvas
             canvas = read_ascii_from_filepath(filename, &canvas_height, &canvas_width);
             // eventually we will have to be able to handle moving around a 
             // canvas that might be much larger than our terminal size
-    }
-    else {
+    } else {
         canvas = init_canvas(canvas_height, canvas_width);
     }
 }
-
 
 void show_error(char *error_msg) {
     if (error_msg != NULL) {
@@ -859,13 +747,11 @@ void show_error(char *error_msg) {
     }
 }
 
-
 void exit_with_error(char *error_msg) {
     endwin();
     fprintf(stderr, "%s\n", error_msg);
     exit(EXIT_FAILURE);
 }
-
 
 void free_color_arrays() {
     // free the color_array
@@ -882,3 +768,4 @@ void free_color_pair_array() {
     }
     free(color_pair_array);
 }
+
