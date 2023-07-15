@@ -17,6 +17,7 @@ void draw_hud_row_1(
     char *filename, 
     int y, 
     int x, 
+    int cy,
     int hud_color, 
     int term_h, 
     int term_w, 
@@ -39,6 +40,7 @@ void draw_hud_row_2(
     int current_color_pair, 
     int y, 
     int x, 
+    int cx,
     int last_char_pressed
 ); 
 

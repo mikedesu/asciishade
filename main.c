@@ -28,6 +28,7 @@
 #define DEFAULT_COLOR_PAIR 1
 
 bool is_text_mode       = false;
+bool is_cam_mode        = false;
 canvas_pixel_t **canvas = NULL;
 int last_char_pressed   = -1;
 
@@ -43,8 +44,13 @@ long last_cmd_ns = -1;
 
 
 
+
+
 int y                   = 0;
 int x                   = 0;
+// "camera" offsets
+int cy                   = 0;
+int cx                   = 0;
 int quit                = 0;
 int hud_color           = 7;
 int current_color_pair  = 0;
@@ -90,6 +96,15 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
 void cleanup();
 void show_error(char *error_msg);
 void exit_with_error(char *error_msg);
+void free_color_arrays();
+void free_color_pair_array();
+void incr_cam_y();
+void decr_cam_y();
+void incr_cam_x();
+void decr_cam_x();
+
+
+
 
 
 
@@ -105,22 +120,7 @@ int main(int argc, char *argv[]) {
         handle_input();
         refresh();
     }
-    endwin();
-
-    free_canvas(canvas, canvas_height);
-    
-    // free the color_array
-    for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
-        free(color_array[i]);
-    }
-    free(color_array);
-
-    // free the color_pair_array
-    for (int i = 0; i < MAX_FG_COLORS; i++) {
-        free(color_pair_array[i]);
-    }
-    free(color_pair_array);
-
+    cleanup();
     return EXIT_SUCCESS;
 }
 
@@ -256,6 +256,8 @@ void define_color_pairs() {
 void cleanup() {
     endwin();
     free_canvas(canvas, canvas_height);
+    free_color_arrays();
+    free_color_pair_array();
 }
 
 void fail_with_msg(const char *msg) {
@@ -267,27 +269,36 @@ void fail_with_msg(const char *msg) {
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
     // check to make sure y,x is within the canvas
     if (y < 0 || y >= canvas_height || x < 0 || x >= canvas_width) {
-        cleanup();
-        fprintf(stderr, "y: %d\nx: %d\n", y, x);
-        mPrint("write_char_to_canvas: y,x is out of bounds");
-        exit(EXIT_FAILURE);
+        //clear();
+        //refresh();
+        //cleanup();
+        //fprintf(stderr, "y: %d\nx: %d\n", y, x);
+        //mPrint("write_char_to_canvas: y,x is out of bounds");
+        //exit(EXIT_FAILURE);
+        return;
     }
     // make sure the other parameters arent absurd
-    if (fg_color < 0 || fg_color >= max_colors) {
+    else if (fg_color < 0 || fg_color >= max_colors) {
+        clear();
+        refresh();
         cleanup();
         fprintf(stderr, "fg_color: %d\n", fg_color);
         mPrint("write_char_to_canvas: fg_color is out of bounds");
         exit(EXIT_FAILURE);
     }
-    if (bg_color < 0 || bg_color >= max_colors) {
+    else if (bg_color < 0 || bg_color >= max_colors) {
+        clear();
+        refresh();
         cleanup();
         fprintf(stderr, "bg_color: %d\n", bg_color);
         mPrint("write_char_to_canvas: bg_color is out of bounds");
         exit(EXIT_FAILURE);
     }
-    canvas[y][x].character = c;
-    canvas[y][x].foreground_color = fg_color;
-    canvas[y][x].background_color = bg_color;
+    else {
+        canvas[y][x].character = c;
+        canvas[y][x].foreground_color = fg_color;
+        canvas[y][x].background_color = bg_color;
+    }
 } 
 
 
@@ -324,32 +335,39 @@ void draw_canvas() {
     int color_pair = 0;
     int i          = -1;
     int j          = -1;
-    for (i = 0; i < canvas_height; i++) {
-        for (j = 0; j < canvas_width; j++) {
+    int y          = -1;
+    int x          = -1;
+    for (i = 0; i + cy < canvas_height; i++) {
+        y = i + cy;
+        for (j = 0; j + cx < canvas_width; j++) {
             // set the color pair
             // first, get the color pair
             // it should be equal to fg_color + (bg_color * 16)
-            fg_color   = canvas[i][j].foreground_color;
-            bg_color   = canvas[i][j].background_color;
+            x = j + cx;
+            
+            if (x < 0 || x >= canvas_width || y < 0 || y >= canvas_height) {
+                continue;
+            }
+
+            //fg_color   = canvas[i][j].foreground_color;
+            //bg_color   = canvas[i][j].background_color;
+            fg_color   = canvas[y][x].foreground_color;
+            bg_color   = canvas[y][x].background_color;
             color_pair = color_pair_array[fg_color][bg_color];
             // draw the character
             attron(COLOR_PAIR(color_pair));
-            c = canvas[i][j].character;
+            c = canvas[y][x].character;
             // this fixes the block-rendering bug for now...
             // there has to be a better way to do this
             if ( c == L'▀' ) {
                 mvaddstr(i, j, "▀");
-            }           
-            else if ( c == L'▄' ) {
+            } else if ( c == L'▄' ) {
                 mvaddstr(i, j, "▄");
-            }
-            else if ( c == L'█' ) {
+            } else if ( c == L'█' ) {
                 mvaddstr(i, j, "█");
-            }
-            else if (c == L'░' ) {
+            } else if (c == L'░' ) {
                 mvaddstr(i, j, "░");
-            }
-            else {
+            } else {
                 mvaddch(i, j, c);
             }
             attroff(COLOR_PAIR(color_pair));
@@ -365,7 +383,11 @@ void add_character(wchar_t c) {
     //canvas[y][x].background_color = get_bg_color(current_color_pair);
     int fg_color = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
     int bg_color = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
-    write_char_to_canvas(y, x, c, fg_color, bg_color);
+    
+    //write_char_to_canvas(y, x, c, fg_color, bg_color);
+    int my = cy + y;
+    int mx = cx + x;
+    write_char_to_canvas(my, mx, c, fg_color, bg_color);
 }
 
 void add_character_and_move_right(wchar_t c) {
@@ -379,13 +401,16 @@ void add_block() {
 
 void delete_block() {
     // delete the character from the canvas
-    canvas[y][x].character = L' ';
+    int my = cy + y;
+    int mx = cx + x;
+    write_char_to_canvas(my, mx, L' ', 0, 0);
+    //canvas[y][x].character = L' ';
     // store the color component
     // this should be set to the default color pair
     // what was the initial ascii drawn in?
-    canvas[y][x].foreground_color = 0;
+    //canvas[y][x].foreground_color = 0;
     //canvas[y][x].foreground_color = get_fg_color(DEFAULT_COLOR_PAIR);
-    canvas[y][x].background_color = 0;
+    //canvas[y][x].background_color = 0;
     //canvas[y][x].background_color = get_bg_color(DEFAULT_COLOR_PAIR);
 }
 
@@ -501,6 +526,26 @@ void handle_move_left() {
 void handle_move_right() {
     if (x+1 < canvas_width) {
         x++;
+    }
+}
+
+void incr_cam_x() {
+    cx++;
+}
+
+void decr_cam_x() {
+    if (cx-1 >= 0) {
+        cx--;
+    }
+}
+
+void incr_cam_y() {
+    cy++;
+}
+
+void decr_cam_y() {
+    if (cy-1 >= 0) {
+        cy--;
     }
 }
 
@@ -689,7 +734,8 @@ void draw_hud() {
         MAX_COLOR_PAIRS, 
         filename, 
         y, 
-        x, 
+        x,
+        cy,
         hud_color, 
         terminal_height, 
         terminal_width, 
@@ -712,6 +758,7 @@ void draw_hud() {
             current_color_pair, 
             y, 
             x, 
+            cx,
             last_char_pressed
         );
 
@@ -780,6 +827,8 @@ void handle_canvas_load() {
 
     // now, it is possible that I pass in a width or height for the canvas
     // that exceeds the size of the terminal
+    // or that an ascii image was read in with width or height
+    // that exceeds the size of the terminal
     // it is for this reason we will introduce a "camera" offset mechanism 
     // so that you can have various configurations for both the terminal and
     // canvas
@@ -815,4 +864,21 @@ void exit_with_error(char *error_msg) {
     endwin();
     fprintf(stderr, "%s\n", error_msg);
     exit(EXIT_FAILURE);
+}
+
+
+void free_color_arrays() {
+    // free the color_array
+    for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
+        free(color_array[i]);
+    }
+    free(color_array);
+}
+
+void free_color_pair_array() {
+    // free the color_pair_array
+    for (int i = 0; i < MAX_FG_COLORS; i++) {
+        free(color_pair_array[i]);
+    }
+    free(color_pair_array);
 }

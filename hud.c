@@ -41,6 +41,7 @@ void draw_hud_row_1(
     char *filename, 
     int y, 
     int x, 
+    int cy,
     int hud_color, 
     int term_h, 
     int term_w, 
@@ -102,8 +103,9 @@ void draw_hud_row_1(
     snprintf(
         str, 
         term_w,
-        "y:%03d|#%02d(%02x)F%02d Canvas:%dx%d %s", 
+        "y:%03d|%03d|#%02d(%02x)F%02d Canvas:%dx%d %s", 
         y, 
+        cy,
         fg_color, 
         current_color_pair, 
         fg_color_cursor, 
@@ -146,6 +148,7 @@ void draw_hud_row_2(
     int current_color_pair, 
     int y, 
     int x, 
+    int cx,
     int last_char_pressed) {
 
     if (canvas == NULL) {
@@ -201,8 +204,9 @@ void draw_hud_row_2(
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
     // copy into str up to terminal_width characters
     snprintf(str, terminal_width,
-        "x:%03d|#%02d(%02x)B%02d Term: %dx%d Last Char: (0x%04X)", 
+        "x:%03d|%03d|#%02d(%02x)B%02d Term: %dx%d Last Char: (0x%04X)", 
         x, 
+        cx,
         bg_color, 
         color_pair_num, 
         bg_color_cursor, 
