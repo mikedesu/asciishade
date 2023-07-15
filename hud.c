@@ -44,31 +44,36 @@ void draw_hud_row_1(
     int hud_color, 
     int term_h, 
     int term_w, 
+    int canvas_h,
+    int canvas_w,
     int current_color_pair, 
     bool is_text_mode) {
 
     (void)filename;
     
     if (canvas == NULL) {
-        mPrint("canvas is null");
+        fprintf(stderr, "canvas is null");
+        exit(EXIT_FAILURE);
+    } else if (term_h < 1) {
+        fprintf(stderr, "term_h is less than 1");
+        exit(EXIT_FAILURE);
+    } else if (term_w < 1) {
+        fprintf(stderr, "term_w is less than 1");
+        exit(EXIT_FAILURE);
+    } else if (color_array == NULL) {
+        fprintf(stderr, "color_array is null");
+        exit(EXIT_FAILURE);
+    } else if (color_array_len <= 0) {
+        fprintf(stderr, "color_array_len <= 0");
+        exit(EXIT_FAILURE);
+    } else if (canvas_h < 1) {
+        fprintf(stderr, "canvas_h < 1\n");
+        exit(EXIT_FAILURE);
+    } else if (canvas_w < 1) {
+        fprintf(stderr, "canvas_w < 1\n");
         exit(EXIT_FAILURE);
     }
-    else if (term_h < 1) {
-        mPrint("term_h is less than 1");
-        exit(EXIT_FAILURE);
-    }
-    else if (term_w < 1) {
-        mPrint("term_w is less than 1");
-        exit(EXIT_FAILURE);
-    }
-    else if (color_array == NULL) {
-        mPrint("color_array is null");
-        exit(EXIT_FAILURE);
-    }
-    else if (color_array_len <= 0) {
-        mPrint("color_array_len <= 0");
-        exit(EXIT_FAILURE);
-    }
+
     attron(COLOR_PAIR(hud_color));
     int hud_y     = term_h-HUD_NUM_ROWS;
     int hud_x     = 0;
@@ -87,7 +92,7 @@ void draw_hud_row_1(
     //char *str = calloc(1, terminal_width);
     char *str = calloc(1, term_w);
     if (str == NULL) {
-        mPrint("Error: calloc failed\n");
+        fprintf(stderr, "Error: calloc failed\n");
         exit(EXIT_FAILURE);
     }
     // before we do this sprintf, we need to make sure the terminal is wide enough
@@ -97,19 +102,18 @@ void draw_hud_row_1(
     snprintf(
         str, 
         term_w,
-        "y:%03d|#%02d(%02x)F%02d %s", 
+        "y:%03d|#%02d(%02x)F%02d Canvas:%dx%d %s", 
         y, 
         fg_color, 
         current_color_pair, 
         fg_color_cursor, 
+        canvas_h,
+        canvas_w,
         is_text_mode ? "TEXT" : "NORMAL"
     );
-    // get the length of str
-    int str_len = strlen(str);
-    if (str_len > term_w) {
-        // truncate the string
-        str[term_w-1] = '\0';
-    }
+    // truncate the string even if the string isnt longer than term_w
+    // its just faster this way
+    str[term_w-1] = '\0';
     move(hud_y,hud_x);
     for (char c = str[0]; c != '\0'; c = str[hud_x]) {
         if (hud_x > term_w) {
@@ -195,9 +199,9 @@ void draw_hud_row_2(
     int fg_color_cursor = canvas[y][x].foreground_color;
     int bg_color_cursor = canvas[y][x].background_color;
     int color_pair_num = color_pair_array[fg_color_cursor][bg_color_cursor];
-    //sprintf(str, 
+    // copy into str up to terminal_width characters
     snprintf(str, terminal_width,
-        "x:%03d|#%02d(%02x)B%02d %dx%d (0x%04X)", 
+        "x:%03d|#%02d(%02x)B%02d Term: %dx%d Last Char: (0x%04X)", 
         x, 
         bg_color, 
         color_pair_num, 

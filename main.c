@@ -56,11 +56,6 @@ char filename[1024]     = {0};
 // fg and bg color is based on the current "color pair"
 // 128x128 = 16384
 // 16x16 = 256
-//
-
-//int color_array[MAX_COLOR_PAIRS][2]                = { 0 };
-//int color_pair_array[MAX_FG_COLORS][MAX_BG_COLORS] = { 0 };
-
 int **color_array = NULL;
 int **color_pair_array = NULL;
 
@@ -139,6 +134,10 @@ void print_help(char **argv) {
     printf("  -h, --help                 display this help and exit\n");
 }
 
+
+
+
+
 void parse_arguments(int argc, char **argv) {
     //mPrint("Parsing arguments...\n");
     // parsing arguments using getopt_long
@@ -146,10 +145,13 @@ void parse_arguments(int argc, char **argv) {
     int option_index = 0;
     static struct option longoptions[] = {
         {"filename", 1, NULL, 'f'},
-        {"help",     0, NULL, 'h'}
+        {"help",     0, NULL, 'h'},
+        {"width",    1, NULL, 'w'},
+        {"height",    1, NULL, 'y'},
+        {0, 0, 0, 0}
     };
     while (1) {
-        c = getopt_long(argc, argv, "f:h", longoptions, &option_index);
+        c = getopt_long(argc, argv, "f:hw:y:", longoptions, &option_index);
         if (c == -1) {
             break;
         }
@@ -161,8 +163,23 @@ void parse_arguments(int argc, char **argv) {
                 print_help(argv);
                 exit(EXIT_SUCCESS);
                 break;
+            case 'w':
+                canvas_width = atoi(optarg);
+                break;
+            case 'y':
+                canvas_height = atoi(optarg);
+                break;
             case '?':
+                // handle input file info
                 if (optopt == 'f') {
+                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+                }
+                //
+                else if (optopt == 'w') {
+                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+                }
+                //
+                else if (optopt == 'y') {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 }
                 else if (isprint(optopt)) {
@@ -178,6 +195,10 @@ void parse_arguments(int argc, char **argv) {
         }
     }
 }
+
+
+
+
 
 void init_color_arrays() {
     color_array = calloc(MAX_COLOR_PAIRS, sizeof(int *));
@@ -672,6 +693,8 @@ void draw_hud() {
         hud_color, 
         terminal_height, 
         terminal_width, 
+        canvas_height,
+        canvas_width,
         current_color_pair,
         is_text_mode
     );
@@ -717,10 +740,16 @@ void init_program() {
     define_colors();
     init_color_arrays();
     define_color_pairs();
+
     getmaxyx(stdscr, terminal_height, terminal_width);
     // if the terminal is too small, exit
-    if (terminal_width < 4) 
-    {
+    // what is "too small"? IDFK GDI 1 pixel would be kind of PoC tho
+    // smallest terminal IS diff than smallest canvas
+    // smallest canvas should be 1
+    // smallest terminal should be large enough to fit the smallest HUD
+    // this feels dumb now but work with me here
+    const size_t smallest_width = 1;
+    if (terminal_width < smallest_width) {
         fprintf(stderr, "Error: terminal too small\n");
         exit(EXIT_FAILURE);
     }
@@ -735,8 +764,28 @@ void init_program() {
 
 void handle_canvas_load() {
     int num_of_hud_rows = 3;
-    canvas_height = terminal_height - num_of_hud_rows;
-    canvas_width  = terminal_width;
+    
+    // ok, initializing the canvas size
+    // we already know the term width/height which is good
+ 
+    // if no size information is available...
+    // like, not passed in from the commandline...
+
+    if (canvas_height == -1) {
+        canvas_height = terminal_height - num_of_hud_rows;
+    }
+    if (canvas_width == -1) {
+        canvas_width = terminal_width;
+    }
+
+    // now, it is possible that I pass in a width or height for the canvas
+    // that exceeds the size of the terminal
+    // it is for this reason we will introduce a "camera" offset mechanism 
+    // so that you can have various configurations for both the terminal and
+    // canvas
+    // we may not need to do anything here, but rather when the user's cursor
+    // attempts to navigate offscreen
+    
     // at this point, if we passed a filename
     if (strcmp(filename, "")!=0 && check_if_file_exists(filename)) {
             // we will load this file into the canvas

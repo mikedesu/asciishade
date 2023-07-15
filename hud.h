@@ -18,8 +18,10 @@ void draw_hud_row_1(
     int y, 
     int x, 
     int hud_color, 
-    int h, 
-    int w, 
+    int term_h, 
+    int term_w, 
+    int canvas_h,
+    int canvas_w,
     int current_color_pair, 
     bool is_text_mode
 );

@@ -215,13 +215,39 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
     while (fgets(buffer, 1024, fp) != NULL) {
         int width_for_this_line = 0;
         for(size_t i=0; i<strlen(buffer); i++) {
-            char c = buffer[i];   
+            unsigned char c = buffer[i];   
 
             // color-codes are preceded by 0x03 and do not count towards width total
             if (c == 0x03 && i <= strlen(buffer)-3) {
                 // skip the next 5 chars
                 i += 5;
             }
+            // handle blocks, half-blocks, etc
+            else if (c == 0xE2 && i <= strlen(buffer)-3) {
+                unsigned char c2 = buffer[i+1];
+                unsigned char c3 = buffer[i+2];
+                // top-half block
+                if (c2 == 0x96 && c3== 0x80) {
+                    i += 2;
+                    width_for_this_line++;
+                }
+                // bottom-half block
+                else if (c2 == 0x96 && c3 == 0x84) {
+                    i += 2;
+                    width_for_this_line++;
+                }
+                // full block
+                else if (c2 == 0x96 && c3 == 0x88) {
+                    i += 2;
+                    width_for_this_line++;
+                }
+                // light shading
+                else if (c2 == 0x96 && c3== 0x91) {
+                    i += 2;
+                    width_for_this_line++;
+                }
+            }
+
             // skip newlines
             else if (c == '\n') {
                 continue;
@@ -232,6 +258,7 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
         }
 
         if (width_for_this_line > max_width) {
+            printf("max width increased from %d to %d\n", max_width, width_for_this_line);
             max_width = width_for_this_line;
         }
 
