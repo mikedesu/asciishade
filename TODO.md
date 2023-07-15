@@ -1,5 +1,9 @@
 # TODO
 
+**noted on 7/15/23**
+
+- realized we need both an "invert colors" tool, as well as a "vertical flip" and "horizontal flip" tool
+
 **noted on 7/10/23**
 
 - while implementing 99 colors, realized that ncurses can only have 256 active color pairs at any given moment (verified by enumerating the color pairs and watching the palette reset after 0xff)
