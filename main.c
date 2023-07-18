@@ -21,7 +21,7 @@
 //#define MAX_BG_COLORS 99
 #define MAX_FG_COLORS 16
 #define MAX_BG_COLORS 16
-#define MAX_COLOR_PAIRS (MAX_FG_COLORS * MAX_BG_COLORS)
+#define MAX_COLOR_PAIRS (MAX_FG_COLORS*MAX_BG_COLORS)
 #define DEFAULT_COLOR_PAIR 1
 
 struct timespec ts0;
@@ -206,23 +206,34 @@ void init_color_arrays() {
     }
 }
 
+// I realize just now 2023-07-18 that we can optimize the color pairs...
+// 16x16 right?
+// that means there will be cases of duplicate colors
+// like same fg and bg colors
+// so we can optimize the color pairs by only storing the unique ones
+// we can get back probably 16 color pairs
 void define_color_pairs() {
     int current_pair = 0;
-    const int local_max_fg_colors = MAX_FG_COLORS; // for now...
-    const int local_max_bg_colors = MAX_BG_COLORS; // for now...
-    for (int bg_color = 0; bg_color < local_max_bg_colors; bg_color++) {
-        for (int fg_color = 0; fg_color < local_max_fg_colors; fg_color++) {
-            init_pair(current_pair, fg_color, bg_color);
-            // store the color pair in the array
-            color_array[current_pair][0] = fg_color;
-            color_array[current_pair][1] = bg_color;
-            // store the color pair in the array
-            color_pair_array[fg_color][bg_color] = current_pair;
-            current_pair++;
+    int bg_color_start = 0;
+    int fg_color_start = 0;
+    for (int bg_color = bg_color_start; bg_color < MAX_BG_COLORS; bg_color++) {
+        for (int fg_color = fg_color_start; fg_color < MAX_FG_COLORS; fg_color++) {
+            // this is the intent but it is throwing everything off right now
+            // once we count up the max colors correctly
+            //if (fg_color != bg_color) {
+                init_pair(current_pair, fg_color, bg_color);
+                // store the color pair in the array
+                color_array[current_pair][0] = fg_color;
+                color_array[current_pair][1] = bg_color;
+                // store the color pair in the array
+                // this is problematic if we want to handle -1,-1
+                color_pair_array[fg_color][bg_color] = current_pair;
+                current_pair++;
+            //}
         }
     }
     max_color_pairs = current_pair;
-    max_colors = local_max_fg_colors;
+    max_colors = MAX_FG_COLORS;
     assert(max_color_pairs == MAX_COLOR_PAIRS);
 }
 
@@ -381,14 +392,14 @@ void delete_block() {
 
 void incr_color_pair() { 
     current_color_pair++; 
-    if (current_color_pair > max_color_pairs) {
+    if (current_color_pair >= max_color_pairs) {
         current_color_pair = 0;  
     }
 }
 
 void incr_color_pair_by_max() { 
     for (int i = 0; i < max_colors; i++) {
-        incr_color_pair();                                   
+        incr_color_pair();
     }
 }
 
@@ -585,6 +596,10 @@ void handle_normal_mode_input(int c) {
     } else if (c=='E') { // experimental
         show_error("This is an error message");
     }
+    else if (c==KEY_RESIZE) {
+        getmaxyx(stdscr, terminal_height, terminal_width);
+    }      
+
 }
 
 void handle_text_mode_input(int c) {
@@ -604,6 +619,9 @@ void handle_text_mode_input(int c) {
         handle_move_up();
     }else if (c==KEY_DOWN) {
         handle_move_down();
+    } else if (c==KEY_RESIZE) {
+        getmaxyx(stdscr, terminal_height, terminal_width);
+        
     } else {
         add_character_and_move_right(c);
     }
