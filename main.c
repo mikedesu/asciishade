@@ -771,16 +771,13 @@ void get_int_str_from_user(char *prompt) {
     if (prompt != NULL) {
         // up to a 3-digit number
         char user_input[4] = {0};
+        int user_input_int = -1;
         clear();
         mvaddstr(0,0,prompt);
         refresh();
-        
-        // TODO: getstr is deprecated, use getnstr
         getnstr(user_input, 3);
-        int user_input_int = atoi(user_input);
-
+        user_input_int = atoi(user_input);
         clear();
-
         printw("You entered: %d\n", user_input_int);
         refresh();
         getch();
