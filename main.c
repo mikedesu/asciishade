@@ -118,7 +118,10 @@ void reset_cursor() {
 void print_help(char **argv) {
     printf("Usage: %s [OPTION]...\n", argv[0]);
     printf("  -f, --filename=FILENAME    specify a filename to save to\n");
-    printf("  -h, --help                 display this help and exit\n");
+    //printf("  -h, --help                 display this help and exit\n");
+    printf("  -w, --width=WIDTH          specify the width of the canvas\n");
+    printf("  -h, --height=HEIGHT        specify the height of the canvas\n");
+    printf("\n");
 }
 
 void parse_arguments(int argc, char **argv) {
@@ -128,13 +131,14 @@ void parse_arguments(int argc, char **argv) {
     int option_index = 0;
     static struct option longoptions[] = {
         {"filename", 1, NULL, 'f'},
-        {"help",     0, NULL, 'h'},
+        //{"help",     0, NULL, '?'},
         {"width",    1, NULL, 'w'},
-        {"height",    1, NULL, 'y'},
+        {"height",    1, NULL, 'h'},
         {0, 0, 0, 0}
     };
+
     while (1) {
-        c = getopt_long(argc, argv, "f:hw:y:", longoptions, &option_index);
+        c = getopt_long(argc, argv, "f:w:h:", longoptions, &option_index);
         if (c == -1) {
             break;
         }
@@ -142,14 +146,10 @@ void parse_arguments(int argc, char **argv) {
             case 'f':
                 strncpy(filename, optarg, 1024);
                 break;
-            case 'h':
-                print_help(argv);
-                exit(EXIT_SUCCESS);
-                break;
             case 'w':
                 canvas_width = atoi(optarg);
                 break;
-            case 'y':
+            case 'h':
                 canvas_height = atoi(optarg);
                 break;
             case '?':
@@ -157,12 +157,10 @@ void parse_arguments(int argc, char **argv) {
                 if (optopt == 'f') {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 }
-                //
                 else if (optopt == 'w') {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 }
-                //
-                else if (optopt == 'y') {
+                else if (optopt == 'h') {
                     fprintf(stderr, "Option -%c requires an argument.\n", optopt);
                 }
                 else if (isprint(optopt)) {
@@ -171,6 +169,7 @@ void parse_arguments(int argc, char **argv) {
                 else {
                     fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
                 }
+                print_help(argv);
                 exit(EXIT_FAILURE);
                 break;
             default:
