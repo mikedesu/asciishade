@@ -87,6 +87,7 @@ void reset_cursor();
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
 void cleanup();
 void show_error(char *error_msg);
+void get_int_str_from_user(char *prompt);
 void exit_with_error(char *error_msg);
 void free_color_arrays();
 void free_color_pair_array();
@@ -594,6 +595,8 @@ void handle_normal_mode_input(int c) {
         handle_color_pair_change(c);
     } else if (c=='E') { // experimental
         show_error("This is an error message");
+
+        get_int_str_from_user("Enter a number: ");
     }
     else if (c==KEY_RESIZE) {
         getmaxyx(stdscr, terminal_height, terminal_width);
@@ -763,6 +766,28 @@ void show_error(char *error_msg) {
         refresh();
     }
 }
+
+void get_int_str_from_user(char *prompt) {
+    if (prompt != NULL) {
+        // up to a 3-digit number
+        char user_input[4] = {0};
+        clear();
+        mvaddstr(0,0,prompt);
+        refresh();
+        
+        // TODO: getstr is deprecated, use getnstr
+        getnstr(user_input, 3);
+        int user_input_int = atoi(user_input);
+
+        clear();
+
+        printw("You entered: %d\n", user_input_int);
+        refresh();
+        getch();
+    }
+}
+
+
 
 void exit_with_error(char *error_msg) {
     endwin();
