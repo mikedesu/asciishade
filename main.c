@@ -95,6 +95,7 @@ void incr_cam_y();
 void decr_cam_y();
 void incr_cam_x();
 void decr_cam_x();
+void invert_current_color_pair();
 
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
@@ -205,6 +206,30 @@ void init_color_arrays() {
         }
     }
 }
+
+
+void invert_current_color_pair() {
+    // get the current color pair
+    // get the current fg and bg colors
+
+    int fg_color = color_array[current_color_pair][0];
+    int bg_color = color_array[current_color_pair][1];
+
+    // invert the colors
+    //
+
+    // get the color pair index
+    int color_pair_index = color_pair_array[fg_color][bg_color];
+
+    assert(color_pair_index == current_color_pair);
+
+    int inverse_color_pair_index = color_pair_array[bg_color][fg_color];
+
+    // swap the colors
+    current_color_pair = inverse_color_pair_index;
+}
+
+
 
 // I realize just now 2023-07-18 that we can optimize the color pairs...
 // 16x16 right?
@@ -597,6 +622,11 @@ void handle_normal_mode_input(int c) {
         show_error("This is an error message");
 
         get_int_str_from_user("Enter a number: ");
+    }
+    //else if (c==KEY_TAB) {
+    else if (c==0x09) {
+        // toggle between normal mode and cam mode
+        invert_current_color_pair();
     }
     else if (c==KEY_RESIZE) {
         getmaxyx(stdscr, terminal_height, terminal_width);
