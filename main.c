@@ -671,6 +671,16 @@ void handle_normal_mode_input(int c) {
         // toggle between normal mode and cam mode
         invert_current_color_pair();
     }
+
+    else if (c=='v') {
+        canvas_flip_vertical(canvas, canvas_height, canvas_width);
+    }
+    else if (c=='h') {
+        canvas_flip_horizontal(canvas, canvas_height, canvas_width);
+    }
+
+
+
     else if (c==KEY_RESIZE) {
         getmaxyx(stdscr, terminal_height, terminal_width);
     }      

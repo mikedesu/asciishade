@@ -21,3 +21,5 @@ void copy_canvas(canvas_pixel_t **dest, canvas_pixel_t **src, int dest_h, int de
 
 
 
+void canvas_flip_horizontal(canvas_pixel_t **canvas, int canvas_height, int canvas_width);
+void canvas_flip_vertical(canvas_pixel_t **canvas, int canvas_height, int canvas_width);

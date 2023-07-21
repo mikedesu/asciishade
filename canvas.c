@@ -151,3 +151,77 @@ void copy_canvas(canvas_pixel_t **dest, canvas_pixel_t **src, int dest_h, int de
 }
 
 
+void canvas_flip_horizontal(canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
+    int i, j;
+    canvas_pixel_t *temp;
+    if (canvas == NULL) {
+        fprintf(stderr, "Error: canvas is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas_height < 1 || canvas_width < 1) {
+        fprintf(stderr, "Error: canvas height and width must be greater than 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    temp = calloc(canvas_width, sizeof(canvas_pixel_t));
+    if (!temp) {
+        fprintf(stderr, "Error: in calloc\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (i = 0; i < canvas_height; i++) {
+        for (j = 0; j < canvas_width / 2; j++) {
+            temp[j] = canvas[i][j];
+            canvas[i][j] = canvas[i][canvas_width - j - 1];
+            canvas[i][canvas_width - j - 1] = temp[j];
+        }
+    }
+    free(temp);
+}
+
+
+void canvas_flip_vertical(canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
+
+    int i, j;
+    canvas_pixel_t *temp;
+    if (canvas == NULL) {
+        fprintf(stderr, "Error: canvas is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (canvas_height < 1 || canvas_width < 1) {
+        fprintf(stderr, "Error: canvas height and width must be greater than 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    temp = calloc(canvas_width, sizeof(canvas_pixel_t));
+    if (!temp) {
+        fprintf(stderr, "Error: in calloc\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (i = 0; i < canvas_height / 2; i++) {
+        for (j = 0; j < canvas_width; j++) {
+            temp[j] = canvas[i][j];
+            canvas[i][j] = canvas[canvas_height - i - 1][j];
+            canvas[canvas_height - i - 1][j] = temp[j];
+        }
+    }
+    free(temp);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
