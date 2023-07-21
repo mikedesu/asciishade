@@ -56,6 +56,8 @@ canvas_pixel_t **canvas = NULL;
 int **color_array = NULL;
 int **color_pair_array = NULL;
 
+void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
+//void paintbucket(int y, int x, int new_fg, int new_bg);
 int get_new_width_from_user();
 int get_new_height_from_user();
 int get_current_fg_color();
@@ -613,6 +615,43 @@ void handle_color_pair_change(int c) {
     }
 }
 
+
+
+//void paintbucket(int y, int x, int new_fg, int new_bg) {
+void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
+    if (y < 0 || y >= canvas_height) {
+        return;
+    }
+    if (x < 0 || x >= canvas_width) {
+        return;
+    }
+    if (canvas[y][x].foreground_color != old_fg) {
+        return;
+    }
+    if (canvas[y][x].background_color != old_bg) {
+        return;
+    }
+    if (canvas[y][x].foreground_color == new_fg) {
+        return;
+    }
+    if (canvas[y][x].background_color == new_bg) {
+        return;
+    }
+    canvas[y][x].foreground_color = new_fg;
+    canvas[y][x].background_color = new_bg;
+
+    //canvas[y][x].foreground_color = fg;
+    //canvas[y][x].background_color = bg;
+    
+    paintbucket(y-1, x, old_fg, old_bg, new_fg, new_bg);
+    paintbucket(y+1, x, old_fg, old_bg,new_fg, new_bg);
+    paintbucket(y, x-1, old_fg, old_bg,new_fg, new_bg);
+    paintbucket(y, x+1, old_fg, old_bg,new_fg, new_bg);
+}
+
+
+
+
 void handle_normal_mode_input(int c) {
     // escape key switches back and forth between normal & text modes
     if (c == 27) {
@@ -637,7 +676,23 @@ void handle_normal_mode_input(int c) {
         handle_save();
     } else if (c==KEY_DOWN || c==KEY_UP || c==KEY_RIGHT || c==KEY_LEFT) {
         handle_normal_mode_arrow_keys(c);
-    } else if (c==' ') {
+    } 
+    
+    else if (c=='g') {
+        // paintbucket tool
+        // smart fill
+        int fg = get_current_fg_color();
+        int bg = get_current_bg_color();
+        int old_fg = canvas[y][x].foreground_color;
+        int old_bg = canvas[y][x].background_color;
+        //canvas[y][x].foreground_color = fg;
+        //canvas[y][x].background_color = bg;
+        //paintbucket(y, x, old_fg, old_bg, fg, bg);
+        paintbucket(y, x, old_fg, old_bg, fg, bg);
+    }
+
+
+    else if (c==' ') {
         add_block();
         handle_move_right();
     } else if (c=='o' || c=='O' || c=='p' || c=='P') {
