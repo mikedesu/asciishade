@@ -402,7 +402,8 @@ void add_character_and_move_right(wchar_t c) {
 }
 
 void add_block() { 
-    add_character(L'█');
+    //add_character(L'█');
+    add_character(L' ');
 }
 
 void delete_block() {
