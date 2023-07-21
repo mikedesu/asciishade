@@ -107,3 +107,47 @@ void free_canvas(canvas_pixel_t **canvas, int canvas_height) {
     free(canvas);
 }
 
+
+void copy_canvas_row(canvas_pixel_t *dest, canvas_pixel_t *src, int dest_w, int src_w) {
+    int i;
+    if (dest == NULL || src == NULL) {
+        fprintf(stderr, "copy_canvas_row: Error: dest or src is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+    // dest_w must be greater than 1
+    // src_w must be greater than 1
+    if (dest_w < 1 || src_w < 1) {
+        fprintf(stderr, "copy_canvas_row: Error: dest_w and src_w must be greater than 0\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (dest_w < src_w) {
+        src_w = dest_w;
+    }
+    for (i = 0; i < src_w; i++) {
+        dest[i] = src[i];
+    }
+    // fill the rest with spaces
+    for (; i < dest_w; i++) {
+        dest[i].character = L' ';
+        dest[i].foreground_color = 0;
+        dest[i].background_color = 0;
+    }
+}
+
+
+void copy_canvas(canvas_pixel_t **dest, canvas_pixel_t **src, int dest_h, int dest_w, int src_h, int src_w) {
+    int i;
+    if (dest_h < src_h) {
+        src_h = dest_h;
+    }
+    for (i = 0; i < src_h; i++) {
+        copy_canvas_row(dest[i], src[i], dest_w, src_w);
+    }
+    // fill the rest with spaces
+    for (; i < dest_h; i++) {
+        clear_canvas_row_unsafe(dest[i], dest_w);
+    }
+}
+
+

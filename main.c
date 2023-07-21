@@ -56,6 +56,8 @@ canvas_pixel_t **canvas = NULL;
 int **color_array = NULL;
 int **color_pair_array = NULL;
 
+int get_new_width_from_user();
+int get_new_height_from_user();
 int get_current_fg_color();
 int get_current_bg_color();
 void init_color_arrays();
@@ -623,6 +625,46 @@ void handle_normal_mode_input(int c) {
 
         get_int_str_from_user("Enter a number: ");
     }
+
+    // resize the canvas' width
+    else if (c=='W') {
+        int w = -1;
+        while (w == -1) {
+            w = get_new_width_from_user();
+        }
+        canvas_pixel_t **new_canvas = init_canvas(canvas_height, w);
+        if (new_canvas == NULL) {
+            show_error("Error creating new canvas");
+            return;
+        }
+        copy_canvas(new_canvas, canvas, canvas_height, w, canvas_height, canvas_width);
+        canvas_width = w;
+        canvas_pixel_t **old_canvas = canvas;
+        canvas = new_canvas;
+        free_canvas(old_canvas, canvas_height);
+    }
+
+    
+    // resize the canvas' height
+    else if (c=='H') {
+        int h = -1;
+        while (h==-1) {
+            h = get_new_height_from_user();
+        }
+        canvas_pixel_t **new_canvas = init_canvas(h, canvas_width);
+        if (new_canvas == NULL) {
+            show_error("Error creating new canvas");
+            return;
+        }
+        copy_canvas(new_canvas, canvas, h, canvas_width, canvas_height, canvas_width);
+        int old_canvas_height = canvas_height;
+        canvas_height = h;
+        canvas_pixel_t **old_canvas = canvas;
+        canvas = new_canvas;
+        free_canvas(old_canvas, old_canvas_height);
+    }
+
+
     //else if (c==KEY_TAB) {
     else if (c==0x09) {
         // toggle between normal mode and cam mode
@@ -797,10 +839,41 @@ void show_error(char *error_msg) {
     }
 }
 
+int get_new_width_from_user() {
+    char *prompt = "Enter new width: ";
+    char user_input[4] = {0};// up to a 3-digit number
+    int user_input_int = -1;
+    clear();
+    mvaddstr(0,0,prompt);
+    refresh();
+    getnstr(user_input, 3);
+    user_input_int = atoi(user_input);
+    if (user_input_int == 0) {
+        return -1;
+    }
+    return user_input_int;
+}
+
+
+int get_new_height_from_user() {
+    char *prompt = "Enter new height: ";
+    char user_input[4] = {0}; // up to a 3-digit number
+    int user_input_int = -1;
+    clear();
+    mvaddstr(0,0,prompt);
+    refresh();
+    getnstr(user_input, 3);
+    user_input_int = atoi(user_input);
+    if (user_input_int == 0) {
+        return -1;
+    }
+    return user_input_int;
+}
+
+
 void get_int_str_from_user(char *prompt) {
     if (prompt != NULL) {
-        // up to a 3-digit number
-        char user_input[4] = {0};
+        char user_input[4] = {0}; // up to 3-digit num
         int user_input_int = -1;
         clear();
         mvaddstr(0,0,prompt);
@@ -814,8 +887,6 @@ void get_int_str_from_user(char *prompt) {
     }
 }
 
-
-
 void exit_with_error(char *error_msg) {
     endwin();
     fprintf(stderr, "%s\n", error_msg);
@@ -823,7 +894,6 @@ void exit_with_error(char *error_msg) {
 }
 
 void free_color_arrays() {
-    // free the color_array
     for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
         free(color_array[i]);
     }
@@ -831,7 +901,6 @@ void free_color_arrays() {
 }
 
 void free_color_pair_array() {
-    // free the color_pair_array
     for (int i = 0; i < MAX_FG_COLORS; i++) {
         free(color_pair_array[i]);
     }

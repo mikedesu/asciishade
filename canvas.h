@@ -16,3 +16,8 @@ void clear_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width);
 void fill_canvas_row_unsafe(canvas_pixel_t *row, int width, int fgcolor, int bgcolor);
 void fill_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width, int fgcolor, int bgcolor);
 
+void copy_canvas_row(canvas_pixel_t *dest, canvas_pixel_t *src, int dest_w, int src_w);
+void copy_canvas(canvas_pixel_t **dest, canvas_pixel_t **src, int dest_h, int dest_w, int src_h, int src_w);
+
+
+
