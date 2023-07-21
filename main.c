@@ -60,6 +60,7 @@ int get_new_width_from_user();
 int get_new_height_from_user();
 int get_current_fg_color();
 int get_current_bg_color();
+void get_filename_from_user();
 void init_color_arrays();
 void add_block();
 void delete_block();
@@ -488,11 +489,32 @@ void handle_save_inner_loop(FILE *outfile) {
     }   
 }
 
+
+
+void get_filename_from_user() {
+    char buffer[32] = {0};
+    while(strlen(buffer) == 0) {
+        clear();
+        echo();
+        mvprintw(0, 0, "Enter filename: ");
+        refresh();
+        getnstr(buffer, 32);
+    }
+    strncpy(filename, buffer, 1024);
+    noecho();
+}
+
+
+
+
 void handle_save() {
     // 1. filename is empty
     if (strcmp(filename, "") == 0) { 
         // set a default filename
-        strncpy(filename, "untitled.ascii", 1024);
+        //strncpy(filename, "untitled.ascii", 1024);
+        
+        // get a filename from the user
+        get_filename_from_user();
     }
     // 2. filename is not empty
     if (strcmp(filename, "") != 0) { 
@@ -785,7 +807,10 @@ void draw_hud() {
 void init_program() {
     //mPrint("Initializing program\n");
     setlocale(LC_ALL, "");
+    // 25 ms delay for escape sequences
+    setenv("ESCDELAY", "200", 1);
     initscr();
+    //nodelay(stdscr, true);
     clear();
     noecho();
     keypad(stdscr, true);
@@ -864,6 +889,7 @@ void show_error(char *error_msg) {
 }
 
 int get_new_width_from_user() {
+    echo();
     char *prompt = "Enter new width: ";
     char user_input[4] = {0};// up to a 3-digit number
     int user_input_int = -1;
@@ -875,11 +901,13 @@ int get_new_width_from_user() {
     if (user_input_int == 0) {
         return -1;
     }
+    noecho();
     return user_input_int;
 }
 
 
 int get_new_height_from_user() {
+    echo();
     char *prompt = "Enter new height: ";
     char user_input[4] = {0}; // up to a 3-digit number
     int user_input_int = -1;
@@ -891,6 +919,7 @@ int get_new_height_from_user() {
     if (user_input_int == 0) {
         return -1;
     }
+    noecho();
     return user_input_int;
 }
 
