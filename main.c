@@ -659,6 +659,13 @@ void handle_normal_mode_input(int c) {
             show_error("Error creating new canvas");
             return;
         }
+
+        y = 0;
+        x = 0;
+        move(y,x);
+
+
+
         copy_canvas(new_canvas, canvas, canvas_height, w, canvas_height, canvas_width);
         canvas_width = w;
         canvas_pixel_t **old_canvas = canvas;
@@ -679,6 +686,11 @@ void handle_normal_mode_input(int c) {
             show_error("Error creating new canvas");
             return;
         }
+
+        y = 0;
+        x = 0;
+        move(y,x);
+
         copy_canvas(new_canvas, canvas, h, canvas_width, canvas_height, canvas_width);
         int old_canvas_height = canvas_height;
         canvas_height = h;
