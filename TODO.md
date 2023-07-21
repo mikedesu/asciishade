@@ -1,5 +1,14 @@
 # TODO
 
+**noted on 7/21/23**
+
+- documentation
+- 'smart' paintbucket that can detect blocks and compensate
+- draw rect
+- fill rect
+- draw circle
+- fill circle
+
 **noted on 7/15/23**
 
 - realized we need both an "invert colors" tool, as well as a "vertical flip" and "horizontal flip" tool
