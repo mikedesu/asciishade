@@ -629,7 +629,7 @@ void handle_normal_mode_input(int c) {
     // resize the canvas' width
     else if (c=='W') {
         int w = -1;
-        while (w == -1) {
+        while (w == -1 || w > 150) {
             w = get_new_width_from_user();
         }
         canvas_pixel_t **new_canvas = init_canvas(canvas_height, w);
@@ -648,6 +648,7 @@ void handle_normal_mode_input(int c) {
     // resize the canvas' height
     else if (c=='H') {
         int h = -1;
+        // whats the max height?
         while (h==-1) {
             h = get_new_height_from_user();
         }
@@ -685,7 +686,11 @@ void handle_text_mode_input(int c) {
     }else if (c==KEY_BACKSPACE) {
         delete_block();
         handle_move_left();
-    }else if (c==KEY_LEFT) {
+    }
+
+
+    /*
+    else if (c==KEY_LEFT) {
         handle_move_left();
     }else if (c==KEY_RIGHT) {
         handle_move_right();
@@ -693,7 +698,16 @@ void handle_text_mode_input(int c) {
         handle_move_up();
     }else if (c==KEY_DOWN) {
         handle_move_down();
-    } else if (c==KEY_RESIZE) {
+    } 
+    */
+    
+
+    else if (c==KEY_UP || c==KEY_DOWN || c==KEY_LEFT || c==KEY_RIGHT) {
+        handle_normal_mode_arrow_keys(c);
+    }
+
+
+    else if (c==KEY_RESIZE) {
         getmaxyx(stdscr, terminal_height, terminal_width);
         
     } else {
