@@ -71,23 +71,21 @@ make
 This section is subject to change soon.
 
 ```
-./asciishade --help
 Usage: ./asciishade [OPTION]...
   -f, --filename=FILENAME    specify a filename to save to
-  -h, --help                 display this help and exit
+  -w, --width=WIDTH          specify the width of the canvas
+  -h, --height=HEIGHT        specify the height of the canvas
 ```
 
 #### Examples
 
 ```
 ./asciishade 
-
 ./asciishade -f test.ascii
-
 ./asciishade --filename=test.ascii
-
-./asciishade -h
-
+./asciishade -w 80 -h 20
+./asciishade -f test.ascii -w 80 -h 20
+./asciishade -h 20 -w 80 --filename=test.ascii
 ./asciishade --help
 ```
 
@@ -97,39 +95,31 @@ Usage: ./asciishade [OPTION]...
 **Normal Mode**
 
 - 'escape': Switch to text mode
-- 'w': place a block and move up
-- 'a': place a block and move left
-- 's': place a block and move down
-- 'd': place a block and move right
 - 'S': save to file
-    - if the filename was not specified on program run, it will save to `untitled.ascii`
+    - if the filename was not specified on program run, you will be asked to enter a filename.
 - 'o': go back one color pair / one foreground color
 - 'p': go forward one color pair / one foreground color
 - 'O': go back one background color
 - 'P': go forward one background color
 - 'c': clear canvas
+- 'f': fill canvas
+- 'v': flip canvas vertically
+- 'h': flip canvas horizontally
+- 'W': resize canvas width
+- 'H': resize canvas height
+- 'g': paintbucket
 - 'q': quit
 - arrow keys: cursor navigation
 - space bar: place a block
 - delete: delete a block
 - backspace: delete a block and move left one
 
-`if the numpad is on...`
-
-- '1': place a block and move down left
-- '2': place a block and move down
-- '3': place a block and move down right
-- '4': place a block and move left
-- '6': place a block and move right
-- '7': place a block and move up left
-- '8': place a block and move up
-- '9': place a block and move up right
-
 **Text Mode**
 
 - 'escape': Switch back to normal mode
-- delete: delete a block
-- backspace: delete a block and move left one
+- 'delete': delete a block
+- 'backspace': delete a block and move left one
+- any key: type character onto screen with selected color pair
 
 ### Features On The Way
 

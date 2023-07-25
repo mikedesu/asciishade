@@ -94,6 +94,12 @@ void decr_cam_y();
 void incr_cam_x();
 void decr_cam_x();
 void invert_current_color_pair();
+void incr_color_pair();
+void incr_color_pair_by_max();
+void decr_color_pair();
+void decr_color_pair_by_max();
+
+
 
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
@@ -367,13 +373,13 @@ void incr_color_pair() {
 
 
 void incr_color_pair_by_max(){for(int i=0;i<max_colors;i++){incr_color_pair();}}
-void decr_color_pair_by_max(){for(int i=0;i<max_colors;i++){decr_color_pair();}}
 
 
 void decr_color_pair() { 
     current_color_pair--; 
     current_color_pair=current_color_pair<0?max_color_pairs-1:current_color_pair;
 }
+void decr_color_pair_by_max(){for(int i=0;i<max_colors;i++){decr_color_pair();}}
 
 
 void handle_save_inner_loop(FILE *outfile) {
