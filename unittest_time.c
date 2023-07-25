@@ -21,3 +21,4 @@ int main() {
     printf("diff: %ld ms\n", diff);
     return EXIT_SUCCESS;
 }
+
