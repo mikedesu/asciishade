@@ -19,7 +19,5 @@ void fill_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width, i
 void copy_canvas_row(canvas_pixel_t *dest, canvas_pixel_t *src, int dest_w, int src_w);
 void copy_canvas(canvas_pixel_t **dest, canvas_pixel_t **src, int dest_h, int dest_w, int src_h, int src_w);
 
-
-
 void canvas_flip_horizontal(canvas_pixel_t **canvas, int canvas_height, int canvas_width);
 void canvas_flip_vertical(canvas_pixel_t **canvas, int canvas_height, int canvas_width);

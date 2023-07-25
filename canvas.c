@@ -182,9 +182,10 @@ void canvas_flip_horizontal(canvas_pixel_t **canvas, int canvas_height, int canv
 
 
 void canvas_flip_vertical(canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
-
-    int i, j;
+    int i;
+    int j;
     canvas_pixel_t *temp;
+
     if (canvas == NULL) {
         fprintf(stderr, "Error: canvas is NULL\n");
         exit(EXIT_FAILURE);
@@ -210,18 +211,5 @@ void canvas_flip_vertical(canvas_pixel_t **canvas, int canvas_height, int canvas
     }
     free(temp);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

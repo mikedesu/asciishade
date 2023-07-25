@@ -659,12 +659,15 @@ void handle_normal_mode_input(int c) {
         is_text_mode = true;
     } else if (c=='q') {
         quit = 1;
-    } else if (c=='c') {
+    } 
+    else if (c=='C') {
         clear_canvas(canvas, canvas_height, canvas_width);
-    } else if (c=='C') {
+    } 
+    else if (c=='c') {
         is_cam_mode = ! is_cam_mode;
         is_text_mode = false;
-    } else if (c=='f') {
+    } 
+    else if (c=='f') {
         int fg = get_current_fg_color();
         int bg = get_current_bg_color();
         fill_canvas(canvas, canvas_height, canvas_width, fg, bg);
