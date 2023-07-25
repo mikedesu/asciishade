@@ -190,7 +190,6 @@ void define_colors() {
     };
     size_t colors_size = sizeof(colors) / sizeof(colors[0]);
 
-
     init_color(COLOR_BROWN,       647,  164,  164 );
     init_color(COLOR_ORANGE,      1000, 647,  0   );
     init_color(COLOR_LIGHT_GREEN, 564,  933,  564 );
@@ -206,7 +205,6 @@ void define_colors() {
         int b = CONVERT(colors[i][2]);
         init_color(16+i, r, g, b);
     }
-
     //init_color(16, CONVERT(0x47), CONVERT(0x00), CONVERT(0x00));
     //init_color(17, CONVERT(0x47), CONVERT(0x21), CONVERT(0x00));
     //init_color(18, CONVERT(0x47), CONVERT(0x47), CONVERT(0x00));

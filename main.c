@@ -12,6 +12,7 @@
 #include "canvas.h"
 #include "tools.h"
 #include "hud.h"
+#include "colors.h"
 #include <time.h>
 #include <assert.h>
 
@@ -19,14 +20,23 @@
 // BUT we can only have 256 color pairs (16x16) active at a time
 //#define MAX_FG_COLORS 99
 //#define MAX_BG_COLORS 99
-#define MAX_FG_COLORS 16
-#define MAX_BG_COLORS 16
-#define MAX_COLOR_PAIRS (MAX_FG_COLORS*MAX_BG_COLORS)
+
+//#define MAX_FG_COLORS 16
+//#define MAX_BG_COLORS 16
+//#define MAX_COLOR_PAIRS (MAX_FG_COLORS*MAX_BG_COLORS)
+
+int MAX_FG_COLORS = 16;
+int MAX_BG_COLORS = 16;
+int MAX_COLOR_PAIRS = 256;
+
+
+
 #define DEFAULT_COLOR_PAIR 1
 
 struct timespec ts0;
 struct timespec ts1;
 
+bool can_change_color_mode   = true;
 bool is_text_mode       = false;
 bool is_cam_mode        = false;
 long last_cmd_ns = -1;
@@ -890,12 +900,27 @@ void init_program() {
     }
     start_color();
     use_default_colors();
+
     if (!can_change_color()) {
-        exit_with_error("Your terminal does not support changing colors\nYou are likely using tmux or something else\nA mode to handle this is not yet implemented");
+        // when this is the case, our colors 8-15 don't work right
+        // it just cycles back thru 0-7
+        // so to handle this we will...limit our max fg and bg colors
+        // when we go to define our colors and init our array
+        // we need to indicate that we are in this mode
+        can_change_color_mode = false;
+        //    exit_with_error("Your terminal does not support changing colors\nYou are likely using tmux or something else\nA mode to handle this is not yet implemented");
+
+        MAX_FG_COLORS = 8;
+        MAX_BG_COLORS = 8;
+        MAX_COLOR_PAIRS = 64;
     }
-    define_colors();
+    else {
+        define_colors();
+    }
+
     init_color_arrays();
     define_color_pairs();
+
     getmaxyx(stdscr, terminal_height, terminal_width);
     // if the terminal is too small, exit
     // what is "too small"? IDFK GDI 1 pixel would be kind of PoC tho
