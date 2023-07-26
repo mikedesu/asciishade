@@ -98,6 +98,7 @@ void incr_color_pair();
 void incr_color_pair_by_max();
 void decr_color_pair();
 void decr_color_pair_by_max();
+void show_help();
 
 
 
@@ -582,9 +583,12 @@ void handle_normal_mode_input(int c) {
     else if (c=='o' || c=='O' || c=='p' || c=='P') {
         handle_color_pair_change(c);
     } 
-    else if (c=='E') { // experimental
-        show_error("This is an error message");
-        get_int_str_from_user("Enter a number: ");
+    //else if (c=='E') { // experimental
+    //    show_error("This is an error message");
+    //    get_int_str_from_user("Enter a number: ");
+    //}
+    else if (c=='h') {
+        show_help();
     }
     // resize the canvas' width
     else if (c=='W') {
@@ -816,6 +820,53 @@ void show_error(char *error_msg) {
 }
 
 
+
+void show_help() {
+    char *help_msg = 
+"**Keyboard Controls**\n"
+"\n"
+"**Normal Mode**\n"
+"\n"
+"- 'escape': Switch to text mode\n"
+"- 'S': save to file\n"
+"    - if the filename was not specified on program run, you will be asked to \n    enter a filename.\n"
+"- 'o': go back one color pair / one foreground color\n"
+"- 'p': go forward one color pair / one foreground color\n"
+"- 'O': go back one background color\n"
+"- 'P': go forward one background color\n"
+"- 'c': clear canvas\n"
+"- 'f': fill canvas\n"
+"- 'v': flip canvas vertically\n"
+"- 'h': flip canvas horizontally\n"
+"- 'W': resize canvas width\n"
+"- 'H': resize canvas height\n"
+"- 'g': paintbucket\n"
+"- 'q': quit\n"
+"- arrow keys: cursor navigation\n"
+"- space bar: place a block\n"
+"- delete: delete a block\n"
+"- backspace: delete a block and move left one\n"
+"\n"
+"**Text Mode**\n"
+"\n"
+"- 'escape': Switch back to normal mode\n"
+"- 'delete': delete a block\n"
+"- 'backspace': delete a block and move left one\n"
+"- any key: type character onto screen with selected color pair\n"
+;
+
+
+    clear();
+    mvaddstr(0,0,help_msg);
+    refresh();
+    getch();
+    clear();
+    refresh();
+}
+
+
+
+
 int get_new_width_from_user() {
     echo();
     char *prompt = "Enter new width: ";
@@ -890,4 +941,10 @@ void free_color_pair_array() {
     }
     free(color_pair_array);
 }
+
+
+
+
+
+
 
