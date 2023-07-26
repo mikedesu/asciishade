@@ -54,7 +54,7 @@ A good number of people care about ASCII art.
 ### Web ASCII editors
 
 - ASCII Blaster: [https://asdf.us/asciiblaster/](https://asdf.us/asciiblaster/)
-- asciibird: [https://asciibird.jewbird.live/](https://asciibird.jewbird.live/)
+- asciibird: [https://asciibird.birdnest.live/](https://asciibird.birdnest.live/)
 
 ### Using asciishade
 
