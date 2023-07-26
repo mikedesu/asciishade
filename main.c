@@ -542,6 +542,37 @@ void handle_normal_mode_input(int c) {
     else if (c=='q') {
         quit = 1;
     } 
+
+    else if (c==KEY_MOUSE) {
+        MEVENT event;
+        if (getmouse(&event) == OK) {
+            if (event.bstate & BUTTON1_CLICKED) {
+                if (event.x < canvas_width) {
+                    x = event.x;
+                } 
+                else if (event.x >= canvas_width) {
+                    x = canvas_width - 1;
+
+                }
+                else {
+                    x = 0;
+                }
+
+                if (event.y < canvas_height) {
+                    y = event.y;
+                }
+                else if (event.y >= canvas_height) {
+                    y = canvas_height - 1;
+                }
+                else {
+                    y = 0;
+                }
+
+            }
+        }
+
+    }
+
     else if (c=='C') {
         clear_canvas(canvas, canvas_height, canvas_width);
     } 
@@ -768,6 +799,11 @@ void init_program() {
     }
     // make the cursor visible
     curs_set(1);
+
+
+    // experimental mouse
+    mousemask(ALL_MOUSE_EVENTS, NULL);
+
     // initialize the canvas
     // for now, we are going to make the canvas the same size as the terminal
     // when we go to read in ascii files,
