@@ -33,4 +33,4 @@ int convert_to_irc_color(int color);
 int convert_to_ncurses_color(int irc_color);
 void print_ncurses_color_codes();
 void define_colors();
-int convert_to_ncurses_color_channel(int color_value);
+

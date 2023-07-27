@@ -7,7 +7,7 @@
 
 bool check_if_file_exists(char *filename);
 
-void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width);
+int read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width);
 void get_ascii_width_height_from_file(FILE *fp, int *h, int *w);
 void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width);
 

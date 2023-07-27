@@ -552,12 +552,10 @@ void handle_normal_mode_input(int c) {
                 } 
                 else if (event.x >= canvas_width) {
                     x = canvas_width - 1;
-
                 }
                 else {
                     x = 0;
                 }
-
                 if (event.y < canvas_height) {
                     y = event.y;
                 }
@@ -567,10 +565,8 @@ void handle_normal_mode_input(int c) {
                 else {
                     y = 0;
                 }
-
             }
         }
-
     }
 
     else if (c=='C') {

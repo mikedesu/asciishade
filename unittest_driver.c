@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     print_canvas(canvas, h, w);
     printf("Freeing canvas:\n");
     free_canvas(canvas, h);
-    print_ncurses_color_codes();
+    //print_ncurses_color_codes();
     return EXIT_SUCCESS;
 }
 

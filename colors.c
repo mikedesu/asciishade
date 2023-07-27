@@ -2,6 +2,8 @@
 #include <ncurses.h>
 #include <stdio.h>
 
+#define CONVERT(c) (c*1000/255)
+
 int convert_to_irc_color(int color) {
     switch (color) {
         case COLOR_BLACK:       return IRC_COLOR_BLACK;
@@ -11,9 +13,9 @@ int convert_to_irc_color(int color) {
         case COLOR_BLUE:        return IRC_COLOR_BLUE;
         case COLOR_MAGENTA:     return IRC_COLOR_MAGENTA;
         case COLOR_CYAN:        return IRC_COLOR_CYAN;
-        case COLOR_WHITE:       return IRC_COLOR_WHITE;   // white
-        case COLOR_BROWN:       return IRC_COLOR_BROWN;   // brown
-        case COLOR_ORANGE:      return IRC_COLOR_ORANGE;  // orange
+        case COLOR_WHITE:       return IRC_COLOR_WHITE;   
+        case COLOR_BROWN:       return IRC_COLOR_BROWN;   
+        case COLOR_ORANGE:      return IRC_COLOR_ORANGE;  
         case COLOR_LIGHT_GREEN: return IRC_COLOR_LIGHT_GREEN;
         case COLOR_LIGHT_CYAN:  return IRC_COLOR_LIGHT_CYAN;
         case COLOR_LIGHT_BLUE:  return IRC_COLOR_LIGHT_BLUE;
@@ -29,21 +31,21 @@ int convert_to_irc_color(int color) {
 int convert_to_ncurses_color(int irc_color) {
     // this is the inverse-function of convert_to_irc_color
     switch (irc_color) {
-        case IRC_COLOR_WHITE:   return COLOR_WHITE;
-        case IRC_COLOR_BLACK:   return COLOR_BLACK;
-        case IRC_COLOR_BLUE:    return COLOR_BLUE;
-        case IRC_COLOR_GREEN:   return COLOR_GREEN;
-        case IRC_COLOR_RED:     return COLOR_RED;
-        case IRC_COLOR_BROWN:   return COLOR_BROWN;   // brown
-        case IRC_COLOR_MAGENTA: return COLOR_MAGENTA;
-        case IRC_COLOR_ORANGE:  return COLOR_ORANGE; // orange
-        case IRC_COLOR_YELLOW:  return COLOR_YELLOW;
-        case IRC_COLOR_LIGHT_GREEN:  return COLOR_LIGHT_GREEN;
-        case IRC_COLOR_LIGHT_CYAN: return COLOR_LIGHT_CYAN;
-        case IRC_COLOR_LIGHT_BLUE: return COLOR_LIGHT_BLUE;
-        case IRC_COLOR_PINK: return COLOR_PINK;
-        case IRC_COLOR_GREY: return COLOR_GREY;
-        case IRC_COLOR_LIGHT_GREY: return COLOR_LIGHT_GREY;
+        case IRC_COLOR_WHITE:       return COLOR_WHITE;
+        case IRC_COLOR_BLACK:       return COLOR_BLACK;
+        case IRC_COLOR_BLUE:        return COLOR_BLUE;
+        case IRC_COLOR_GREEN:       return COLOR_GREEN;
+        case IRC_COLOR_RED:         return COLOR_RED;
+        case IRC_COLOR_BROWN:       return COLOR_BROWN;   
+        case IRC_COLOR_MAGENTA:     return COLOR_MAGENTA;
+        case IRC_COLOR_ORANGE:      return COLOR_ORANGE; 
+        case IRC_COLOR_YELLOW:      return COLOR_YELLOW;
+        case IRC_COLOR_LIGHT_GREEN: return COLOR_LIGHT_GREEN;
+        case IRC_COLOR_LIGHT_CYAN:  return COLOR_LIGHT_CYAN;
+        case IRC_COLOR_LIGHT_BLUE:  return COLOR_LIGHT_BLUE;
+        case IRC_COLOR_PINK:        return COLOR_PINK;
+        case IRC_COLOR_GREY:        return COLOR_GREY;
+        case IRC_COLOR_LIGHT_GREY:  return COLOR_LIGHT_GREY;
         default: return irc_color;
     }
     return 0;
@@ -79,21 +81,10 @@ void print_ncurses_color_codes() {
 }
 
 
-#define CONVERT(c) (c*1000/255)
-
 // https://stackoverflow.com/questions/18551558/how-to-use-terminal-color-palette-with-curses
 void define_colors() {
     // default colors already defined via use_default_colors()
     // colors below define the remaining 8 colors used by irc
-
-    //int _127 = convert_to_ncurses_color_channel(127);
-    //int _192 = convert_to_ncurses_color_channel(192);
-    //int _252 = convert_to_ncurses_color_channel(252);
-    //int _ff = convert_to_ncurses_color_channel(255);
-    //int _a5 = convert_to_ncurses_color_channel(0xA5);
-    //
-    //
-
     // extended colors 16-99
     // size of array is 99-16=84
     int colors[83][3] = {
@@ -205,18 +196,5 @@ void define_colors() {
         int b = CONVERT(colors[i][2]);
         init_color(16+i, r, g, b);
     }
-    //init_color(16, CONVERT(0x47), CONVERT(0x00), CONVERT(0x00));
-    //init_color(17, CONVERT(0x47), CONVERT(0x21), CONVERT(0x00));
-    //init_color(18, CONVERT(0x47), CONVERT(0x47), CONVERT(0x00));
-    //init_color(19, CONVERT(0x32), CONVERT(0x47), CONVERT(0x00));
-    //init_color(20, CONVERT(0x00), CONVERT(0x47), CONVERT(0x00));
-    //init_color(21, CONVERT(0x00), CONVERT(0x47), CONVERT(0x2c));
-    //init_color(22, CONVERT(0x00), CONVERT(0x47), CONVERT(0x47));
-}
-
-
-// color_value is a value between 0 and 255
-int convert_to_ncurses_color_channel(int color_value) {
-    return (color_value/255) * 1000;
 }
 

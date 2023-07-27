@@ -36,37 +36,32 @@ void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
 }
 
 
-void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
-    if (fp == NULL) {
-        printf("Error: fp is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-    if (canvas == NULL) {
-        printf("Error: canvas is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-    if (canvas_height <= 0) {
-        printf("Error: canvas_height is <= 0\n");
-        exit(EXIT_FAILURE);
-    }
-    if (canvas_width <= 0) {
-        printf("Error: canvas_width is <= 0\n");
-        exit(EXIT_FAILURE);
-    }
-    // reset the file pointer to the beginning of the file
-    fseek(fp, 0, SEEK_SET);
-    //int max_w = -1;
+int read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
+    mPrint("read_ascii_into_canvas()");
     int h = 0;
     int canvas_y = 0;
     int canvas_x = 0;
     int current_fg_color = DEFAULT_FG_COLOR;
     int current_bg_color = DEFAULT_BG_COLOR;
     char buffer[1024] = {0};
+    if (fp == NULL) {
+        return -1;
+    }
+    if (canvas == NULL) {
+        return -2;
+    }
+    if (canvas_height <= 0) {
+        return -3;
+    }
+    if (canvas_width <= 0) {
+        return -4;
+    }
+    // reset the file pointer to the beginning of the file
+    fseek(fp, 0, SEEK_SET);
     while (fgets(buffer, 1024, fp) != NULL) {
         h++;
         int w = 0;
         for (size_t i = 0; i < strlen(buffer); i++) {
-            //char c = buffer[i];
             unsigned char c = buffer[i];
             if (c == 0x03) {
                 // we will have to read color codes to skip past them when computing width
@@ -83,7 +78,6 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 bool fourth_c = bg_chars[0] >= '0' && bg_chars[0] <= '9';
                 bool fifth_c  = bg_chars[1] >= '0' && bg_chars[1] <= '9';
                 bool color_code_is_valid = first_c && second_c && third_c && fourth_c && fifth_c;
-
                 if (color_code_is_valid) {
                     i += 5;
                     int fg_irc_color = -1;
@@ -91,37 +85,33 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                     sscanf(fg_chars, "%02d", &fg_irc_color);
                     sscanf(bg_chars, "%02d", &bg_irc_color);
                     if (fg_irc_color < 0 || fg_irc_color > 15) {
-                        //printf("Error: invalid foreground color code: %d\n", fg_irc_color);
-                        exit(EXIT_FAILURE);
+                        printf("Error: invalid foreground color code: %d\n", fg_irc_color);
+                        return -5;
                     }
                     if (bg_irc_color < 0 || bg_irc_color > 15) {
-                        //printf("Error: invalid background color code: %d\n", bg_irc_color);
-                        exit(EXIT_FAILURE);
+                        printf("Error: invalid background color code: %d\n", bg_irc_color);
+                        return -6;
                     }
                     // convert the irc color code to ncurses color code
                     current_fg_color = convert_to_ncurses_color(fg_irc_color);
                     current_bg_color = convert_to_ncurses_color(bg_irc_color);
                     if (current_fg_color < 0 || current_fg_color > 15) {
-                        //printf("Error: invalid foreground color code: %d\n", current_fg_color);
-                        exit(EXIT_FAILURE);
+                        printf("Error: invalid foreground color code: %d\n", current_fg_color);
+                        return -7;
                     }
                     if (current_bg_color < 0 || current_bg_color > 15) {
-                        //printf("Error: invalid background color code: %d\n", current_bg_color);
-                        exit(EXIT_FAILURE);
+                        printf("Error: invalid background color code: %d\n", current_bg_color);
+                        return -8;
                     }
                     continue;
                 }
                 continue;
             }
-            //else if (c == 0xFFFFFFE2 && i <= strlen(buffer)-3) {
             else if (c == 0xE2 && i <= strlen(buffer)-3) {
                 unsigned char c2 = buffer[i+1];
                 unsigned char c3 = buffer[i+2];
                 // top-half block
                 if (c2 == 0x96 && c3== 0x80) {
-                    //putchar(c);
-                    //putchar(c2);
-                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -132,9 +122,6 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
                 // bottom-half block
                 else if (c2 == 0x96 && c3 == 0x84) {
-                    //putchar(c);
-                    //putchar(c2);
-                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -145,9 +132,6 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
                 // full block
                 else if (c2 == 0x96 && c3 == 0x88) {
-                    //putchar(c);
-                    //putchar(c2);
-                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -158,9 +142,6 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
                 // light shading
                 else if (c2 == 0x96 && c3== 0x91) {
-                    //putchar(c);
-                    //putchar(c2);
-                    //putchar(c3);
                     i += 2;
                     // write the block to the canvas
                     canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
@@ -171,12 +152,10 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 }
             }
             else if (c == '\n') {
-                //putchar(c);
                 canvas_y++;
                 canvas_x = 0;
             }
             else {
-                //putchar(c);
                 // write the block to the canvas
                 canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
                 canvas[canvas_y][canvas_x].background_color = current_bg_color;
@@ -185,14 +164,16 @@ void read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height
                 w++;
             }
         }
-        //if (w > max_w) {
-        //    max_w = w;
-        //}
     }
+    return 0;
 }
 
 
 void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
+    int max_width = 0;
+    int max_height = 0;
+    char buffer[1024] = {0};
+    
     if (fp == NULL) {
         mPrint("Error: fp is NULL\n");
         exit(EXIT_FAILURE);
@@ -207,20 +188,14 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
     }
     // reset the file pointer to the beginning of the file
     fseek(fp, 0, SEEK_SET);
-    int max_width = 0;
-    int max_height = 0;
-    char buffer[1024] = {0};
-
-
+    
     while (fgets(buffer, 1024, fp) != NULL) {
         int width_for_this_line = 0;
         for(size_t i=0; i<strlen(buffer); i++) {
             unsigned char c = buffer[i];   
-
             // color-codes are preceded by 0x03 and do not count towards width total
             if (c == 0x03 && i <= strlen(buffer)-3) {
-                // skip the next 5 chars
-                i += 5;
+                i += 5;// skip the next 5 chars
             }
             // handle blocks, half-blocks, etc
             else if (c == 0xE2 && i <= strlen(buffer)-3) {
@@ -247,7 +222,6 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
                     width_for_this_line++;
                 }
             }
-
             // skip newlines
             else if (c == '\n') {
                 continue;
@@ -261,15 +235,8 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
             printf("max width increased from %d to %d\n", max_width, width_for_this_line);
             max_width = width_for_this_line;
         }
-
-        //int width = strlen(buffer);
-        //if (width > max_width) {
-        //    max_width = width;
-        //}
         max_height++;
     }
-    // this does not account for control-characters, wide-characters, or color-codes
-    // however, 
     *w = max_width;
     *h = max_height;
 }
@@ -298,11 +265,20 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width) 
     get_ascii_width_height_from_file(fp, &h, &w);
     printf("ascii width: %d\n", w);
     printf("ascii height: %d\n", h);
+    
     canvas_pixel_t **canvas = init_canvas(h, w);
-    read_ascii_into_canvas(fp, canvas, h, w);
+    
+    int result = read_ascii_into_canvas(fp, canvas, h, w);
+    fclose(fp);
+
+    if (result != 0) {
+        mPrint("Error: read_ascii_into_canvas returned non-zero");
+        printf("Result: %d\n", result);
+        exit(EXIT_FAILURE);
+    }
+
     *height = h;
     *width = w;
-    fclose(fp);
     return canvas;  
 }
 
