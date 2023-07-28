@@ -15,3 +15,5 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *h, int *w);
 
 int get_fg_color(int **color_array, int array_len, int color_pair);
 int get_bg_color(int **color_array, int array_len, int color_pair);
+//bool isdigit(char c);
+bool iscomma(char c) ;

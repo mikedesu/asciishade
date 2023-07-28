@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "mPrint.h"
 #include "colors.h"
 
@@ -36,12 +37,6 @@ void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
 }
 
 
-
-
-
-
-
-
 int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
     mPrint("read_ascii_into_canvas_unsafe()");
     int h = 0;
@@ -50,11 +45,9 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
     int current_fg_color = DEFAULT_FG_COLOR;
     int current_bg_color = DEFAULT_BG_COLOR;
     char buffer[1024] = {0};
-
     // we are going to attempt to track how many unique
     // colors are used in a given ascii
     //char palette_colors[100][100];
-
     if (fp == NULL) {
         return -1;
     }
@@ -182,10 +175,21 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
 }
 
 
+bool iscomma(char c) {
+    return c == ',';
+}
+//bool isdigit(char c) {
+//    return c >= '0' && c <= '9';
+//}
+
+
+
+
 void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
     int max_width = 0;
     int max_height = 0;
     char buffer[1024] = {0};
+    //unsigned char buffer[1024] = {0};
     
     if (fp == NULL) {
         mPrint("Error: fp is NULL\n");
@@ -201,42 +205,65 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
     }
     // reset the file pointer to the beginning of the file
     fseek(fp, 0, SEEK_SET);
-    
+
+
     while (fgets(buffer, 1024, fp) != NULL) {
         int width_for_this_line = 0;
+        char *b = buffer;
+        //unsigned char *b = buffer;
         for(size_t i=0; i<strlen(buffer); i++) {
-            unsigned char c = buffer[i];   
+            //unsigned char c = b[i];   
             // color-codes are preceded by 0x03 and do not count towards width total
-            if (c == 0x03 && i <= strlen(buffer)-3) {
+            // this currently does not account for other possible color code combos:
+            // 0x03 followed by 1 or 2 digits
+            // 0x03 followed by a comma and 1 or 2 digits
+            // 0x03 followed by 1 or 2 digits, followed by another comma and 1 or 2 digits
+            bool next_three   = i    <= strlen(b)-3;
+            bool next_four    = i    <= strlen(b)-4;
+            bool next_five    = i    <= strlen(b)-5;
+            bool bi_is_ctrl_c = (unsigned char)b[i] == 0x03;
+            bool bi_is_e2     = (unsigned char)b[i] == 0xE2;
+            // combining clauses to prevent overrun and improve visual aesthetics
+            bool bi1_is_96              = bi_is_e2     && next_three && (unsigned char)b[i+1] == 0x96;
+            bool bi1_isdigit_next_five  = bi_is_ctrl_c && next_five  && isdigit(b[i+1]);
+            bool bi1_isdigit_next_three = bi_is_ctrl_c && next_three && isdigit(b[i+1]);
+            bool color_check_0 = bi1_isdigit_next_five && isdigit(b[i+2]) && iscomma(b[i+3]) && isdigit(b[i+4]) && isdigit(b[i+5]);
+            bool color_check_1 = bi_is_ctrl_c && next_four && iscomma(b[i+1]) && isdigit(b[i+2]) && isdigit(b[i+3]);
+            bool color_check_2 = bi1_isdigit_next_three && isdigit(b[i+2]);
+
+            //if (bi1_isdigit_next_five && isdigit(b[i+2]) && iscomma(b[i+3]) && isdigit(b[i+4]) && isdigit(b[i+5])) {
+            if (color_check_0) {
                 i += 5;// skip the next 5 chars
             }
+            else if (color_check_1) {
+                i += 3;// skip the next 3 chars
+            }
+            else if (color_check_2) {
+                i += 2;// skip the next 2 chars
+            }
             // handle blocks, half-blocks, etc
-            else if (c == 0xE2 && i <= strlen(buffer)-3) {
-                unsigned char c2 = buffer[i+1];
-                unsigned char c3 = buffer[i+2];
-                // top-half block
-                if (c2 == 0x96 && c3== 0x80) {
-                    i += 2;
-                    width_for_this_line++;
-                }
-                // bottom-half block
-                else if (c2 == 0x96 && c3 == 0x84) {
-                    i += 2;
-                    width_for_this_line++;
-                }
-                // full block
-                else if (c2 == 0x96 && c3 == 0x88) {
-                    i += 2;
-                    width_for_this_line++;
-                }
-                // light shading
-                else if (c2 == 0x96 && c3== 0x91) {
-                    i += 2;
-                    width_for_this_line++;
-                }
+            // top-half block
+            else if (bi1_is_96 && (unsigned char)b[i+2] == 0x80) {
+                i += 2;
+                width_for_this_line++;
+            }
+            // bottom-half block
+            else if (bi1_is_96 && (unsigned char)b[i+2] == 0x84) {
+                i += 2;
+                width_for_this_line++;
+            }
+            // full block
+            else if (bi1_is_96 && (unsigned char)b[i+2] == 0x88) {
+                i += 2;
+                width_for_this_line++;
+            }
+            // light shading
+            else if (bi1_is_96 && (unsigned char)b[i+2] == 0x91) {
+                i += 2;
+                width_for_this_line++;
             }
             // skip newlines
-            else if (c == '\n') {
+            else if (b[i] == '\n') {
                 continue;
             }
             else {
