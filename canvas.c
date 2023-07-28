@@ -102,6 +102,7 @@ void fill_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width, i
 void free_canvas(canvas_pixel_t **canvas, int canvas_height) {
     printf("Freeing the canvas memory...\n");
     for (int i = 0; i < canvas_height; i++) {
+        printf("Freeing row %d\n", i);
         free(canvas[i]);
     }
     free(canvas);

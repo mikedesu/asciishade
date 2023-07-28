@@ -15,6 +15,11 @@ int main(int argc, char **argv) {
     canvas = read_ascii_from_filepath(argv[1], &h, &w);
     printf("Printing canvas:\n");
     print_canvas(canvas, h, w);
+    printf("Size of canvas: %d x %d\n", h, w);
+    printf("Clearing canvas:\n");
+    clear_canvas(canvas, h, w);
+    printf("Printing canvas:\n");
+    print_canvas(canvas, h, w);
     printf("Freeing canvas:\n");
     free_canvas(canvas, h);
     //print_ncurses_color_codes();

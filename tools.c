@@ -36,14 +36,25 @@ void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) 
 }
 
 
-int read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
-    mPrint("read_ascii_into_canvas()");
+
+
+
+
+
+
+int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
+    mPrint("read_ascii_into_canvas_unsafe()");
     int h = 0;
     int canvas_y = 0;
     int canvas_x = 0;
     int current_fg_color = DEFAULT_FG_COLOR;
     int current_bg_color = DEFAULT_BG_COLOR;
     char buffer[1024] = {0};
+
+    // we are going to attempt to track how many unique
+    // colors are used in a given ascii
+    //char palette_colors[100][100];
+
     if (fp == NULL) {
         return -1;
     }
@@ -85,12 +96,14 @@ int read_ascii_into_canvas(FILE *fp, canvas_pixel_t **canvas, int canvas_height,
                     sscanf(fg_chars, "%02d", &fg_irc_color);
                     sscanf(bg_chars, "%02d", &bg_irc_color);
                     if (fg_irc_color < 0 || fg_irc_color > 15) {
-                        printf("Error: invalid foreground color code: %d\n", fg_irc_color);
-                        return -5;
+                        //printf("Error: invalid foreground color code: %d\n", fg_irc_color);
+                        fg_irc_color = IRC_COLOR_GREY;
+                        //return -5;
                     }
                     if (bg_irc_color < 0 || bg_irc_color > 15) {
-                        printf("Error: invalid background color code: %d\n", bg_irc_color);
-                        return -6;
+                        //printf("Error: invalid background color code: %d\n", bg_irc_color);
+                        bg_irc_color = IRC_COLOR_GREY;
+                        //return -6;
                     }
                     // convert the irc color code to ncurses color code
                     current_fg_color = convert_to_ncurses_color(fg_irc_color);
@@ -262,17 +275,19 @@ canvas_pixel_t ** read_ascii_from_filepath(char *path, int *height, int *width) 
         printf("Error: cannot open file %s\n", path);
         exit(EXIT_FAILURE);
     }
+
     get_ascii_width_height_from_file(fp, &h, &w);
+    
     printf("ascii width: %d\n", w);
     printf("ascii height: %d\n", h);
     
     canvas_pixel_t **canvas = init_canvas(h, w);
     
-    int result = read_ascii_into_canvas(fp, canvas, h, w);
+    int result = read_ascii_into_canvas_unsafe(fp, canvas, h, w);
     fclose(fp);
 
     if (result != 0) {
-        mPrint("Error: read_ascii_into_canvas returned non-zero");
+        mPrint("Error: read_ascii_into_canvas_unsafe returned non-zero");
         printf("Result: %d\n", result);
         exit(EXIT_FAILURE);
     }
