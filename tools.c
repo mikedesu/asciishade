@@ -206,11 +206,9 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
     // reset the file pointer to the beginning of the file
     fseek(fp, 0, SEEK_SET);
 
-
     while (fgets(buffer, 1024, fp) != NULL) {
         int width_for_this_line = 0;
         char *b = buffer;
-        //unsigned char *b = buffer;
         for(size_t i=0; i<strlen(buffer); i++) {
             //unsigned char c = b[i];   
             // color-codes are preceded by 0x03 and do not count towards width total
@@ -224,14 +222,13 @@ void get_ascii_width_height_from_file(FILE *fp, int *h, int *w) {
             bool bi_is_ctrl_c = (unsigned char)b[i] == 0x03;
             bool bi_is_e2     = (unsigned char)b[i] == 0xE2;
             // combining clauses to prevent overrun and improve visual aesthetics
-            bool bi1_is_96              = bi_is_e2     && next_three && (unsigned char)b[i+1] == 0x96;
-            bool bi1_isdigit_next_five  = bi_is_ctrl_c && next_five  && isdigit(b[i+1]);
-            bool bi1_isdigit_next_three = bi_is_ctrl_c && next_three && isdigit(b[i+1]);
-            bool color_check_0 = bi1_isdigit_next_five && isdigit(b[i+2]) && iscomma(b[i+3]) && isdigit(b[i+4]) && isdigit(b[i+5]);
-            bool color_check_1 = bi_is_ctrl_c && next_four && iscomma(b[i+1]) && isdigit(b[i+2]) && isdigit(b[i+3]);
-            bool color_check_2 = bi1_isdigit_next_three && isdigit(b[i+2]);
+            bool bi1_is_96              = bi_is_e2               && next_three      && (unsigned char)b[i+1] == 0x96;
+            bool bi1_isdigit_next_five  = bi_is_ctrl_c           && next_five       && isdigit(b[i+1]);
+            bool bi1_isdigit_next_three = bi_is_ctrl_c           && next_three      && isdigit(b[i+1]);
+            bool color_check_0          = bi1_isdigit_next_five  && isdigit(b[i+2]) && iscomma(b[i+3]) && isdigit(b[i+4]) && isdigit(b[i+5]);
+            bool color_check_1          = bi_is_ctrl_c           && next_four       && iscomma(b[i+1]) && isdigit(b[i+2]) && isdigit(b[i+3]);
+            bool color_check_2          = bi1_isdigit_next_three && isdigit(b[i+2]);
 
-            //if (bi1_isdigit_next_five && isdigit(b[i+2]) && iscomma(b[i+3]) && isdigit(b[i+4]) && isdigit(b[i+5])) {
             if (color_check_0) {
                 i += 5;// skip the next 5 chars
             }
