@@ -143,14 +143,14 @@ int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
     init_program();
     
-    //refresh();
-    //while (!quit) {
-    //    clear();
-    //    draw_canvas();
-    //    draw_hud();
-    //    handle_input();
-    //    refresh();
-    //}
+    refresh();
+    while (!quit) {
+        clear();
+        draw_canvas();
+        draw_hud();
+        handle_input();
+        refresh();
+    }
     
     cleanup();
     return EXIT_SUCCESS;
