@@ -1,4 +1,5 @@
 #define _XOPEN_SOURCE_EXTENDED 1
+
 #include <ncurses.h>
 #include <ctype.h>
 #include <locale.h>
@@ -8,13 +9,15 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <getopt.h>
+#include <time.h>
+#include <assert.h>
+
 #include "mPrint.h"
 #include "canvas.h"
 #include "tools.h"
 #include "hud.h"
 #include "colors.h"
-#include <time.h>
-#include <assert.h>
+#include "mPrint.h"
 
 // we can technically handle 99 colors and have defined them
 // BUT we can only have 256 color pairs (16x16) active at a time
@@ -22,50 +25,79 @@ int MAX_FG_COLORS = 16;
 int MAX_BG_COLORS = 16;
 int MAX_COLOR_PAIRS = 256;
 
+extern int g_color_palette[100][100];
+
+
 #define DEFAULT_COLOR_PAIR 1
 
 struct timespec ts0;
 struct timespec ts1;
-bool can_change_color_mode   = true;
-bool is_text_mode       = false;
-bool is_cam_mode        = false;
-long last_cmd_ns = -1;
-long last_cmd_us = -1;
+
+bool can_change_color_mode          = true;
+bool is_text_mode                   = false;
+bool is_cam_mode                    = false;
+bool was_loaded_from_file           = false;
+bool ncurses_initialized            = false;
+bool color_array_initialized        = false;
+bool color_pair_array_initialized   = false;
+
+long last_cmd_ns        = -1;
+long last_cmd_us        = -1;
+
 int last_char_pressed   = -1;
 int canvas_width        = -1;
 int canvas_height       = -1;
-int terminal_height               = -1;
-int terminal_width               = -1;
+int terminal_height     = -1;
+int terminal_width      = -1;
 int y                   = 0;
 int x                   = 0;
-int cy                   = 0;
-int cx                   = 0;
+int cy                  = 0;
+int cx                  = 0;
 int quit                = 0;
 int hud_color           = 7;
 int current_color_pair  = 0;
 int max_color_pairs     = -1;
 int max_colors          = -1;
-char filename[1024]     = {0};
-canvas_pixel_t **canvas = NULL;
-int **color_array = NULL;
-int **color_pair_array = NULL;
 
-void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
-int get_new_width_from_user();
-int get_new_height_from_user();
+char filename[1024]     = {0};
+
+canvas_pixel_t **canvas = NULL;
+
+int **color_array       = NULL;
+int **color_pair_array  = NULL;
+
 int get_current_fg_color();
 int get_current_bg_color();
-void get_filename_from_user();
-void init_color_arrays();
+int get_new_width_from_user();
+int get_new_height_from_user();
+
 void add_block();
-void delete_block();
 void add_character(wchar_t c);
 void add_character_and_move_right(wchar_t c);
+
+void cleanup();
+
+void decr_cam_y();
+void decr_cam_x();
+void decr_color_pair();
+void decr_color_pair_by_max();
+
 void define_color_pairs();
+void define_color_pairs_for_ascii();
+void delete_block();
+void draw_canvas();
 void draw_hud();
 void draw_initial_ascii();
-void draw_canvas();
+
+void exit_with_error(char *error_msg);
+
 void fail_with_msg(const char *msg);
+void free_color_arrays();
+void free_color_pair_array();
+
+void get_filename_from_user();
+void get_int_str_from_user(char *prompt);
+
 void handle_canvas_load();
 void handle_color_pair_change(int c);
 void handle_normal_mode_arrow_keys(int c);
@@ -78,47 +110,58 @@ void handle_move_up();
 void handle_move_down();
 void handle_save_inner_loop(FILE *outfile);
 void handle_save();
+
 void init_program();
-void parse_arguments(int argc, char **argv);
-void print_help(char **argv);
-void reset_cursor();
-void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
-void cleanup();
-void show_error(char *error_msg);
-void get_int_str_from_user(char *prompt);
-void exit_with_error(char *error_msg);
-void free_color_arrays();
-void free_color_pair_array();
+void init_color_arrays();
 void incr_cam_y();
-void decr_cam_y();
 void incr_cam_x();
-void decr_cam_x();
-void invert_current_color_pair();
 void incr_color_pair();
 void incr_color_pair_by_max();
-void decr_color_pair();
-void decr_color_pair_by_max();
+void invert_current_color_pair();
+
+void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
+void parse_arguments(int argc, char **argv);
+void print_help(char **argv);
+
+void reset_cursor();
+
+void show_error(char *error_msg);
+
+void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
+
+
+
+
+
+
 void show_help();
+
 
 
 
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
     init_program();
-    refresh();
-    while (!quit) {
-        clear();
-        draw_canvas();
-        draw_hud();
-        handle_input();
-        refresh();
-    }
+    
+    //refresh();
+    //while (!quit) {
+    //    clear();
+    //    draw_canvas();
+    //    draw_hud();
+    //    handle_input();
+    //    refresh();
+    //}
+    
     cleanup();
     return EXIT_SUCCESS;
 }
 
 
+
+
 void reset_cursor() { move(y, x); }
+
+
 
 
 void print_help(char **argv) {
@@ -127,6 +170,8 @@ void print_help(char **argv) {
     "  -w, --width=WIDTH          specify the width of the canvas\n"
     "  -h, --height=HEIGHT        specify the height of the canvas\n\n");
 }
+
+
 
 void parse_arguments(int argc, char **argv) {
     int c = -1;
@@ -177,7 +222,12 @@ void parse_arguments(int argc, char **argv) {
 }
 
 
+
+
 void init_color_arrays() {
+
+    mPrint("Initializing color arrays\n");
+
     color_array = calloc(MAX_COLOR_PAIRS, sizeof(int *));
     if (color_array == NULL) {
         mPrint("Failed to allocate memory for color_array\n");
@@ -195,6 +245,7 @@ void init_color_arrays() {
         mPrint("Failed to allocate memory for color_pair_array\n");
         exit(EXIT_FAILURE);
     }
+
     for (int i = 0; i < MAX_FG_COLORS; i++) {
         color_pair_array[i] = calloc(MAX_BG_COLORS, sizeof(int));
         if (color_pair_array[i] == NULL) {
@@ -202,7 +253,11 @@ void init_color_arrays() {
             exit(EXIT_FAILURE);
         }
     }
+
+    mPrint("end init_color_arrays\n");
 }
+
+
 
 
 void invert_current_color_pair() {
@@ -215,7 +270,12 @@ void invert_current_color_pair() {
 }
 
 
+
+
+// depending on if the ascii was loaded from file or not
+// we may wish to define custom color pairs
 void define_color_pairs() {
+    mPrint("defining color pairs\n");
     int current_pair = 0;
     int bg_color_start = 0;
     int fg_color_start = 0;
@@ -234,6 +294,47 @@ void define_color_pairs() {
 }
 
 
+
+
+// this is a custom pair definer based on the ascii
+void define_color_pairs_for_ascii() {
+    mPrint("defining color pairs for ascii\n");
+    int current_pair = 0;
+    for (int i=0; i < 100; i++) {
+        for (int j=0; i < 100; i++) {
+
+            if (g_color_palette[i][j] == 1) {
+                char buffer[1024] = {0};
+                snprintf(buffer, 1024, "i: %d, j: %d current_pair: %d\n", i, j, current_pair);
+                mPrint(buffer);
+                mPrint("init_pair\n");
+
+                init_pair(current_pair, i, j);
+
+                mPrint("color_array assignment\n");
+                color_array[current_pair][0] = i;
+                color_array[current_pair][1] = j;
+                
+                mPrint("color_pair_array assignment\n");
+                color_pair_array[i][j] = current_pair;
+
+                mPrint("incrementing current_pair\n");
+                current_pair++;
+            }
+        }
+    }
+    max_color_pairs = current_pair;
+    MAX_COLOR_PAIRS = current_pair;
+    max_colors = MAX_FG_COLORS;
+    //max_colors = MAX_FG_COLORS;
+    //assert(max_color_pairs == MAX_COLOR_PAIRS);
+}
+
+
+
+
+
+
 void cleanup() {
     endwin();
     free_canvas(canvas, canvas_height);
@@ -242,11 +343,15 @@ void cleanup() {
 }
 
 
+
+
 void fail_with_msg(const char *msg) {
     cleanup();
     fprintf(stderr, "%s\n", msg);
     exit(EXIT_FAILURE);
 }
+
+
 
     
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
@@ -277,26 +382,16 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
 } 
 
 
+
+
 int get_current_fg_color() {return color_array[current_color_pair][0];}
+
+
+
+
 int get_current_bg_color() {return color_array[current_color_pair][1];}
 
 
-//#define INITIAL_ASCII_LINE_COUNT 3
-//void draw_initial_ascii() {
-//    char *lines[INITIAL_ASCII_LINE_COUNT] = { 
-//        "Welcome to asciishade", 
-//        "by darkmage", 
-//        "www.evildojo.com" 
-//    };
-//    current_color_pair = DEFAULT_COLOR_PAIR;
-//    int fg_color = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
-//    int bg_color = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
-//    for (int i=0; i < 3; i++) {
-//        for (size_t j=0; j < strlen(lines[i]); j++) {
-//            write_char_to_canvas(i, j, lines[i][j], fg_color, bg_color);
-//        }
-//    }
-//}
 
 
 void draw_canvas() {
@@ -325,19 +420,25 @@ void draw_canvas() {
             // there has to be a better way to do this
             if ( c == L'▀' ) {
                 mvaddstr(i, j, "▀");
-            } else if ( c == L'▄' ) {
+            } 
+            else if ( c == L'▄' ) {
                 mvaddstr(i, j, "▄");
-            } else if ( c == L'█' ) {
+            } 
+            else if ( c == L'█' ) {
                 mvaddstr(i, j, "█");
-            } else if (c == L'░' ) {
+            } 
+            else if (c == L'░' ) {
                 mvaddstr(i, j, "░");
-            } else {
+            } 
+            else {
                 mvaddch(i, j, c);
             }
             attroff(COLOR_PAIR(color_pair));
         }
     }
 }
+
+
 
 
 void add_character(wchar_t c) {
@@ -349,15 +450,21 @@ void add_character(wchar_t c) {
 }
 
 
+
+
 void add_character_and_move_right(wchar_t c) {
     add_character(c);
     handle_move_right();
 }
 
 
+
+
 void add_block() { 
     add_character(L' ');
 }
+
+
 
 
 void delete_block() {
@@ -367,20 +474,32 @@ void delete_block() {
 }
 
 
+
+
 void incr_color_pair() { 
     current_color_pair++; 
-    current_color_pair=current_color_pair>=max_color_pairs?0:current_color_pair;
+    current_color_pair = current_color_pair >= max_color_pairs ? 0 : current_color_pair;
 }
+
+
 
 
 void incr_color_pair_by_max(){for(int i=0;i<max_colors;i++){incr_color_pair();}}
 
 
+
+
 void decr_color_pair() { 
     current_color_pair--; 
-    current_color_pair=current_color_pair<0?max_color_pairs-1:current_color_pair;
+    current_color_pair = current_color_pair < 0 ? max_color_pairs-1 : current_color_pair;
 }
+
+
+
+
 void decr_color_pair_by_max(){for(int i=0;i<max_colors;i++){decr_color_pair();}}
+
+
 
 
 void handle_save_inner_loop(FILE *outfile) {
@@ -420,6 +539,8 @@ void handle_save_inner_loop(FILE *outfile) {
 }
 
 
+
+
 void get_filename_from_user() {
     char buffer[32] = {0};
     while(strlen(buffer) == 0) {
@@ -432,6 +553,8 @@ void get_filename_from_user() {
     strncpy(filename, buffer, 1024);
     noecho();
 }
+
+
 
 
 void handle_save() {
@@ -453,14 +576,46 @@ void handle_save() {
 }
 
 
+
+
 void handle_move_down() { if (y+1 < canvas_height) { y++; } }
+
+
+
+
 void handle_move_up() {if (y-1 >= 0) {y--;}}
+
+
+
+
 void handle_move_left() {if (x-1 >= 0) {x--;}}
+
+
+
+
 void handle_move_right() {if (x+1 < canvas_width) {x++;}}
+
+
+
+
 void incr_cam_x() {cx++;}
+
+
+
+
 void decr_cam_x() {if (cx-1 >= 0){cx--;}}
+
+
+
+
 void incr_cam_y() {cy++;}
+
+
+
+
 void decr_cam_y() {if (cy-1 >= 0) {cy--;}}
+
+
 
 
 void handle_normal_mode_arrow_keys(int c) {
@@ -503,17 +658,24 @@ void handle_normal_mode_arrow_keys(int c) {
 }
 
 
+
+
 void handle_color_pair_change(int c) {
     if (c=='o') {
         decr_color_pair();
-    } else if (c=='p') {
+    } 
+    else if (c=='p') {
         incr_color_pair();
-    } else if (c=='O') {
+    } 
+    else if (c=='O') {
         decr_color_pair_by_max();
-    } else if (c=='P') {
+    } 
+    else if (c=='P') {
         incr_color_pair_by_max();
     }
 }
+
+
 
 
 void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
@@ -525,13 +687,15 @@ void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
     if (b) {
         return;
     }
-    canvas[y][x].foreground_color = new_fg;
+    //canvas[y][x].foreground_color = new_fg;
     canvas[y][x].background_color = new_bg;
     paintbucket(y-1, x, old_fg, old_bg, new_fg, new_bg);
     paintbucket(y+1, x, old_fg, old_bg,new_fg, new_bg);
     paintbucket(y, x-1, old_fg, old_bg,new_fg, new_bg);
     paintbucket(y, x+1, old_fg, old_bg,new_fg, new_bg);
 }
+
+
 
 
 void handle_normal_mode_input(int c) {
@@ -542,7 +706,6 @@ void handle_normal_mode_input(int c) {
     else if (c=='q') {
         quit = 1;
     } 
-
     else if (c==KEY_MOUSE) {
         MEVENT event;
         if (getmouse(&event) == OK) {
@@ -568,7 +731,6 @@ void handle_normal_mode_input(int c) {
             }
         }
     }
-
     else if (c=='C') {
         clear_canvas(canvas, canvas_height, canvas_width);
     } 
@@ -614,16 +776,21 @@ void handle_normal_mode_input(int c) {
     //    show_error("This is an error message");
     //    get_int_str_from_user("Enter a number: ");
     //}
-    else if (c=='h') {
+    else if (c=='?') {
         show_help();
     }
     // resize the canvas' width
     else if (c=='W') {
         int w = -1;
-        while (w == -1 || w > 150) {
+        // TODO: this is a temporary max width
+        // eventually we will decide on something resonable
+        const int max_width = 150;
+        canvas_pixel_t **new_canvas = NULL;
+        canvas_pixel_t **old_canvas = NULL;
+        while (w == -1 || w > max_width) {
             w = get_new_width_from_user();
         }
-        canvas_pixel_t **new_canvas = init_canvas(canvas_height, w);
+        new_canvas = init_canvas(canvas_height, w);
         if (new_canvas == NULL) {
             show_error("Error creating new canvas");
             return;
@@ -633,7 +800,7 @@ void handle_normal_mode_input(int c) {
         move(y,x);
         copy_canvas(new_canvas, canvas, canvas_height, w, canvas_height, canvas_width);
         canvas_width = w;
-        canvas_pixel_t **old_canvas = canvas;
+        old_canvas = canvas;
         canvas = new_canvas;
         free_canvas(old_canvas, canvas_height);
     }
@@ -641,10 +808,16 @@ void handle_normal_mode_input(int c) {
     else if (c=='H') {
         int h = -1;
         // whats the max height?
-        while (h==-1) {
+        // eventually we will decide on something resonable
+        const int tmp_max_height = 1000;
+        canvas_pixel_t **new_canvas = NULL;
+        int old_canvas_height = -1;
+        canvas_pixel_t **old_canvas = NULL;
+        
+        while (h==-1 || h > tmp_max_height) {
             h = get_new_height_from_user();
         }
-        canvas_pixel_t **new_canvas = init_canvas(h, canvas_width);
+        new_canvas = init_canvas(h, canvas_width);
         if (new_canvas == NULL) {
             show_error("Error creating new canvas");
             return;
@@ -653,9 +826,9 @@ void handle_normal_mode_input(int c) {
         x = 0;
         move(y,x);
         copy_canvas(new_canvas, canvas, h, canvas_width, canvas_height, canvas_width);
-        int old_canvas_height = canvas_height;
+        old_canvas_height = canvas_height;
         canvas_height = h;
-        canvas_pixel_t **old_canvas = canvas;
+        old_canvas = canvas;
         canvas = new_canvas;
         free_canvas(old_canvas, old_canvas_height);
     }
@@ -673,6 +846,8 @@ void handle_normal_mode_input(int c) {
         getmaxyx(stdscr, terminal_height, terminal_width);
     }      
 }
+
+
 
 
 void handle_text_mode_input(int c) {
@@ -699,6 +874,8 @@ void handle_text_mode_input(int c) {
 }
 
 
+
+
 void handle_input() {
     int c = getch();
     // start the clock
@@ -717,6 +894,8 @@ void handle_input() {
     // do microseconds
     last_cmd_us = last_cmd_ns / 1000;
 }
+
+
 
 
 void draw_hud() {
@@ -756,17 +935,16 @@ void draw_hud() {
 }
 
 
-void init_program() {
-    //mPrint("Initializing program\n");
-    setlocale(LC_ALL, "");
-    // 200 ms delay for escape sequences
-    setenv("ESCDELAY", "200", 1);
+
+
+void init_ncurses() {
+    const size_t smallest_width = 1;
     initscr();
     clear();
     noecho();
     keypad(stdscr, true);
     if (!has_colors()) {
-        exit_with_error("Your terminal does not support color\nPlaintext ASCII mode is not yet implemented");
+        exit_with_error("Your terminal does not support color");
     }
     start_color();
     use_default_colors();
@@ -779,32 +957,45 @@ void init_program() {
     else {
         define_colors();
     }
-    init_color_arrays();
-    define_color_pairs();
     getmaxyx(stdscr, terminal_height, terminal_width);
-    // if the terminal is too small, exit
-    // what is "too small"? IDFK GDI 1 pixel would be kind of PoC tho
-    // smallest terminal IS diff than smallest canvas
-    // smallest canvas should be 1
-    // smallest terminal should be large enough to fit the smallest HUD
-    // this feels dumb now but work with me here
-    const size_t smallest_width = 1;
     if (terminal_width < smallest_width) {
         fprintf(stderr, "Error: terminal too small\n");
         exit(EXIT_FAILURE);
     }
-    // make the cursor visible
     curs_set(1);
-
-
-    // experimental mouse
     mousemask(ALL_MOUSE_EVENTS, NULL);
-
-    // initialize the canvas
-    // for now, we are going to make the canvas the same size as the terminal
-    // when we go to read in ascii files,
-    handle_canvas_load();
 }
+
+
+
+
+void init_program() {
+    mPrint("Initializing program\n");
+    setlocale(LC_ALL, "");
+    setenv("ESCDELAY", "200", 1); // 200 ms delay for escape sequences
+    
+    init_ncurses();
+    
+    init_color_arrays();
+    define_color_pairs();
+    
+    handle_canvas_load();
+
+    // to come soon...
+    //if (was_loaded_from_file) {
+    //    mPrint("Loaded from file\n");
+    //    init_color_arrays();
+    //    define_color_pairs_for_ascii();
+    //}
+    //else {
+    //    mPrint("Not loaded from file\n");
+    //    init_color_arrays();
+    //    define_color_pairs();
+    //}
+
+}
+
+
 
 
 void handle_canvas_load() {
@@ -834,10 +1025,21 @@ void handle_canvas_load() {
             canvas = read_ascii_from_filepath(filename, &canvas_height, &canvas_width);
             // eventually we will have to be able to handle moving around a 
             // canvas that might be much larger than our terminal size
+            
+            if (canvas == NULL) {
+                exit_with_error("Error: could not read file");
+            }
+
+            was_loaded_from_file = true;
+
     } else {
         canvas = init_canvas(canvas_height, canvas_width);
     }
+
+    mPrint("done");
 }
+
+
 
 
 void show_error(char *error_msg) {
@@ -886,8 +1088,6 @@ void show_help() {
 "- 'backspace': delete a block and move left one\n"
 "- any key: type character onto screen with selected color pair\n"
 ;
-
-
     clear();
     mvaddstr(0,0,help_msg);
     refresh();
@@ -917,6 +1117,8 @@ int get_new_width_from_user() {
 }
 
 
+
+
 int get_new_height_from_user() {
     echo();
     char *prompt = "Enter new height: ";
@@ -933,6 +1135,8 @@ int get_new_height_from_user() {
     noecho();
     return user_input_int;
 }
+
+
 
 
 void get_int_str_from_user(char *prompt) {
@@ -952,6 +1156,8 @@ void get_int_str_from_user(char *prompt) {
 }
 
 
+
+
 void exit_with_error(char *error_msg) {
     endwin();
     fprintf(stderr, "%s\n", error_msg);
@@ -959,24 +1165,37 @@ void exit_with_error(char *error_msg) {
 }
 
 
+
+
 void free_color_arrays() {
-    for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
-        free(color_array[i]);
+    if (!ncurses_initialized) {
+        mPrint("Freeing color arrays");
     }
-    free(color_array);
+
+    if (color_array_initialized) {
+        for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
+            free(color_array[i]);
+        }
+        free(color_array);
+        color_array_initialized = false;
+    }
 }
+
+
 
 
 void free_color_pair_array() {
-    for (int i = 0; i < MAX_FG_COLORS; i++) {
-        free(color_pair_array[i]);
+    if (!ncurses_initialized) {
+        mPrint("Freeing color pair array");
     }
-    free(color_pair_array);
+
+    if (color_pair_array_initialized) {
+        for (int i = 0; i < MAX_FG_COLORS; i++) {
+            free(color_pair_array[i]);
+        }
+        free(color_pair_array);
+        color_pair_array_initialized = false;
+    }   
 }
-
-
-
-
-
 
 

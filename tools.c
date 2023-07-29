@@ -8,6 +8,10 @@
 #include "colors.h"
 
 
+// global color palette
+int g_color_palette[100][100];
+
+
 void print_canvas(canvas_pixel_t **canvas, int canvas_height, int canvas_width) {
     if (canvas == NULL) {
         printf("Error: canvas is NULL\n");
@@ -63,18 +67,27 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
     // reset the file pointer to the beginning of the file
     fseek(fp, 0, SEEK_SET);
     while (fgets(buffer, 1024, fp) != NULL) {
+        get_colors_in_line(buffer);
         h++;
         int w = 0;
         for (size_t i = 0; i < strlen(buffer); i++) {
             unsigned char c = buffer[i];
+            printf("line: %d\n", h);
             if (c == 0x03) {
                 // we will have to read color codes to skip past them when computing width
                 // we can expect after a ctrl char that the color code is of format:
                 // 00,00
                 // where the first 00 is the foreground color and the second 00 is the background color
+                
+                if (i+5 >= strlen(buffer)) {
+                    mPrint("Error: color code is incomplete");
+                    continue;
+                }
+
                 char fg_chars[3] = { buffer[i+1], buffer[i+2], 0 };
                 char bg_chars[3] = { buffer[i+4], buffer[i+5], 0 };
                 char comma = buffer[i+3]; // ,
+                
                 // the state machine for colors is a bit more complicated than this...
                 bool first_c  = fg_chars[0] >= '0' && fg_chars[0] <= '9';
                 bool second_c = fg_chars[1] >= '0' && fg_chars[1] <= '9';
@@ -101,6 +114,7 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
                     // convert the irc color code to ncurses color code
                     current_fg_color = convert_to_ncurses_color(fg_irc_color);
                     current_bg_color = convert_to_ncurses_color(bg_irc_color);
+                    
                     if (current_fg_color < 0 || current_fg_color > 15) {
                         printf("Error: invalid foreground color code: %d\n", current_fg_color);
                         return -7;
@@ -171,6 +185,9 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
             }
         }
     }
+    mPrint("done");
+
+    //print_color_palette();
     return 0;
 }
 
@@ -178,10 +195,163 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
 bool iscomma(char c) {
     return c == ',';
 }
-//bool isdigit(char c) {
-//    return c >= '0' && c <= '9';
-//}
 
+
+void get_colors_in_line(char *s) {
+    mPrint("get_colors_in_line()");
+
+    if (s==NULL) {
+        return;
+    }
+
+    int len_s = -1;
+    int fg = -1;
+    int bg = -1;
+    unsigned char c0 = 0;
+    unsigned char c1 = 0;
+    unsigned char c2 = 0;
+    unsigned char c3 = 0;
+    unsigned char c4 = 0;
+    unsigned char c5 = 0;
+    char fg_color_code_str[3] = {0, 0, 0};
+    char bg_color_code_str[3] = {0, 0, 0};
+
+    len_s = strlen(s);
+    
+    for (int i=0; i<len_s; i++) {
+        
+        c0 = s[i];
+
+        if (c0 == 0x03) {
+            // look ahead at the next character
+            // if it is not 0 thru 9, fail
+
+            if (i+1 >= len_s) {
+                fprintf(stderr, "Error: invalid color code\n");
+                exit(EXIT_FAILURE);
+            }
+
+            c1 = s[i+1];
+            
+            if (!isdigit(c1)) {
+                fprintf(stderr, "Error: invalid color code\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if (i+2 >= len_s) {
+                fprintf(stderr, "Error: invalid color code\n");
+                exit(EXIT_FAILURE);
+            }
+
+            // look ahead at the next character
+            c2 = s[i+2];
+            
+            if (isdigit(c2)) {
+                c3 = s[i+3];
+                if (iscomma(c3)) {
+                    // expecting another color code either 1 or 2 digit
+                    c4 = s[i+4];
+                    if (isdigit(c4)) {
+                        // check for one more digit in bg color code
+                        c5 = s[i+5];
+                        if (isdigit(c5)) {
+                            // double-digit fg color code
+                            // double-digit bg color code
+                            fg_color_code_str[0] = c1;
+                            fg_color_code_str[1] = c2;
+                            fg_color_code_str[2] = '\0';
+                            bg_color_code_str[0] = c4;
+                            bg_color_code_str[1] = c5;
+                            bg_color_code_str[2] = '\0';
+                            fg = atoi(fg_color_code_str);
+                            bg = atoi(bg_color_code_str);
+                            g_color_palette[fg][bg] = 1;
+                        }
+                        else {
+                            // double-digit fg color code
+                            // single-digit bg color code
+                            fg_color_code_str[0] = c1;
+                            fg_color_code_str[1] = c2;
+                            fg_color_code_str[2] = '\0';
+                            bg_color_code_str[0] = c4;
+                            bg_color_code_str[1] = '\0';
+                            fg = atoi(fg_color_code_str);
+                            bg = atoi(bg_color_code_str);
+                            g_color_palette[fg][bg] = 1;
+                        }
+                    }
+                    else {
+                        fprintf(stderr, "Error: invalid color code\n");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+            // single-digit fg color code
+            else if (iscomma(c2)) {
+                // expecting another color code either 1 or 2 digit
+                c3 = s[i+3];
+                if (isdigit(c3)) {
+                    // check for one more digit in bg color code
+                    c4 = s[i+4];
+                    if (isdigit(c4)) {
+                        // single-digit fg color code
+                        // double-digit bg color code
+                        fg_color_code_str[0] = c1;
+                        fg_color_code_str[1] = '\0';
+                        bg_color_code_str[0] = c3;
+                        bg_color_code_str[1] = c4;
+                        bg_color_code_str[2] = '\0';
+                        fg = atoi(fg_color_code_str);
+                        bg = atoi(bg_color_code_str);
+                        g_color_palette[fg][bg] = 1;
+                    }
+                    else {
+                        // single-digit fg color code
+                        // single-digit bg color code
+                        fg_color_code_str[0] = c1;
+                        fg_color_code_str[1] = '\0';
+                        bg_color_code_str[0] = c3;
+                        bg_color_code_str[1] = '\0';
+                        fg = atoi(fg_color_code_str);
+                        bg = atoi(bg_color_code_str);
+                        g_color_palette[fg][bg] = 1;
+                    }
+                }
+                else {
+                    fprintf(stderr, "Error: invalid color code\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+    }
+}
+
+
+
+// count the number of unique color combinations
+unsigned int count_color_palette() {
+    unsigned int count = 0;
+    for (int i=0; i<100; i++) {
+        for (int j=0; j<100; j++) {
+            if (g_color_palette[i][j] == 1) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+
+
+void print_color_palette() {
+    for (int i=0; i<100; i++) {
+        for (int j=0; j<100; j++) {
+            if (g_color_palette[i][j] == 1) {
+                printf("%d,%d\n", i, j);
+            }
+        }
+    }
+}
 
 
 
