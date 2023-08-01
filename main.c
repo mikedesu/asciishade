@@ -748,7 +748,16 @@ void draw_line(int y1, int x1, int y2, int x2, int fg, int bg) {
 void handle_normal_mode_input(int c) {
     // escape key switches back and forth between normal & text modes
     if (c == 27) {
-        is_text_mode = true;
+
+        if (!is_line_draw_mode) {
+            is_text_mode = true;
+        }
+
+        else if (is_line_draw_mode) {
+            is_line_draw_mode = false;
+        }
+    
+
     } 
     else if (c=='q') {
         quit = 1;
@@ -971,10 +980,14 @@ void handle_input() {
 
 void draw_hud() {
     draw_hud_background(hud_color, terminal_height, terminal_width);
+
+
+    int fg = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
+    //int bg = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
+
+
     draw_hud_row_1(canvas, 
-        color_array, 
-        MAX_COLOR_PAIRS, 
-        filename, 
+        fg,
         y, 
         x,
         cy,
@@ -984,7 +997,11 @@ void draw_hud() {
         canvas_height,
         canvas_width,
         current_color_pair,
-        is_text_mode
+
+
+        is_text_mode ? 1 : is_line_draw_mode ? 2 : 0
+
+
     );
     reset_cursor();
     draw_hud_row_2(canvas, 

@@ -36,9 +36,7 @@ void draw_hud_background(
 
 void draw_hud_row_1(
     canvas_pixel_t **canvas, 
-    int **color_array, 
-    int color_array_len, 
-    char *filename, 
+    int fgcolor,
     int y, 
     int x, 
     int cy,
@@ -48,29 +46,30 @@ void draw_hud_row_1(
     int canvas_h,
     int canvas_w,
     int current_color_pair, 
-    bool is_text_mode) {
+    int mode_value 
+    ) {
 
-    (void)filename;
-    
     if (canvas == NULL) {
         fprintf(stderr, "canvas is null");
         exit(EXIT_FAILURE);
-    } else if (term_h < 1) {
+    } 
+    else if (term_h < 1) {
         fprintf(stderr, "term_h is less than 1");
         exit(EXIT_FAILURE);
-    } else if (term_w < 1) {
+    } 
+    else if (term_w < 1) {
         fprintf(stderr, "term_w is less than 1");
         exit(EXIT_FAILURE);
-    } else if (color_array == NULL) {
-        fprintf(stderr, "color_array is null");
+    } 
+    else if (fgcolor < 0) {
+        fprintf(stderr, "fgcolor is less than 0");
         exit(EXIT_FAILURE);
-    } else if (color_array_len <= 0) {
-        fprintf(stderr, "color_array_len <= 0");
-        exit(EXIT_FAILURE);
-    } else if (canvas_h < 1) {
+    }
+    else if (canvas_h < 1) {
         fprintf(stderr, "canvas_h < 1\n");
         exit(EXIT_FAILURE);
-    } else if (canvas_w < 1) {
+    } 
+    else if (canvas_w < 1) {
         fprintf(stderr, "canvas_w < 1\n");
         exit(EXIT_FAILURE);
     }
@@ -79,7 +78,6 @@ void draw_hud_row_1(
     int hud_y     = term_h-HUD_NUM_ROWS;
     int hud_x     = 0;
     //int hud_terminal_width = w;
-    int fg_color  = get_fg_color(color_array, color_array_len, current_color_pair);
     int fg_color_cursor = canvas[y][x].foreground_color;
     // perhaps the string could be longer than the hud_terminal_width,
     // since we are going to stop printing there anyway
@@ -106,12 +104,18 @@ void draw_hud_row_1(
         "y:%03d|%03d|#%02d(%02x)F%02d Canvas:%dx%d %s", 
         y, 
         cy,
-        fg_color, 
+        fgcolor, 
         current_color_pair, 
         fg_color_cursor, 
         canvas_h,
         canvas_w,
-        is_text_mode ? "TEXT" : "NORMAL"
+        
+        (
+            mode_value == 0 ? "NORMAL" :
+            mode_value == 1 ? "TEXT" :
+            mode_value == 2 ? "LINE" :
+            "ERROR"
+        )
     );
     // truncate the string even if the string isnt longer than term_w
     // its just faster this way

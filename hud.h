@@ -12,9 +12,7 @@ void draw_hud_background(
 
 void draw_hud_row_1(
     canvas_pixel_t **canvas, 
-    int **color_array, 
-    int color_array_len, 
-    char *filename, 
+    int fgcolor,
     int y, 
     int x, 
     int cy,
@@ -24,7 +22,7 @@ void draw_hud_row_1(
     int canvas_h,
     int canvas_w,
     int current_color_pair, 
-    bool is_text_mode
+    int mode_value 
 );
  
 
