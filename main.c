@@ -34,6 +34,7 @@ struct timespec ts0;
 struct timespec ts1;
 
 bool can_change_color_mode          = true;
+bool is_line_draw_mode              = false;
 bool is_text_mode                   = false;
 bool is_cam_mode                    = false;
 bool was_loaded_from_file           = false;
@@ -58,6 +59,11 @@ int hud_color           = 7;
 int current_color_pair  = 0;
 int max_color_pairs     = -1;
 int max_colors          = -1;
+int line_draw_y0        = 0;
+int line_draw_x0        = 0;
+int line_draw_y1        = 0;
+int line_draw_x1        = 0;
+
 
 char filename[1024]     = {0};
 
@@ -88,6 +94,7 @@ void delete_block();
 void draw_canvas();
 void draw_hud();
 void draw_initial_ascii();
+void draw_line(int y1, int x1, int y2, int x2, int fg, int bg);
 
 void exit_with_error(char *error_msg);
 
@@ -371,6 +378,7 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
         refresh();
         cleanup();
         fprintf(stderr, "bg_color: %d\n", bg_color);
+        fprintf(stderr, "max_colors: %d\n", max_colors);
         mPrint("write_char_to_canvas: bg_color is out of bounds");
         exit(EXIT_FAILURE);
     }
@@ -697,6 +705,45 @@ void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
 
 
 
+void draw_line(int y1, int x1, int y2, int x2, int fg, int bg) {
+    int dx = abs(x2-x1);
+    int dy = abs(y2-y1);
+    int sx = x1 < x2 ? 1 : -1;
+    int sy = y1 < y2 ? 1 : -1;
+    int err = dx-dy;
+    int e2;
+    // TODO: check if x1,y1 is in bounds
+    if (x1 < 0 || x1 >= canvas_width || y1 < 0 || y1 >= canvas_height) {
+        return;
+    }
+
+    if (x2 < 0 || x2 >= canvas_width || y2 < 0 || y2 >= canvas_height) {
+        return;
+    }
+
+    if (x1==x2 && y1==y2) {
+        write_char_to_canvas(y1, x1, L' ', fg, bg);
+        return;
+    }
+
+    while (true) {
+        write_char_to_canvas(y1, x1, L' ', fg, bg);
+        if (x1==x2 && y1==y2) {
+            break;
+        }
+        e2 = 2*err;
+        if (e2 > -dy) {
+            err = err - dy;
+            x1 = x1 + sx;
+        }
+        if (e2 < dx) {
+            err = err + dx;
+            y1 = y1 + sy;
+        }
+    }
+}
+
+
 
 void handle_normal_mode_input(int c) {
     // escape key switches back and forth between normal & text modes
@@ -731,6 +778,30 @@ void handle_normal_mode_input(int c) {
             }
         }
     }
+    // to draw a line, we will need a function line(y0,x0,y1,x1)
+    // you will press l, then navigate to where you want the line drawn
+    else if (c=='l') {
+        // y0 and x0 must be set and it must set that we are in line draw mode 
+        if (!is_line_draw_mode) {
+            is_line_draw_mode = true;
+            line_draw_y0 = y;
+            line_draw_x0 = x;
+        }
+        else {
+            is_line_draw_mode = false;
+            line_draw_y1 = y;
+            line_draw_x1 = x;
+
+            int fg = get_current_fg_color();
+            int bg = get_current_bg_color();
+            
+            draw_line(line_draw_y0, line_draw_x0, line_draw_y1, line_draw_x1, fg, bg);
+        }
+        // user must either
+        // 1. move to the y1 x1 that they want to drawn the line to and then press space or l or something
+        // 2. press escape or something to exit line draw mode
+    }
+
     else if (c=='C') {
         clear_canvas(canvas, canvas_height, canvas_width);
     } 
