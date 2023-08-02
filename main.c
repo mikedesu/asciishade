@@ -19,16 +19,15 @@
 #include "colors.h"
 #include "mPrint.h"
 
+#define DEFAULT_COLOR_PAIR 1
+
+extern int g_color_palette[100][100];
+
 // we can technically handle 99 colors and have defined them
 // BUT we can only have 256 color pairs (16x16) active at a time
 int MAX_FG_COLORS = 16;
 int MAX_BG_COLORS = 16;
 int MAX_COLOR_PAIRS = 256;
-
-extern int g_color_palette[100][100];
-
-
-#define DEFAULT_COLOR_PAIR 1
 
 struct timespec ts0;
 struct timespec ts1;
@@ -42,9 +41,10 @@ bool ncurses_initialized            = false;
 bool color_array_initialized        = false;
 bool color_pair_array_initialized   = false;
 
+double last_cmd_ms        = -1;
+
 long last_cmd_ns        = -1;
 long last_cmd_us        = -1;
-double last_cmd_ms        = -1;
 
 int last_char_pressed   = -1;
 int canvas_width        = -1;
@@ -64,7 +64,6 @@ int line_draw_y0        = 0;
 int line_draw_x0        = 0;
 int line_draw_y1        = 0;
 int line_draw_x1        = 0;
-
 
 char filename[1024]     = {0};
 
@@ -120,12 +119,12 @@ void handle_move_down();
 void handle_save_inner_loop(FILE *outfile);
 void handle_save();
 
-void init_program();
-void init_color_arrays();
 void incr_cam_y();
 void incr_cam_x();
 void incr_color_pair();
 void incr_color_pair_by_max();
+void init_color_arrays();
+void init_program();
 void invert_current_color_pair();
 
 void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
@@ -136,15 +135,9 @@ void render_temp_line();
 void reset_cursor();
 
 void show_error(char *error_msg);
+void show_help();
 
 void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color);
-
-
-
-
-
-
-void show_help();
 
 
 
@@ -152,7 +145,6 @@ void show_help();
 int main(int argc, char *argv[]) {
     parse_arguments(argc, argv);
     init_program();
-    
     refresh();
     while (!quit) {
         clear();
@@ -161,7 +153,6 @@ int main(int argc, char *argv[]) {
         handle_input();
         refresh();
     }
-    
     cleanup();
     return EXIT_SUCCESS;
 }
@@ -169,7 +160,9 @@ int main(int argc, char *argv[]) {
 
 
 
-void reset_cursor() { move(y, x); }
+void reset_cursor() { 
+    move(y, x); 
+}
 
 
 
@@ -180,6 +173,7 @@ void print_help(char **argv) {
     "  -w, --width=WIDTH          specify the width of the canvas\n"
     "  -h, --height=HEIGHT        specify the height of the canvas\n\n");
 }
+
 
 
 
@@ -235,9 +229,7 @@ void parse_arguments(int argc, char **argv) {
 
 
 void init_color_arrays() {
-
-    mPrint("Initializing color arrays\n");
-
+    //mPrint("Initializing color arrays\n");
     color_array = calloc(MAX_COLOR_PAIRS, sizeof(int *));
     if (color_array == NULL) {
         mPrint("Failed to allocate memory for color_array\n");
@@ -255,7 +247,6 @@ void init_color_arrays() {
         mPrint("Failed to allocate memory for color_pair_array\n");
         exit(EXIT_FAILURE);
     }
-
     for (int i = 0; i < MAX_FG_COLORS; i++) {
         color_pair_array[i] = calloc(MAX_BG_COLORS, sizeof(int));
         if (color_pair_array[i] == NULL) {
@@ -263,20 +254,35 @@ void init_color_arrays() {
             exit(EXIT_FAILURE);
         }
     }
-
-    mPrint("end init_color_arrays\n");
+    //mPrint("end init_color_arrays\n");
 }
 
 
 
 
 void invert_current_color_pair() {
-    int fg_color = color_array[current_color_pair][0];
-    int bg_color = color_array[current_color_pair][1];
-    int color_pair_index = color_pair_array[fg_color][bg_color];
-    assert(color_pair_index == current_color_pair);
-    int inverse_color_pair_index = color_pair_array[bg_color][fg_color];
-    current_color_pair = inverse_color_pair_index;
+    int fg = -1;
+    int bg = -1;
+    int index = -1;
+    int inverse_index = -1;
+
+    if (current_color_pair > MAX_COLOR_PAIRS) {
+        exit_with_error("invert_current_color_pair: current_color_pair > MAX_COLOR_PAIRS");
+    }
+
+    fg = color_array[current_color_pair][0];
+    bg = color_array[current_color_pair][1];
+
+    index = color_pair_array[fg][bg];
+    
+    if (index != current_color_pair) {
+        char msg[1024] = {0};
+        snprintf(msg, 1024, "invert_current_color_pair: index != current_color_pair: %d != %d", index, current_color_pair);
+        exit_with_error(msg);
+    }
+    
+    inverse_index = color_pair_array[bg][fg];
+    current_color_pair = inverse_index;
 }
 
 
@@ -472,10 +478,16 @@ void render_temp_line() {
     int y1 = line_draw_y0;
     int dx = abs(x-x1);
     int dy = abs(y-y1);
-    int sx = x1 < x ? 1 : -1;
-    int sy = y1 < y ? 1 : -1;
     int err = dx-dy;
     int e2 = -1;
+    int sx = -1;
+    int sy = -1;
+    if (x1 < x) {
+        sx = 1;
+    }
+    if (y1 < y) {
+        sy = 1;
+    }
     while (true) {
         mvaddstr(y1, x1, " ");
         if (x1==x && y1==y) {
@@ -498,11 +510,11 @@ void render_temp_line() {
 
 
 void add_character(wchar_t c) {
-    int fg_color = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
-    int bg_color = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
+    int fg = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
+    int bg = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
     int my = cy + y;
     int mx = cx + x;
-    write_char_to_canvas(my, mx, c, fg_color, bg_color);
+    write_char_to_canvas(my, mx, c, fg, bg);
 }
 
 
@@ -575,18 +587,18 @@ void handle_save_inner_loop(FILE *outfile) {
         fail_with_msg("Error opening file for writing");
     }
     for (int i = 0; i < canvas_height; i++) {
-        int prev_irc_fg_color = -1;
-        int prev_irc_bg_color = -1;
+        int prev_irc_fg = -1;
+        int prev_irc_bg = -1;
         for (int j = 0; j < canvas_width; j++) {
             // now, instead of grabbing characters from stdscr
             // and having to do all this shit on the fly
             // we can just render from the canvas
             wchar_t wc = canvas[i][j].character;
-            int foreground_color = canvas[i][j].foreground_color;
-            int background_color = canvas[i][j].background_color;
-            int irc_foreground_color = convert_to_irc_color(foreground_color);
-            int irc_background_color = convert_to_irc_color(background_color);
-            bool color_changed = prev_irc_fg_color != irc_foreground_color || prev_irc_bg_color != irc_background_color;
+            int fg = canvas[i][j].foreground_color;
+            int bg = canvas[i][j].background_color;
+            int irc_fg = convert_to_irc_color(fg);
+            int irc_bg = convert_to_irc_color(bg);
+            bool color_changed = prev_irc_fg != irc_fg || prev_irc_bg != irc_bg;
             //old code here for historic reasons
             //cchar_t character;
             //mvwin_wch(stdscr, i, j, &character);  // Read wide character from the canvas
@@ -594,13 +606,13 @@ void handle_save_inner_loop(FILE *outfile) {
             //attr_t attribute = character.attr;
             //int color_pair_number = PAIR_NUMBER(attribute);
             if (color_changed) {
-                fprintf(outfile, "\x03%02d,%02d%lc", irc_foreground_color, irc_background_color, wc);
+                fprintf(outfile, "\x03%02d,%02d%lc", irc_fg, irc_bg, wc);
             }
             else {
                 fprintf(outfile, "%lc", wc);
             }
-            prev_irc_fg_color = irc_foreground_color;
-            prev_irc_bg_color = irc_background_color;
+            prev_irc_fg = irc_fg;
+            prev_irc_bg = irc_bg;
         }
         fprintf(outfile, "\n");
     }   

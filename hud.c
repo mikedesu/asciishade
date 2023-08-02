@@ -264,8 +264,7 @@ void draw_hud_row_3(
         exit(EXIT_FAILURE);
     }
 
-    //snprintf(str, terminal_width, "Press q to quit | %ldns", last_cmd_ns);
-    snprintf(str, terminal_width, "Press q to quit | %.08fms", last_cmd_ms);
+    snprintf(str, terminal_width, "Press q to quit | %.06fms", last_cmd_ms);
 
     attron(COLOR_PAIR(hud_color));
     mvaddstr(starting_row, 0, str);

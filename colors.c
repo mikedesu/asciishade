@@ -9,13 +9,17 @@ int convert_to_irc_color(int color) {
         case COLOR_BLACK:       return IRC_COLOR_BLACK;
         case COLOR_RED:         return IRC_COLOR_RED;
         case COLOR_GREEN:       return IRC_COLOR_GREEN;
+        
         case COLOR_YELLOW:      return IRC_COLOR_YELLOW;
+        
         case COLOR_BLUE:        return IRC_COLOR_BLUE;
         case COLOR_MAGENTA:     return IRC_COLOR_MAGENTA;
         case COLOR_CYAN:        return IRC_COLOR_CYAN;
         case COLOR_WHITE:       return IRC_COLOR_WHITE;   
         case COLOR_BROWN:       return IRC_COLOR_BROWN;   
+        
         case COLOR_ORANGE:      return IRC_COLOR_ORANGE;  
+        
         case COLOR_LIGHT_GREEN: return IRC_COLOR_LIGHT_GREEN;
         case COLOR_LIGHT_CYAN:  return IRC_COLOR_LIGHT_CYAN;
         case COLOR_LIGHT_BLUE:  return IRC_COLOR_LIGHT_BLUE;
@@ -38,8 +42,10 @@ int convert_to_ncurses_color(int irc_color) {
         case IRC_COLOR_RED:         return COLOR_RED;
         case IRC_COLOR_BROWN:       return COLOR_BROWN;   
         case IRC_COLOR_MAGENTA:     return COLOR_MAGENTA;
+        
         case IRC_COLOR_ORANGE:      return COLOR_ORANGE; 
         case IRC_COLOR_YELLOW:      return COLOR_YELLOW;
+        
         case IRC_COLOR_LIGHT_GREEN: return COLOR_LIGHT_GREEN;
         case IRC_COLOR_LIGHT_CYAN:  return COLOR_LIGHT_CYAN;
         case IRC_COLOR_LIGHT_BLUE:  return COLOR_LIGHT_BLUE;
