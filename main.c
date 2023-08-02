@@ -130,6 +130,7 @@ void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
 void parse_arguments(int argc, char **argv);
 void print_help(char **argv);
 
+void render_temp_line();
 void reset_cursor();
 
 void show_error(char *error_msg);
@@ -409,21 +410,23 @@ void draw_canvas() {
     int color_pair = 0;
     int i          = -1;
     int j          = -1;
-    int y          = -1;
-    int x          = -1;
+    int local_y          = -1;
+    int local_x          = -1;
+
+    // this loop renders the real canvas
     for (i = 0; i + cy < canvas_height; i++) {
-        y = i + cy;
+        local_y = i + cy;
         for (j = 0; j + cx < canvas_width; j++) {
             // first, get the color pair
-            x = j + cx;
-            if (x < 0 || x >= canvas_width || y < 0 || y >= canvas_height) {
+            local_x = j + cx;
+            if (local_x < 0 || local_x >= canvas_width || local_y < 0 || local_y >= canvas_height) {
                 continue;
             }
-            fg_color   = canvas[y][x].foreground_color;
-            bg_color   = canvas[y][x].background_color;
+            fg_color   = canvas[local_y][local_x].foreground_color;
+            bg_color   = canvas[local_y][local_x].background_color;
             color_pair = color_pair_array[fg_color][bg_color];
             attron(COLOR_PAIR(color_pair));
-            c = canvas[y][x].character;
+            c = canvas[local_y][local_x].character;
             // this fixes the block-rendering bug for now...
             // there has to be a better way to do this
             if ( c == L'▀' ) {
@@ -444,6 +447,47 @@ void draw_canvas() {
             attroff(COLOR_PAIR(color_pair));
         }
     }
+
+    // if we are currently in line draw mode...
+    // we need to draw a temporary representation of the line
+    // after we draw the real canvas
+    if (is_line_draw_mode) {
+        render_temp_line();
+    }
+    refresh();
+}
+
+
+
+
+void render_temp_line() {
+    attron(COLOR_PAIR(current_color_pair));
+    int x1 = line_draw_x0;
+    int y1 = line_draw_y0;
+    int x2 = x;
+    int y2 = y;
+    int dx = abs(x2-x1);
+    int dy = abs(y2-y1);
+    int sx = x1 < x2 ? 1 : -1;
+    int sy = y1 < y2 ? 1 : -1;
+    int err = dx-dy;
+    int e2 = -1;
+    while (true) {
+        mvaddstr(y1, x1, " ");
+        if (x1==x2 && y1==y2) {
+            break;
+        }
+        e2 = 2*err;
+        if (e2 > -dy) {
+            err = err - dy;
+            x1 = x1 + sx;
+        }
+        if (e2 < dx) {
+            err = err + dx;
+            y1 = y1 + sy;
+        }
+    }
+    attroff(COLOR_PAIR(current_color_pair));
 }
 
 
@@ -748,16 +792,16 @@ void draw_line(int y1, int x1, int y2, int x2, int fg, int bg) {
 void handle_normal_mode_input(int c) {
     // escape key switches back and forth between normal & text modes
     if (c == 27) {
-
         if (!is_line_draw_mode) {
             is_text_mode = true;
         }
-
         else if (is_line_draw_mode) {
             is_line_draw_mode = false;
+            line_draw_x0 = -1;
+            line_draw_y0 = -1;
+            line_draw_x1 = -1;
+            line_draw_y1 = -1;
         }
-    
-
     } 
     else if (c=='q') {
         quit = 1;
@@ -805,6 +849,9 @@ void handle_normal_mode_input(int c) {
             int bg = get_current_bg_color();
             
             draw_line(line_draw_y0, line_draw_x0, line_draw_y1, line_draw_x1, fg, bg);
+
+            line_draw_y0 = -1;
+            line_draw_x0 = -1;
         }
         // user must either
         // 1. move to the y1 x1 that they want to drawn the line to and then press space or l or something
