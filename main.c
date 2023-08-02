@@ -105,6 +105,7 @@ void free_color_pair_array();
 void get_filename_from_user();
 void get_int_str_from_user(char *prompt);
 
+void handle_cam_mode_arrow_keys(int c);
 void handle_canvas_load();
 void handle_color_pair_change(int c);
 void handle_normal_mode_arrow_keys(int c);
@@ -393,12 +394,16 @@ void write_char_to_canvas(int y, int x, wchar_t c, int fg_color, int bg_color) {
 
 
 
-int get_current_fg_color() {return color_array[current_color_pair][0];}
+int get_current_fg_color() {
+    return color_array[current_color_pair][0];
+}
 
 
 
 
-int get_current_bg_color() {return color_array[current_color_pair][1];}
+int get_current_bg_color() {
+    return color_array[current_color_pair][1];
+}
 
 
 
@@ -464,17 +469,15 @@ void render_temp_line() {
     attron(COLOR_PAIR(current_color_pair));
     int x1 = line_draw_x0;
     int y1 = line_draw_y0;
-    int x2 = x;
-    int y2 = y;
-    int dx = abs(x2-x1);
-    int dy = abs(y2-y1);
-    int sx = x1 < x2 ? 1 : -1;
-    int sy = y1 < y2 ? 1 : -1;
+    int dx = abs(x-x1);
+    int dy = abs(y-y1);
+    int sx = x1 < x ? 1 : -1;
+    int sy = y1 < y ? 1 : -1;
     int err = dx-dy;
     int e2 = -1;
     while (true) {
         mvaddstr(y1, x1, " ");
-        if (x1==x2 && y1==y2) {
+        if (x1==x && y1==y) {
             break;
         }
         e2 = 2*err;
@@ -530,26 +533,38 @@ void delete_block() {
 
 void incr_color_pair() { 
     current_color_pair++; 
-    current_color_pair = current_color_pair >= max_color_pairs ? 0 : current_color_pair;
+    if (current_color_pair >= max_color_pairs) {
+        current_color_pair = 0;
+    }
 }
 
 
 
 
-void incr_color_pair_by_max(){for(int i=0;i<max_colors;i++){incr_color_pair();}}
+void incr_color_pair_by_max(){
+    for(int i=0;i<max_colors;i++){
+        incr_color_pair();
+    }
+}
 
 
 
 
 void decr_color_pair() { 
     current_color_pair--; 
-    current_color_pair = current_color_pair < 0 ? max_color_pairs-1 : current_color_pair;
+    if (current_color_pair < 0) {
+        current_color_pair = max_color_pairs - 1;
+    }
 }
 
 
 
 
-void decr_color_pair_by_max(){for(int i=0;i<max_colors;i++){decr_color_pair();}}
+void decr_color_pair_by_max(){
+    for(int i=0;i<max_colors;i++){
+        decr_color_pair();
+    }
+}
 
 
 
@@ -630,49 +645,74 @@ void handle_save() {
 
 
 
-void handle_move_down() { if (y+1 < canvas_height) { y++; } }
+void handle_move_down() { 
+    if (y+1 < canvas_height) { 
+        y++; 
+    } 
+}
 
 
 
 
-void handle_move_up() {if (y-1 >= 0) {y--;}}
+void handle_move_up() {
+    if (y-1 >= 0) {
+        y--;
+    }
+}
 
 
 
 
-void handle_move_left() {if (x-1 >= 0) {x--;}}
+void handle_move_left() {
+    if (x-1 >= 0) {
+        x--;
+    }
+}
+
+
+
+void handle_move_right() {
+    if (x+1 < canvas_width) {
+        x++;
+    }
+}
 
 
 
 
-void handle_move_right() {if (x+1 < canvas_width) {x++;}}
+void incr_cam_x() {
+    cx++;
+}
 
 
 
 
-void incr_cam_x() {cx++;}
+void decr_cam_x() {
+    if (cx-1 >= 0){
+        cx--;
+    }
+}
 
 
 
 
-void decr_cam_x() {if (cx-1 >= 0){cx--;}}
+void incr_cam_y() {
+    cy++;
+}
 
 
 
 
-void incr_cam_y() {cy++;}
-
-
-
-
-void decr_cam_y() {if (cy-1 >= 0) {cy--;}}
-
+void decr_cam_y() {
+    if (cy-1 >= 0) {
+        cy--;
+    }
+}
 
 
 
 void handle_normal_mode_arrow_keys(int c) {
-    if (! is_cam_mode) {
-        switch(c) {
+    switch(c) {
             case KEY_DOWN:
                     handle_move_down();
                     break;
@@ -688,9 +728,16 @@ void handle_normal_mode_arrow_keys(int c) {
                     default:
                     break;
         }
-    }
-    else {
-        switch(c) {
+}
+
+
+
+
+
+
+
+void handle_cam_mode_arrow_keys(int c) {
+    switch(c) {
             case KEY_DOWN:
                     incr_cam_y();
                     break;
@@ -706,7 +753,8 @@ void handle_normal_mode_arrow_keys(int c) {
             default:
                     break;  
         }
-    }
+
+
 }
 
 
@@ -881,7 +929,14 @@ void handle_normal_mode_input(int c) {
         handle_save();
     } 
     else if (c==KEY_DOWN || c==KEY_UP || c==KEY_RIGHT || c==KEY_LEFT) {
-        handle_normal_mode_arrow_keys(c);
+        
+        if (is_cam_mode) {
+            handle_cam_mode_arrow_keys(c);
+        }
+        else {
+            handle_normal_mode_arrow_keys(c);
+        }
+    
     } 
     else if (c=='g') {
         // paintbucket tool
@@ -1210,6 +1265,7 @@ void show_help() {
 "- 'W': resize canvas width\n"
 "- 'H': resize canvas height\n"
 "- 'g': paintbucket\n"
+"- 'l': line mode\n"
 "- 'q': quit\n"
 "- arrow keys: cursor navigation\n"
 "- space bar: place a block\n"
