@@ -47,7 +47,7 @@ void draw_hud_row_3(
     int terminal_height,
     int terminal_width,
     int hud_color,
-    long last_cmd_ns
+    double last_cmd_ms
 );
 
 void switch_between_hud_and_current_color(int hud_color, int current_color_pair);

@@ -44,6 +44,7 @@ bool color_pair_array_initialized   = false;
 
 long last_cmd_ns        = -1;
 long last_cmd_us        = -1;
+double last_cmd_ms        = -1;
 
 int last_char_pressed   = -1;
 int canvas_width        = -1;
@@ -1059,8 +1060,7 @@ void handle_text_mode_input(int c) {
 
 
 void handle_input() {
-    int c = getch();
-    // start the clock
+    int c = getch(); // start the clock
     clock_gettime(CLOCK_MONOTONIC, &ts0);
     last_char_pressed = c;
     if (is_text_mode) {
@@ -1069,12 +1069,16 @@ void handle_input() {
     else {
         handle_normal_mode_input(c);
     }
-    // stop the clock
-    clock_gettime(CLOCK_MONOTONIC, &ts1);
+    clock_gettime(CLOCK_MONOTONIC, &ts1); // stop clock
     // do nanoseconds
-    last_cmd_ns = (ts1.tv_sec - ts0.tv_sec) * 1000000000 + (ts1.tv_nsec - ts0.tv_nsec);
+    //last_cmd_ns = (ts1.tv_sec - ts0.tv_sec) * 1000000000 + (ts1.tv_nsec - ts0.tv_nsec);
     // do microseconds
-    last_cmd_us = last_cmd_ns / 1000;
+    //last_cmd_us = last_cmd_ns / 1000;
+    // do milliseconds
+    //last_cmd_ms = last_cmd_ns / 1000000;
+
+    // do milliseconds
+    last_cmd_ms = (ts1.tv_sec - ts0.tv_sec) * 1000.0 + (ts1.tv_nsec - ts0.tv_nsec) / 1000000.0;
 }
 
 
@@ -1082,12 +1086,8 @@ void handle_input() {
 
 void draw_hud() {
     draw_hud_background(hud_color, terminal_height, terminal_width);
-
-
     int fg = get_fg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
     //int bg = get_bg_color(color_array, MAX_COLOR_PAIRS, current_color_pair);
-
-
     draw_hud_row_1(canvas, 
         fg,
         y, 
@@ -1099,11 +1099,7 @@ void draw_hud() {
         canvas_height,
         canvas_width,
         current_color_pair,
-
-
         is_text_mode ? 1 : is_line_draw_mode ? 2 : 0
-
-
     );
     reset_cursor();
     draw_hud_row_2(canvas, 
@@ -1120,7 +1116,7 @@ void draw_hud() {
             cx,
             last_char_pressed
         );
-    draw_hud_row_3(terminal_height, terminal_width, hud_color, last_cmd_ns);
+    draw_hud_row_3(terminal_height, terminal_width, hud_color, last_cmd_ms);
     reset_cursor();
 }
 
@@ -1163,14 +1159,10 @@ void init_program() {
     mPrint("Initializing program\n");
     setlocale(LC_ALL, "");
     setenv("ESCDELAY", "200", 1); // 200 ms delay for escape sequences
-    
     init_ncurses();
-    
     init_color_arrays();
     define_color_pairs();
-    
     handle_canvas_load();
-
     // to come soon...
     //if (was_loaded_from_file) {
     //    mPrint("Loaded from file\n");
@@ -1182,7 +1174,6 @@ void init_program() {
     //    init_color_arrays();
     //    define_color_pairs();
     //}
-
 }
 
 
@@ -1211,22 +1202,18 @@ void handle_canvas_load() {
     // attempts to navigate offscreen
     // at this point, if we passed a filename
     if (strcmp(filename, "")!=0 && check_if_file_exists(filename)) {
-            // we will load this file into the canvas
-            canvas = read_ascii_from_filepath(filename, &canvas_height, &canvas_width);
-            // eventually we will have to be able to handle moving around a 
-            // canvas that might be much larger than our terminal size
-            
-            if (canvas == NULL) {
-                exit_with_error("Error: could not read file");
-            }
-
-            was_loaded_from_file = true;
-
+        // we will load this file into the canvas
+        canvas = read_ascii_from_filepath(filename, &canvas_height, &canvas_width);
+        // eventually we will have to be able to handle moving around a 
+        // canvas that might be much larger than our terminal size
+        if (canvas == NULL) {
+            exit_with_error("Error: could not read file");
+        }
+        was_loaded_from_file = true;
     } else {
         canvas = init_canvas(canvas_height, canvas_width);
     }
-
-    mPrint("done");
+    //mPrint("done");
 }
 
 
@@ -1247,11 +1234,11 @@ void show_error(char *error_msg) {
 
 void show_help() {
     char *helpfilename = "helpfile.txt";
+    char help_msg[1024] = {0};
     FILE *helpfile = fopen(helpfilename, "r");
     if (helpfile == NULL) {
         exit_with_error("Error: could not open help file");
     }
-    char help_msg[1024] = {0};
     // read whole file into help_msg
     fread(help_msg, 1, 1024, helpfile);
     fclose(helpfile);
@@ -1287,10 +1274,10 @@ int get_new_width_from_user() {
 
 
 int get_new_height_from_user() {
-    echo();
     char *prompt = "Enter new height: ";
     char user_input[4] = {0}; // up to a 3-digit number
     int user_input_int = -1;
+    echo();
     clear();
     mvaddstr(0,0,prompt);
     refresh();

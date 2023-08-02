@@ -242,7 +242,7 @@ void draw_hud_row_3(
     int terminal_height,
     int terminal_width,
     int hud_color,
-    long last_cmd_ns
+    double last_cmd_ms
 ) {
     
     if (terminal_height < 0) {
@@ -264,7 +264,8 @@ void draw_hud_row_3(
         exit(EXIT_FAILURE);
     }
 
-    snprintf(str, terminal_width, "Press q to quit | %ldns", last_cmd_ns);
+    //snprintf(str, terminal_width, "Press q to quit | %ldns", last_cmd_ns);
+    snprintf(str, terminal_width, "Press q to quit | %.08fms", last_cmd_ms);
 
     attron(COLOR_PAIR(hud_color));
     mvaddstr(starting_row, 0, str);
