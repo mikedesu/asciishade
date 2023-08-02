@@ -1246,39 +1246,15 @@ void show_error(char *error_msg) {
 
 
 void show_help() {
-    char *help_msg = 
-"**Keyboard Controls**\n"
-"\n"
-"**Normal Mode**\n"
-"\n"
-"- 'escape': Switch to text mode\n"
-"- 'S': save to file\n"
-"    - if the filename was not specified on program run, you will be asked to \n    enter a filename.\n"
-"- 'o': go back one color pair / one foreground color\n"
-"- 'p': go forward one color pair / one foreground color\n"
-"- 'O': go back one background color\n"
-"- 'P': go forward one background color\n"
-"- 'c': clear canvas\n"
-"- 'f': fill canvas\n"
-"- 'v': flip canvas vertically\n"
-"- 'h': flip canvas horizontally\n"
-"- 'W': resize canvas width\n"
-"- 'H': resize canvas height\n"
-"- 'g': paintbucket\n"
-"- 'l': line mode\n"
-"- 'q': quit\n"
-"- arrow keys: cursor navigation\n"
-"- space bar: place a block\n"
-"- delete: delete a block\n"
-"- backspace: delete a block and move left one\n"
-"\n"
-"**Text Mode**\n"
-"\n"
-"- 'escape': Switch back to normal mode\n"
-"- 'delete': delete a block\n"
-"- 'backspace': delete a block and move left one\n"
-"- any key: type character onto screen with selected color pair\n"
-;
+    char *helpfilename = "helpfile.txt";
+    FILE *helpfile = fopen(helpfilename, "r");
+    if (helpfile == NULL) {
+        exit_with_error("Error: could not open help file");
+    }
+    char help_msg[1024] = {0};
+    // read whole file into help_msg
+    fread(help_msg, 1, 1024, helpfile);
+    fclose(helpfile);
     clear();
     mvaddstr(0,0,help_msg);
     refresh();
@@ -1362,7 +1338,6 @@ void free_color_arrays() {
     if (!ncurses_initialized) {
         mPrint("Freeing color arrays");
     }
-
     if (color_array_initialized) {
         for (int i = 0; i < MAX_COLOR_PAIRS; i++) {
             free(color_array[i]);
@@ -1379,7 +1354,6 @@ void free_color_pair_array() {
     if (!ncurses_initialized) {
         mPrint("Freeing color pair array");
     }
-
     if (color_pair_array_initialized) {
         for (int i = 0; i < MAX_FG_COLORS; i++) {
             free(color_pair_array[i]);
