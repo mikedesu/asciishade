@@ -5,6 +5,26 @@
 #include "canvas.h"
 #include "colors.h"
 
+#define FULL_BLOCK        L'█' //0x2588
+#define UPPER_HALF_BLOCK  L'▀' //0x2580
+#define BOTTOM_HALF_BLOCK L'▄' //0x2584
+#define LEFT_HALF_BLOCK   L'▌' //0x258C
+#define RIGHT_HALF_BLOCK  L'▐' //0x2590
+#define BOTTOM_LEFT_BLOCK  L'▖' //0x2596
+#define BOTTOM_RIGHT_BLOCK L'▗' //0x2597
+#define UPPER_LEFT_BLOCK   L'▘' //0x2598
+#define UPPER_LEFT_CORNER  L'▛' //0x259B
+#define UPPER_RIGHT_CORNER L'▜' //0x259C
+#define UPPER_RIGHT_BLOCK  L'▝' //0x259D
+#define BOTTOM_LEFT_CORNER  L'▙' //0x2599
+#define BOTTOM_RIGHT_CORNER L'▟' //0x259F
+#define LIGHT_SHADE  L'░' //0x2591
+#define MEDIUM_SHADE L'▒' //0x2592
+#define DARK_SHADE   L'▓' //0x2593
+
+
+
+
 bool check_if_file_exists(char *filename);
 bool iscomma(char c) ;
 

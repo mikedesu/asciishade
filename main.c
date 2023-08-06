@@ -21,6 +21,10 @@
 
 #define DEFAULT_COLOR_PAIR 1
 
+//#define SPACE        L' ' 0x0020
+
+
+
 extern int g_color_palette[100][100];
 
 // we can technically handle 99 colors and have defined them
@@ -68,6 +72,10 @@ int line_draw_x1        = 0;
 char filename[1024]     = {0};
 
 canvas_pixel_t **canvas = NULL;
+
+
+//wchar_t gblock = L' ';
+wchar_t gblock = FULL_BLOCK;
 
 int **color_array       = NULL;
 int **color_pair_array  = NULL;
@@ -133,6 +141,8 @@ void print_help(char **argv);
 
 void render_temp_line();
 void reset_cursor();
+void rotate_gblock_forward();
+void rotate_gblock_backward();
 
 void show_error(char *error_msg);
 void show_help();
@@ -441,18 +451,54 @@ void draw_canvas() {
             c = canvas[local_y][local_x].character;
             // this fixes the block-rendering bug for now...
             // there has to be a better way to do this
-            if ( c == L'▀' ) {
+            if ( c == UPPER_HALF_BLOCK ) {
                 mvaddstr(i, j, "▀");
             } 
-            else if ( c == L'▄' ) {
+            else if ( c == BOTTOM_HALF_BLOCK ) {
                 mvaddstr(i, j, "▄");
             } 
-            else if ( c == L'█' ) {
+            else if ( c == FULL_BLOCK ) {
                 mvaddstr(i, j, "█");
             } 
-            else if (c == L'░' ) {
+            else if (c==LEFT_HALF_BLOCK) {
+                mvaddstr(i, j, "▌");
+            }
+            else if (c==RIGHT_HALF_BLOCK) {
+                mvaddstr(i, j, "▐");
+            }
+            else if (c == DARK_SHADE ) {
                 mvaddstr(i, j, "░");
             } 
+            else if (c == MEDIUM_SHADE ) {
+                mvaddstr(i, j, "▒");
+            } 
+            else if (c == LIGHT_SHADE ) {
+                mvaddstr(i, j, "▓");
+            }
+            else if (c == UPPER_LEFT_CORNER ) {
+                mvaddstr(i, j, "▛");
+            }
+            else if (c == UPPER_RIGHT_CORNER ) {
+                mvaddstr(i, j, "▜");
+            }
+            else if (c == BOTTOM_LEFT_CORNER ) {
+                mvaddstr(i, j, "▙");
+            }
+            else if (c == BOTTOM_RIGHT_CORNER ) {
+                mvaddstr(i, j, "▟");
+            }
+            else if (c == UPPER_LEFT_BLOCK ) {
+                mvaddstr(i, j, "▘");
+            }
+            else if (c == UPPER_RIGHT_BLOCK ) {
+                mvaddstr(i, j, "▝");
+            }
+            else if (c == BOTTOM_RIGHT_BLOCK ) {
+                mvaddstr(i, j, "▗");
+            }
+            else if (c == BOTTOM_LEFT_BLOCK ) {
+                mvaddstr(i, j, "▖");
+            }
             else {
                 mvaddch(i, j, c);
             }
@@ -529,7 +575,8 @@ void add_character_and_move_right(wchar_t c) {
 
 
 void add_block() { 
-    add_character(L' ');
+    //add_character(L' ');
+    add_character(gblock);
 }
 
 
@@ -850,6 +897,59 @@ void draw_line(int y1, int x1, int y2, int x2, int fg, int bg) {
 
 
 
+// the 13 is hard-coded AF we need to extend this
+// eventually the pixels will no longer be wchar_t but rather a 5-byte array
+#define GBLOCK_PALETTE_SIZE 13
+static int gblock_palette_index = 0;
+static wchar_t gblock_palette[GBLOCK_PALETTE_SIZE] = { 
+    FULL_BLOCK,
+    UPPER_HALF_BLOCK,
+    BOTTOM_HALF_BLOCK,
+    LEFT_HALF_BLOCK,
+    RIGHT_HALF_BLOCK,
+    UPPER_LEFT_BLOCK,
+    UPPER_LEFT_CORNER,
+    UPPER_RIGHT_BLOCK,
+    UPPER_RIGHT_CORNER,
+    BOTTOM_LEFT_BLOCK,
+    BOTTOM_LEFT_CORNER,
+    BOTTOM_RIGHT_BLOCK,
+    BOTTOM_RIGHT_CORNER
+};
+
+
+
+
+void rotate_gblock_forward() {
+    gblock_palette_index = (gblock_palette_index + 1) % GBLOCK_PALETTE_SIZE;
+    gblock = gblock_palette[gblock_palette_index];
+}
+
+
+
+
+void rotate_gblock_backward() {
+    gblock_palette_index = (gblock_palette_index - 1) % GBLOCK_PALETTE_SIZE;
+    if (gblock_palette_index < 0) {
+        gblock_palette_index = 4;
+    }
+    gblock = gblock_palette[gblock_palette_index];
+}
+
+
+
+
+void handle_gblock_rotation(int c) {
+    if (c=='[') {
+        rotate_gblock_backward();
+    }
+    else if (c==']') {
+        rotate_gblock_forward();
+    }
+}
+
+
+
 void handle_normal_mode_input(int c) {
     // escape key switches back and forth between normal & text modes
     if (c == 27) {
@@ -966,7 +1066,29 @@ void handle_normal_mode_input(int c) {
     } 
     else if (c=='o' || c=='O' || c=='p' || c=='P') {
         handle_color_pair_change(c);
-    } 
+    }
+
+    else if (c=='[' || c==']') {
+
+
+        // lets just test switching between a full block and a half block
+        
+        handle_gblock_rotation(c);
+
+        /*
+        if ( gblock == FULL_BLOCK ) {
+            gblock = UPPER_HALF_BLOCK;
+        }
+        else if ( gblock == UPPER_HALF_BLOCK ) {
+            gblock = BOTTOM_HALF_BLOCK;
+        }
+        else if ( gblock == BOTTOM_HALF_BLOCK ) {
+            gblock = FULL_BLOCK;
+        }
+        */
+
+
+    }
     //else if (c=='E') { // experimental
     //    show_error("This is an error message");
     //    get_int_str_from_user("Enter a number: ");

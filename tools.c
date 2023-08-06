@@ -130,46 +130,31 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
             else if (c == 0xE2 && i <= strlen(buffer)-3) {
                 unsigned char c2 = buffer[i+1];
                 unsigned char c3 = buffer[i+2];
-                // top-half block
-                if (c2 == 0x96 && c3== 0x80) {
-                    i += 2;
-                    // write the block to the canvas
-                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
-                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
-                    canvas[canvas_y][canvas_x].character = L'▀';
-                    canvas_x++;
-                    w++;
-                }
-                // bottom-half block
-                else if (c2 == 0x96 && c3 == 0x84) {
-                    i += 2;
-                    // write the block to the canvas
-                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
-                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
-                    canvas[canvas_y][canvas_x].character = L'▄';
-                    canvas_x++;
-                    w++;
-                }
-                // full block
-                else if (c2 == 0x96 && c3 == 0x88) {
-                    i += 2;
-                    // write the block to the canvas
-                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
-                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
-                    canvas[canvas_y][canvas_x].character = L'█';
-                    canvas_x++;
-                    w++;
-                }
-                // light shading
-                else if (c2 == 0x96 && c3== 0x91) {
-                    i += 2;
-                    // write the block to the canvas
-                    canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
-                    canvas[canvas_y][canvas_x].background_color = current_bg_color;
-                    canvas[canvas_y][canvas_x].character = L'░';
-                    canvas_x++;
-                    w++;
-                }
+                wchar_t block;    
+            
+                if (c2 == 0x96 && c3== 0x80)       { block = UPPER_HALF_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x84) { block = BOTTOM_HALF_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x88) { block = FULL_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x8C) { block = LEFT_HALF_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x90) { block = RIGHT_HALF_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x91) { block = LIGHT_SHADE; }
+                else if (c2 == 0x96 && c3 == 0x92) { block = MEDIUM_SHADE; }
+                else if (c2 == 0x96 && c3 == 0x93) { block = DARK_SHADE; }
+                else if (c2 == 0x96 && c3 == 0x96) { block = BOTTOM_LEFT_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x97) { block = BOTTOM_RIGHT_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x98) { block = UPPER_LEFT_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x99) { block = BOTTOM_LEFT_CORNER; }
+                else if (c2 == 0x96 && c3 == 0x9B) { block = UPPER_LEFT_CORNER; }
+                else if (c2 == 0x96 && c3 == 0x9C) { block = UPPER_RIGHT_CORNER; }
+                else if (c2 == 0x96 && c3 == 0x9D) { block = UPPER_RIGHT_BLOCK; }
+                else if (c2 == 0x96 && c3 == 0x9F) { block = BOTTOM_RIGHT_CORNER; }
+
+                i += 2;
+                canvas[canvas_y][canvas_x].foreground_color = current_fg_color;
+                canvas[canvas_y][canvas_x].background_color = current_bg_color;
+                canvas[canvas_y][canvas_x].character = block;
+                canvas_x++;
+                w++;
             }
             else if (c == '\n') {
                 canvas_y++;
