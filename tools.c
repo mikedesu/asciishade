@@ -67,12 +67,12 @@ int read_ascii_into_canvas_unsafe(FILE *fp, canvas_pixel_t **canvas, int canvas_
     // reset the file pointer to the beginning of the file
     fseek(fp, 0, SEEK_SET);
     while (fgets(buffer, 1024, fp) != NULL) {
-        get_colors_in_line(buffer);
+        //get_colors_in_line(buffer);
         h++;
         int w = 0;
         for (size_t i = 0; i < strlen(buffer); i++) {
             unsigned char c = buffer[i];
-            printf("line: %d\n", h);
+            //printf("line: %d\n", h);
             if (c == 0x03) {
                 // we will have to read color codes to skip past them when computing width
                 // we can expect after a ctrl char that the color code is of format:
@@ -199,11 +199,9 @@ bool iscomma(char c) {
 
 void get_colors_in_line(char *s) {
     mPrint("get_colors_in_line()");
-
     if (s==NULL) {
         return;
     }
-
     int len_s = -1;
     int fg = -1;
     int bg = -1;
@@ -215,37 +213,27 @@ void get_colors_in_line(char *s) {
     unsigned char c5 = 0;
     char fg_color_code_str[3] = {0, 0, 0};
     char bg_color_code_str[3] = {0, 0, 0};
-
     len_s = strlen(s);
-    
     for (int i=0; i<len_s; i++) {
-        
         c0 = s[i];
-
         if (c0 == 0x03) {
             // look ahead at the next character
             // if it is not 0 thru 9, fail
-
             if (i+1 >= len_s) {
                 fprintf(stderr, "Error: invalid color code\n");
                 exit(EXIT_FAILURE);
             }
-
             c1 = s[i+1];
-            
             if (!isdigit(c1)) {
                 fprintf(stderr, "Error: invalid color code\n");
                 exit(EXIT_FAILURE);
             }
-
             if (i+2 >= len_s) {
                 fprintf(stderr, "Error: invalid color code\n");
                 exit(EXIT_FAILURE);
             }
-
             // look ahead at the next character
             c2 = s[i+2];
-            
             if (isdigit(c2)) {
                 c3 = s[i+3];
                 if (iscomma(c3)) {

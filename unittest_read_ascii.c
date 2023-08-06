@@ -22,11 +22,8 @@ int main(int argc, char **argv) {
     //print_canvas(canvas, h, w);
     printf("Freeing canvas:\n");
     free_canvas(canvas, h);
-    
-    print_color_palette();
-
-    printf("Total color pairs for this ASCII: %u\n", count_color_palette());
-
+    //print_color_palette();
+    //printf("Total color pairs for this ASCII: %u\n", count_color_palette());
     //print_ncurses_color_codes();
     return EXIT_SUCCESS;
 }
