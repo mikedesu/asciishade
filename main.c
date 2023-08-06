@@ -535,7 +535,9 @@ void render_temp_line() {
         sy = 1;
     }
     while (true) {
-        mvaddstr(y1, x1, " ");
+        
+        mvaddstr(y1, x1, convert_wchar_block_to_str(gblock));
+
         if (x1==x && y1==y) {
             break;
         }
@@ -962,6 +964,7 @@ void handle_normal_mode_input(int c) {
             line_draw_y0 = -1;
             line_draw_x1 = -1;
             line_draw_y1 = -1;
+            curs_set(1);
         }
     } 
     else if (c=='q') {
@@ -1000,6 +1003,8 @@ void handle_normal_mode_input(int c) {
             is_line_draw_mode = true;
             line_draw_y0 = y;
             line_draw_x0 = x;
+
+            curs_set(0);
         }
         else {
             is_line_draw_mode = false;
@@ -1013,6 +1018,7 @@ void handle_normal_mode_input(int c) {
 
             line_draw_y0 = -1;
             line_draw_x0 = -1;
+            curs_set(1);
         }
         // user must either
         // 1. move to the y1 x1 that they want to drawn the line to and then press space or l or something
