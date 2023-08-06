@@ -6,6 +6,7 @@ asciishade
 *.o
 unittest_colors
 unittest_driver
+unittest_read_ascii
 unittest_wide_chars
 unittest_chars
 unittest_time
