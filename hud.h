@@ -22,7 +22,8 @@ void draw_hud_row_1(
     int canvas_h,
     int canvas_w,
     int current_color_pair, 
-    int mode_value 
+    int mode_value,
+    wchar_t block_char
 );
  
 

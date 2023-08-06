@@ -874,12 +874,12 @@ void draw_line(int y1, int x1, int y2, int x2, int fg, int bg) {
     }
 
     if (x1==x2 && y1==y2) {
-        write_char_to_canvas(y1, x1, L' ', fg, bg);
+        write_char_to_canvas(y1, x1, gblock, fg, bg);
         return;
     }
 
     while (true) {
-        write_char_to_canvas(y1, x1, L' ', fg, bg);
+        write_char_to_canvas(y1, x1, gblock, fg, bg);
         if (x1==x2 && y1==y2) {
             break;
         }
@@ -931,7 +931,7 @@ void rotate_gblock_forward() {
 void rotate_gblock_backward() {
     gblock_palette_index = (gblock_palette_index - 1) % GBLOCK_PALETTE_SIZE;
     if (gblock_palette_index < 0) {
-        gblock_palette_index = 4;
+        gblock_palette_index = GBLOCK_PALETTE_SIZE - 1;
     }
     gblock = gblock_palette[gblock_palette_index];
 }
@@ -1233,7 +1233,8 @@ void draw_hud() {
         canvas_height,
         canvas_width,
         current_color_pair,
-        is_text_mode ? 1 : is_line_draw_mode ? 2 : 0
+        is_text_mode ? 1 : is_line_draw_mode ? 2 : 0,
+        gblock
     );
     reset_cursor();
     draw_hud_row_2(canvas, 

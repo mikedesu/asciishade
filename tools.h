@@ -22,6 +22,24 @@
 #define MEDIUM_SHADE L'▒' //0x2592
 #define DARK_SHADE   L'▓' //0x2593
 
+#define FULL_BLOCK_STR        "█" //0x2588
+#define UPPER_HALF_BLOCK_STR  "▀" //0x2580
+#define BOTTOM_HALF_BLOCK_STR "▄" //0x2584
+#define LEFT_HALF_BLOCK_STR   "▌" //0x258C
+#define RIGHT_HALF_BLOCK_STR  "▐" //0x2590
+#define BOTTOM_LEFT_BLOCK_STR  "▖" //0x2596
+#define BOTTOM_RIGHT_BLOCK_STR "▗" //0x2597
+#define UPPER_LEFT_BLOCK_STR   "▘" //0x2598
+#define UPPER_LEFT_CORNER_STR  "▛" //0x259B
+#define UPPER_RIGHT_CORNER_STR "▜" //0x259C
+#define UPPER_RIGHT_BLOCK_STR  "▝" //0x259D
+#define BOTTOM_LEFT_CORNER_STR  "▙" //0x2599
+#define BOTTOM_RIGHT_CORNER_STR "▟" //0x259F
+#define LIGHT_SHADE_STR  "░" //0x2591
+#define MEDIUM_SHADE_STR "▒" //0x2592
+#define DARK_SHADE_STR   "▓" //0x2593
+
+
 
 
 
@@ -41,3 +59,4 @@ void print_color_palette();
 
 canvas_pixel_t ** read_ascii_from_filepath(char *path, int *h, int *w);
 
+char *convert_wchar_block_to_str(wchar_t block) ;

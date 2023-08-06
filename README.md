@@ -89,7 +89,6 @@ Usage: ./asciishade [OPTION]...
 ./asciishade --help
 ```
 
-
 **Keyboard Controls**
 
 **Normal Mode**
@@ -101,6 +100,8 @@ Usage: ./asciishade [OPTION]...
 - 'p': go forward one color pair / one foreground color
 - 'O': go back one background color
 - 'P': go forward one background color
+- '[': go back one block type
+- ']': go forward one block type
 - 'c': clear canvas
 - 'f': fill canvas
 - 'v': flip canvas vertically
@@ -108,6 +109,7 @@ Usage: ./asciishade [OPTION]...
 - 'W': resize canvas width
 - 'H': resize canvas height
 - 'g': paintbucket
+- 'l': line mode
 - 'q': quit
 - arrow keys: cursor navigation
 - space bar: place a block
@@ -123,7 +125,6 @@ Usage: ./asciishade [OPTION]...
 
 ### Features On The Way
 
-- Loading from file
 - Exporting to:
     - irc
     - ascii
@@ -131,7 +132,6 @@ Usage: ./asciishade [OPTION]...
     - gif
 - Upload to:
     - termbin
-- Half-block and quarter-block support
 - Full Unicode / UTF-8 support
 - Copy / paste
 - Multiple tabs
@@ -140,10 +140,6 @@ Usage: ./asciishade [OPTION]...
 - Custom Palettes
 - Support for beyond 16 colors
 - More!
-
-### Any plans for mouse support?
-
-No!
 
 -----
 

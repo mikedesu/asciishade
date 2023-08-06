@@ -6,6 +6,9 @@
 #include "tools.h"
 #include "mPrint.h"
 
+
+
+
 // hud_color
 // terminal_height
 // terminal_width
@@ -46,7 +49,8 @@ void draw_hud_row_1(
     int canvas_h,
     int canvas_w,
     int current_color_pair, 
-    int mode_value 
+    int mode_value,
+    wchar_t block_char
     ) {
 
     if (canvas == NULL) {
@@ -127,7 +131,13 @@ void draw_hud_row_1(
         }
         if (c=='#') {
             switch_between_hud_and_current_color(hud_color, current_color_pair);
-            addstr("█");
+            
+            //addstr("█");
+            char *block_str = convert_wchar_block_to_str(block_char);
+            if (block_str) {
+                addstr(block_str);
+            }
+            
             switch_between_current_and_hud_color(hud_color, current_color_pair);
         }
         else {

@@ -504,3 +504,58 @@ int get_bg_color(int **color_array, int array_len, int color_pair) {
     return color_array[color_pair][1];
 }
 
+
+char *convert_wchar_block_to_str(wchar_t block) {
+    if (block == FULL_BLOCK) {
+        return FULL_BLOCK_STR;
+    }
+    else if (block == UPPER_HALF_BLOCK) {  
+        return UPPER_HALF_BLOCK_STR;
+    }
+    else if (block == BOTTOM_HALF_BLOCK) { 
+        return BOTTOM_HALF_BLOCK_STR ;
+    }
+    else if (block == LEFT_HALF_BLOCK) {   
+        return LEFT_HALF_BLOCK_STR   ;
+    }
+    else if (block == RIGHT_HALF_BLOCK) {  
+        return RIGHT_HALF_BLOCK_STR  ;
+    }
+    else if (block == BOTTOM_LEFT_BLOCK) {  
+        return BOTTOM_LEFT_BLOCK_STR  ;
+    }
+    else if (block == BOTTOM_RIGHT_BLOCK) { 
+        return BOTTOM_RIGHT_BLOCK_STR ;
+    }
+    else if (block == UPPER_LEFT_BLOCK) {   
+        return UPPER_LEFT_BLOCK_STR   ;
+    }
+    else if (block == UPPER_LEFT_CORNER) {  
+        return UPPER_LEFT_CORNER_STR  ;
+    }
+    else if (block == UPPER_RIGHT_CORNER) { 
+        return UPPER_RIGHT_CORNER_STR ;
+    }
+    else if (block == UPPER_RIGHT_BLOCK) {  
+        return UPPER_RIGHT_BLOCK_STR  ;
+    }
+    else if (block == BOTTOM_LEFT_CORNER) {  
+        return BOTTOM_LEFT_CORNER_STR  ;
+    }
+    else if (block == BOTTOM_RIGHT_CORNER) { 
+        return BOTTOM_RIGHT_CORNER_STR ;
+    }
+    else if (block == LIGHT_SHADE) {  
+        return LIGHT_SHADE_STR  ;
+    }
+    else if (block == MEDIUM_SHADE) { 
+        return MEDIUM_SHADE_STR ;
+    }
+    else if (block == DARK_SHADE) {   
+        return DARK_SHADE_STR   ;
+    }
+    return NULL;
+}
+
+
+

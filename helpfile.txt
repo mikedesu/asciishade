@@ -9,6 +9,8 @@
 - 'p': go forward one color pair / one foreground color
 - 'O': go back one background color
 - 'P': go forward one background color
+- '[': go back one block type
+- ']': go forward one block type
 - 'c': clear canvas
 - 'f': fill canvas
 - 'v': flip canvas vertically
