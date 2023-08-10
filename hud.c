@@ -118,6 +118,7 @@ void draw_hud_row_1(
             mode_value == 0 ? "NORMAL" :
             mode_value == 1 ? "TEXT" :
             mode_value == 2 ? "LINE" :
+            mode_value == 3 ? "RECT" :
             "ERROR"
         )
     );

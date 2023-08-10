@@ -38,6 +38,7 @@ struct timespec ts1;
 
 bool can_change_color_mode          = true;
 bool is_line_draw_mode              = false;
+bool is_rect_draw_mode              = false;
 bool is_text_mode                   = false;
 bool is_cam_mode                    = false;
 bool was_loaded_from_file           = false;
@@ -103,6 +104,7 @@ void draw_canvas();
 void draw_hud();
 void draw_initial_ascii();
 void draw_line(int y1, int x1, int y2, int x2, int fg, int bg);
+void draw_rect(int y1, int x1, int y2, int x2, int fg, int bg);
 
 void exit_with_error(char *error_msg);
 
@@ -135,11 +137,14 @@ void init_color_arrays();
 void init_program();
 void invert_current_color_pair();
 
-void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
+void paintbucket(int y, int x, wchar_t old_char, wchar_t new_char, int old_fg, int old_bg, int new_fg, int new_bg);
+//void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
 void parse_arguments(int argc, char **argv);
 void print_help(char **argv);
 
-void render_temp_line();
+void render_temp_line(int y1, int x1, int y2, int x2);
+//void render_temp_rect(int y1, int x1, int y2, int x2, int fg, int bg);
+void render_temp_rect(int y1, int x1, int y2, int x2);
 void reset_cursor();
 void rotate_gblock_forward();
 void rotate_gblock_backward();
@@ -510,35 +515,47 @@ void draw_canvas() {
     // we need to draw a temporary representation of the line
     // after we draw the real canvas
     if (is_line_draw_mode) {
-        render_temp_line();
+        render_temp_line(line_draw_y0, line_draw_x0, y, x);
     }
+    else if (is_rect_draw_mode) {
+        render_temp_rect(line_draw_y0, line_draw_x0, y, x);
+    }
+
     refresh();
 }
 
 
 
 
-void render_temp_line() {
+void render_temp_rect(int y1, int x1, int y2, int x2) {
+    render_temp_line(y1, x1, y1, x2);
+    render_temp_line(y1, x2, y2, x2);
+    render_temp_line(y2, x2, y2, x1);
+    render_temp_line(y2, x1, y1, x1);
+}
+
+
+
+
+void render_temp_line(int y1, int x1, int y2, int x2) {
     attron(COLOR_PAIR(current_color_pair));
-    int x1 = line_draw_x0;
-    int y1 = line_draw_y0;
-    int dx = abs(x-x1);
-    int dy = abs(y-y1);
+    //int x1 = line_draw_x0;
+    //int y1 = line_draw_y0;
+    int dx = abs(x2-x1);
+    int dy = abs(y2-y1);
     int err = dx-dy;
     int e2 = -1;
     int sx = -1;
     int sy = -1;
-    if (x1 < x) {
+    if (x1 < x2) {
         sx = 1;
     }
-    if (y1 < y) {
+    if (y1 < y2) {
         sy = 1;
     }
     while (true) {
-        
         mvaddstr(y1, x1, convert_wchar_block_to_str(gblock));
-
-        if (x1==x && y1==y) {
+        if (x1==x2 && y1==y2) {
             break;
         }
         e2 = 2*err;
@@ -840,8 +857,13 @@ void handle_color_pair_change(int c) {
 
 
 
-void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
-    bool b = y < 0 || y >= canvas_height || x < 0 || x >= canvas_width ||
+//void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
+void paintbucket(int y, int x, wchar_t old_char, wchar_t new_char, int old_fg, int old_bg, int new_fg, int new_bg) {
+    bool b = 
+        y < 0 || 
+        y >= canvas_height || 
+        x < 0 || 
+        x >= canvas_width ||
         canvas[y][x].foreground_color != old_fg || 
         canvas[y][x].background_color != old_bg ||
         canvas[y][x].foreground_color == new_fg ||
@@ -849,13 +871,15 @@ void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
     if (b) {
         return;
     }
-    //canvas[y][x].foreground_color = new_fg;
+    canvas[y][x].character = new_char;
+    canvas[y][x].foreground_color = new_fg;
     canvas[y][x].background_color = new_bg;
-    paintbucket(y-1, x, old_fg, old_bg, new_fg, new_bg);
-    paintbucket(y+1, x, old_fg, old_bg,new_fg, new_bg);
-    paintbucket(y, x-1, old_fg, old_bg,new_fg, new_bg);
-    paintbucket(y, x+1, old_fg, old_bg,new_fg, new_bg);
+    paintbucket(y-1, x, old_char, new_char, old_fg, old_bg, new_fg, new_bg);
+    paintbucket(y+1, x, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
+    paintbucket(y, x-1, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
+    paintbucket(y, x+1, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
 }
+
 
 
 
@@ -896,6 +920,18 @@ void draw_line(int y1, int x1, int y2, int x2, int fg, int bg) {
         }
     }
 }
+
+
+
+void draw_rect(int y1, int x1, int y2, int x2, int fg, int bg) {
+    draw_line(y1, x1, y1, x2, fg, bg);
+    draw_line(y1, x2, y2, x2, fg, bg);
+    draw_line(y2, x2, y2, x1, fg, bg);
+    draw_line(y2, x1, y1, x1, fg, bg);
+}
+
+
+
 
 
 
@@ -955,11 +991,19 @@ void handle_gblock_rotation(int c) {
 void handle_normal_mode_input(int c) {
     // escape key switches back and forth between normal & text modes
     if (c == 27) {
-        if (!is_line_draw_mode) {
+        if (!is_line_draw_mode && !is_rect_draw_mode) {
             is_text_mode = true;
         }
         else if (is_line_draw_mode) {
             is_line_draw_mode = false;
+            line_draw_x0 = -1;
+            line_draw_y0 = -1;
+            line_draw_x1 = -1;
+            line_draw_y1 = -1;
+            curs_set(1);
+        }
+        else if (is_rect_draw_mode) {
+            is_rect_draw_mode = false;
             line_draw_x0 = -1;
             line_draw_y0 = -1;
             line_draw_x1 = -1;
@@ -1003,19 +1047,15 @@ void handle_normal_mode_input(int c) {
             is_line_draw_mode = true;
             line_draw_y0 = y;
             line_draw_x0 = x;
-
             curs_set(0);
         }
         else {
             is_line_draw_mode = false;
             line_draw_y1 = y;
             line_draw_x1 = x;
-
             int fg = get_current_fg_color();
             int bg = get_current_bg_color();
-            
             draw_line(line_draw_y0, line_draw_x0, line_draw_y1, line_draw_x1, fg, bg);
-
             line_draw_y0 = -1;
             line_draw_x0 = -1;
             curs_set(1);
@@ -1023,6 +1063,29 @@ void handle_normal_mode_input(int c) {
         // user must either
         // 1. move to the y1 x1 that they want to drawn the line to and then press space or l or something
         // 2. press escape or something to exit line draw mode
+    }
+    
+    // to draw a square, we will need a function square(y0,x0,y1,x1)
+    // you will press s, then navigate to where you want the square drawn
+    else if (c=='s') {
+        // it is going to be a lot like 4 separate line draws
+        if (!is_rect_draw_mode) {
+            is_rect_draw_mode = true;
+            line_draw_y0 = y;
+            line_draw_x0 = x;
+            curs_set(0);
+        }
+        else {
+            is_rect_draw_mode = false;
+            line_draw_y1 = y;
+            line_draw_x1 = x;
+            int fg = get_current_fg_color();
+            int bg = get_current_bg_color();
+            draw_rect(line_draw_y0, line_draw_x0, line_draw_y1, line_draw_x1, fg, bg);
+            line_draw_y0 = -1;
+            line_draw_x0 = -1;
+            curs_set(1);
+        }
     }
 
     else if (c=='C') {
@@ -1048,6 +1111,7 @@ void handle_normal_mode_input(int c) {
     else if (c=='S')  {
         handle_save();
     } 
+
     else if (c==KEY_DOWN || c==KEY_UP || c==KEY_RIGHT || c==KEY_LEFT) {
         
         if (is_cam_mode) {
@@ -1058,6 +1122,8 @@ void handle_normal_mode_input(int c) {
         }
     
     } 
+    // disabling temporarily
+    /*
     else if (c=='G') {
         // paintbucket tool
         // smart fill
@@ -1065,8 +1131,11 @@ void handle_normal_mode_input(int c) {
         int bg = get_current_bg_color();
         int old_fg = canvas[y][x].foreground_color;
         int old_bg = canvas[y][x].background_color;
-        paintbucket(y, x, old_fg, old_bg, fg, bg);
+        wchar_t old_char = canvas[y][x].character;
+        wchar_t new_char = gblock;
+        paintbucket(y, x, old_char, new_char, old_fg, old_bg, fg, bg);
     }
+    */
     else if (c==' ') {
         add_block();
         handle_move_right();
@@ -1074,14 +1143,9 @@ void handle_normal_mode_input(int c) {
     else if (c=='o' || c=='O' || c=='p' || c=='P') {
         handle_color_pair_change(c);
     }
-
     else if (c=='[' || c==']') {
-
-
         // lets just test switching between a full block and a half block
-        
         handle_gblock_rotation(c);
-
         /*
         if ( gblock == FULL_BLOCK ) {
             gblock = UPPER_HALF_BLOCK;
@@ -1240,7 +1304,12 @@ void draw_hud() {
         canvas_height,
         canvas_width,
         current_color_pair,
-        is_text_mode ? 1 : is_line_draw_mode ? 2 : 0,
+        
+            is_text_mode ? 1 : 
+            is_line_draw_mode ? 2 : 
+            is_rect_draw_mode ? 3 : 
+            0,
+        
         gblock
     );
     reset_cursor();
