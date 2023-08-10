@@ -138,7 +138,6 @@ void init_program();
 void invert_current_color_pair();
 
 void paintbucket(int y, int x, wchar_t old_char, wchar_t new_char, int old_fg, int old_bg, int new_fg, int new_bg);
-//void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg);
 void parse_arguments(int argc, char **argv);
 void print_help(char **argv);
 
@@ -857,23 +856,35 @@ void handle_color_pair_change(int c) {
 
 
 
-//void paintbucket(int y, int x, int old_fg, int old_bg, int new_fg, int new_bg) {
 void paintbucket(int y, int x, wchar_t old_char, wchar_t new_char, int old_fg, int old_bg, int new_fg, int new_bg) {
-    bool b = 
-        y < 0 || 
-        y >= canvas_height || 
-        x < 0 || 
-        x >= canvas_width ||
-        canvas[y][x].foreground_color != old_fg || 
-        canvas[y][x].background_color != old_bg ||
-        canvas[y][x].foreground_color == new_fg ||
-        canvas[y][x].background_color == new_bg;
-    if (b) {
+    if (y < 0) {
         return;
     }
+    else if (y >= canvas_height) {
+        return;
+    }
+    else if (x < 0) {
+        return;
+    }
+    else if (x >= canvas_width) {
+        return;
+    }
+
+    else if (canvas[y][x].foreground_color != old_fg) {
+        return;
+    }
+    else if (canvas[y][x].background_color != old_bg) {
+        return;
+    }
+
+    else if (canvas[y][x].character != old_char) {
+        return;
+    }
+
     canvas[y][x].character = new_char;
     canvas[y][x].foreground_color = new_fg;
     canvas[y][x].background_color = new_bg;
+
     paintbucket(y-1, x, old_char, new_char, old_fg, old_bg, new_fg, new_bg);
     paintbucket(y+1, x, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
     paintbucket(y, x-1, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
@@ -1123,7 +1134,6 @@ void handle_normal_mode_input(int c) {
     
     } 
     // disabling temporarily
-    /*
     else if (c=='G') {
         // paintbucket tool
         // smart fill
@@ -1135,6 +1145,7 @@ void handle_normal_mode_input(int c) {
         wchar_t new_char = gblock;
         paintbucket(y, x, old_char, new_char, old_fg, old_bg, fg, bg);
     }
+    /*
     */
     else if (c==' ') {
         add_block();
@@ -1146,19 +1157,6 @@ void handle_normal_mode_input(int c) {
     else if (c=='[' || c==']') {
         // lets just test switching between a full block and a half block
         handle_gblock_rotation(c);
-        /*
-        if ( gblock == FULL_BLOCK ) {
-            gblock = UPPER_HALF_BLOCK;
-        }
-        else if ( gblock == UPPER_HALF_BLOCK ) {
-            gblock = BOTTOM_HALF_BLOCK;
-        }
-        else if ( gblock == BOTTOM_HALF_BLOCK ) {
-            gblock = FULL_BLOCK;
-        }
-        */
-
-
     }
     //else if (c=='E') { // experimental
     //    show_error("This is an error message");

@@ -105,7 +105,7 @@ void draw_hud_row_1(
     snprintf(
         str, 
         term_w,
-        "y:%03d|%03d|#%02d(%02x)F%02d Canvas:%dx%d %s", 
+        "y:%03d|%03d|#%02d(%02x)F%02d Canvas:%dx%d [%c] %s", 
         y, 
         cy,
         fgcolor, 
@@ -113,7 +113,7 @@ void draw_hud_row_1(
         fg_color_cursor, 
         canvas_h,
         canvas_w,
-        
+        canvas[y][x].character, // this is buggy, block chars display funky
         (
             mode_value == 0 ? "NORMAL" :
             mode_value == 1 ? "TEXT" :
@@ -132,13 +132,11 @@ void draw_hud_row_1(
         }
         if (c=='#') {
             switch_between_hud_and_current_color(hud_color, current_color_pair);
-            
             //addstr("█");
             char *block_str = convert_wchar_block_to_str(block_char);
             if (block_str) {
                 addstr(block_str);
             }
-            
             switch_between_current_and_hud_color(hud_color, current_color_pair);
         }
         else {
