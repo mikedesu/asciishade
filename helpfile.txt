@@ -11,14 +11,15 @@
 - 'P': go forward one background color
 - '[': go back one block type
 - ']': go forward one block type
-- 'c': clear canvas
-- 'f': fill canvas
+- 'C': clear canvas
+- 'F': fill canvas
 - 'v': flip canvas vertically
 - 'h': flip canvas horizontally
 - 'W': resize canvas width
 - 'H': resize canvas height
 - 'g': paintbucket
 - 'l': line mode
+- 's': rect mode
 - 'q': quit
 - arrow keys: cursor navigation
 - space bar: place a block
