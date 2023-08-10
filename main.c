@@ -1032,7 +1032,8 @@ void handle_normal_mode_input(int c) {
         is_cam_mode = ! is_cam_mode;
         is_text_mode = false;
     } 
-    else if (c=='f') {
+    // fill canvas
+    else if (c=='F') {
         int fg = get_current_fg_color();
         int bg = get_current_bg_color();
         fill_canvas(canvas, canvas_height, canvas_width, fg, bg);
@@ -1057,7 +1058,7 @@ void handle_normal_mode_input(int c) {
         }
     
     } 
-    else if (c=='g') {
+    else if (c=='G') {
         // paintbucket tool
         // smart fill
         int fg = get_current_fg_color();

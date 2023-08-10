@@ -10,6 +10,7 @@ unittest_read_ascii
 unittest_wide_chars
 unittest_chars
 unittest_time
+unittest_canvas_pixel
 *.cast
 asciis
 asciis/*
