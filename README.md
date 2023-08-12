@@ -9,6 +9,8 @@
                www.evildojo.com
 ```
 
+[![asciicast](https://asciinema.org/a/dqKtIa2qkyMzSpuzX9sB1YXrH.svg)](https://asciinema.org/a/dqKtIa2qkyMzSpuzX9sB1YXrH)
+
 <img src="https://raw.githubusercontent.com/mikedesu/asciishade/main/preview.png"/>
 
 *doin' ascii? throw some shade on it*

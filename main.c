@@ -860,35 +860,52 @@ void paintbucket(int y, int x, wchar_t old_char, wchar_t new_char, int old_fg, i
     if (y < 0) {
         return;
     }
-    else if (y >= canvas_height) {
+    if (y >= canvas_height) {
         return;
     }
-    else if (x < 0) {
+    if (x < 0) {
         return;
     }
-    else if (x >= canvas_width) {
-        return;
-    }
-
-    else if (canvas[y][x].foreground_color != old_fg) {
-        return;
-    }
-    else if (canvas[y][x].background_color != old_bg) {
+    if (x >= canvas_width) {
         return;
     }
 
-    else if (canvas[y][x].character != old_char) {
+    if (canvas[y][x].foreground_color != old_fg) {
         return;
     }
+    if (canvas[y][x].background_color != old_bg) {
+        return;
+    }
+    if (canvas[y][x].character != old_char) {
+        return;
+    }
+
+
+    //if (canvas[y][x].character == new_char) {
+    //    return;
+    //}
+    
+    if (canvas[y][x].foreground_color == new_fg) {
+        return;
+    }
+    /*
+    if (canvas[y][x].background_color == new_bg) {
+        return;
+    }
+    */
 
     canvas[y][x].character = new_char;
     canvas[y][x].foreground_color = new_fg;
     canvas[y][x].background_color = new_bg;
 
     paintbucket(y-1, x, old_char, new_char, old_fg, old_bg, new_fg, new_bg);
-    paintbucket(y+1, x, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
+    /*
+    */
+    paintbucket(y+1, x, old_char, new_char, old_fg, old_bg, new_fg, new_bg);
     paintbucket(y, x-1, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
     paintbucket(y, x+1, old_char, new_char, old_fg, old_bg,new_fg, new_bg);
+    /*
+    */
 }
 
 
@@ -1139,10 +1156,13 @@ void handle_normal_mode_input(int c) {
         // smart fill
         int fg = get_current_fg_color();
         int bg = get_current_bg_color();
+        
         int old_fg = canvas[y][x].foreground_color;
         int old_bg = canvas[y][x].background_color;
+        
         wchar_t old_char = canvas[y][x].character;
         wchar_t new_char = gblock;
+        
         paintbucket(y, x, old_char, new_char, old_fg, old_bg, fg, bg);
     }
     /*
