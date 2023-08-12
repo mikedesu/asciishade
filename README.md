@@ -93,38 +93,40 @@ Usage: ./asciishade [OPTION]...
 
 **Keyboard Controls**
 
-**Normal Mode**
+```
+Normal Mode
 
-- 'escape': Switch to text mode
-- 'S': save to file
-    - if the filename was not specified on program run, you will be asked to enter a filename.
-- 'o': go back one color pair / one foreground color
-- 'p': go forward one color pair / one foreground color
-- 'O': go back one background color
-- 'P': go forward one background color
-- '[': go back one block type
-- ']': go forward one block type
-- 'C': clear canvas
-- 'F': fill canvas
-- 'v': flip canvas vertically
-- 'h': flip canvas horizontally
-- 'W': resize canvas width
-- 'H': resize canvas height
-- 'g': paintbucket
-- 'l': line mode
-- 's': rect mode
-- 'q': quit
-- arrow keys: cursor navigation
-- space bar: place a block
-- delete: delete a block
-- backspace: delete a block and move left one
+escape: Switch to text mode
+S: save to file
+    if the filename was not specified on program run, you will be asked to enter a filename.
+o: go back one color pair / one foreground color
+p: go forward one color pair / one foreground color
+O: go back one background color
+P: go forward one background color
+[: go back one block type
+]: go forward one block type
+C: clear canvas
+F: fill canvas
+v: flip canvas vertically
+h: flip canvas horizontally
+W: resize canvas width
+H: resize canvas height
+g: paintbucket
+l: line mode
+s: rect mode
+q: quit
+arrow keys: cursor navigation
+space bar: place a block
+delete: delete a block
+backspace: delete a block and move left one
 
-**Text Mode**
+Text Mode
 
-- 'escape': Switch back to normal mode
-- 'delete': delete a block
-- 'backspace': delete a block and move left one
-- any key: type character onto screen with selected color pair
+escape: Switch back to normal mode
+delete: delete a block
+backspace: delete a block and move left one
+any key: type character onto screen with selected color pair
+```
 
 ### Features On The Way
 
