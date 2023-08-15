@@ -53,10 +53,16 @@ A good number of people care about ASCII art.
 - Blocktronics: [http://blocktronics.org/](http://blocktronics.org/)
 - AciD Productions: [https://16colo.rs/group/acid](https://16colo.rs/group/acid)
 
-### Web ASCII editors
+### Web ASCII/ANSI editors
 
 - ASCII Blaster: [https://asdf.us/asciiblaster/](https://asdf.us/asciiblaster/)
 - asciibird: [https://asciibird.birdnest.live/](https://asciibird.birdnest.live/)
+
+### Windows and MS-DOS ASCII/ANSI editors
+
+- pablodraw: [https://github.com/cwensley/pablodraw](https://github.com/cwensley/pablodraw)
+- TheDraw: [https://en.wikipedia.org/wiki/TheDraw](https://en.wikipedia.org/wiki/TheDraw)
+- AcidDraw: [https://www.acid.org/apps/apps.html](https://www.acid.org/apps/apps.html)
 
 ### Using asciishade
 
