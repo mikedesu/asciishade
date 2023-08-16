@@ -103,7 +103,12 @@ void get_filename_from_user();
 void get_int_str_from_user(char *prompt);
 void handle_cam_mode_arrow_keys(int c);
 void handle_canvas_load();
+void handle_canvas_resize_width();
+void handle_canvas_resize_height();
 void handle_color_pair_change(int c);
+void handle_escape_key_normal();
+void handle_line_draw();
+void handle_rect_draw();
 void handle_normal_mode_arrow_keys(int c);
 void handle_input();
 void handle_text_mode_input(int c);
@@ -789,53 +794,51 @@ void reset_line_draw_vars() {
 }
 
 
-void handle_normal_mode_input(int c) {
-    // escape key switches back and forth between normal & text modes
-    if (c == 27) {
-        if (!is_line_draw_mode && !is_rect_draw_mode) {
-            is_text_mode = true;
-        }
-        else if (is_line_draw_mode) {
-            is_line_draw_mode = false;
-            reset_line_draw_vars();
-        }
-        else if (is_rect_draw_mode) {
-            is_rect_draw_mode = false;
-            reset_line_draw_vars();
-        }
-    } 
-    else if (c=='q') {
-        handle_quit();
-    } 
-    else if (c==KEY_MOUSE) {
-        MEVENT event;
-        if (getmouse(&event) == OK) {
-            if (event.bstate & BUTTON1_CLICKED) {
-                if (event.x < canvas_width) {
-                    x = event.x;
-                } 
-                else if (event.x >= canvas_width) {
-                    x = canvas_width - 1;
-                }
-                else {
-                    x = 0;
-                }
-                if (event.y < canvas_height) {
-                    y = event.y;
-                }
-                else if (event.y >= canvas_height) {
-                    y = canvas_height - 1;
-                }
-                else {
-                    y = 0;
-                }
+
+void handle_escape_key_normal() {
+    if (!is_line_draw_mode && !is_rect_draw_mode) {
+        is_text_mode = true;
+    }
+    else if (is_line_draw_mode) {
+        is_line_draw_mode = false;
+        reset_line_draw_vars();
+    }
+    else if (is_rect_draw_mode) {
+        is_rect_draw_mode = false;
+        reset_line_draw_vars();
+    }
+}
+
+
+void handle_mouse_normal() {
+    MEVENT event;
+    if (getmouse(&event) == OK) {
+        if (event.bstate & BUTTON1_CLICKED) {
+            if (event.x < canvas_width) {
+                x = event.x;
+            } 
+            else if (event.x >= canvas_width) {
+                x = canvas_width - 1;
+            }
+            else {
+                x = 0;
+            }
+            if (event.y < canvas_height) {
+                y = event.y;
+            }
+            else if (event.y >= canvas_height) {
+                y = canvas_height - 1;
+            }
+            else {
+                y = 0;
             }
         }
     }
-    // to draw a line, we will need a function line(y0,x0,y1,x1)
-    // you will press l, then navigate to where you want the line drawn
-    else if (c=='l') {
-        // y0 and x0 must be set and it must set that we are in line draw mode 
+}
+
+
+void handle_line_draw() {
+    // y0 and x0 must be set and it must set that we are in line draw mode 
         // enter line draw mode
         if (!is_line_draw_mode) {
             is_line_draw_mode = true;
@@ -852,22 +855,46 @@ void handle_normal_mode_input(int c) {
         // user must either
         // 1. move to the y1 x1 that they want to drawn the line to and then press space or l or something
         // 2. press escape or something to exit line draw mode
+
+}
+
+
+void handle_rect_draw() {
+    // it is going to be a lot like 4 separate line draws
+    if (!is_rect_draw_mode) {
+        is_rect_draw_mode = true;
+        line_draw_y0 = y;
+        line_draw_x0 = x;
+        curs_set(0);
+    }
+    else {
+        is_rect_draw_mode = false;
+        draw_rect(line_draw_y0, line_draw_x0, y, x, get_current_fg_color(), get_current_bg_color());
+        reset_line_draw_vars();
+    }
+}
+
+
+void handle_normal_mode_input(int c) {
+    // escape key switches back and forth between normal & text modes
+    if (c == 27) {
+        handle_escape_key_normal();
+    } 
+    else if (c=='q') {
+        handle_quit();
+    } 
+    else if (c==KEY_MOUSE) {
+        handle_mouse_normal();
+    }
+    // to draw a line, we will need a function line(y0,x0,y1,x1)
+    // you will press l, then navigate to where you want the line drawn
+    else if (c=='l') {
+        handle_line_draw();
     }
     // to draw a square, we will need a function square(y0,x0,y1,x1)
     // you will press s, then navigate to where you want the square drawn
     else if (c=='s') {
-        // it is going to be a lot like 4 separate line draws
-        if (!is_rect_draw_mode) {
-            is_rect_draw_mode = true;
-            line_draw_y0 = y;
-            line_draw_x0 = x;
-            curs_set(0);
-        }
-        else {
-            is_rect_draw_mode = false;
-            draw_rect(line_draw_y0, line_draw_x0, y, x, get_current_fg_color(), get_current_bg_color());
-            reset_line_draw_vars();
-        }
+        handle_rect_draw();       
     }
     else if (c=='C') {
         clear_canvas(canvas, canvas_height, canvas_width);
@@ -917,7 +944,30 @@ void handle_normal_mode_input(int c) {
     }
     // resize the canvas' width
     else if (c=='W') {
-        int w = -1;
+        handle_canvas_resize_width();
+    }
+    // resize the canvas' height
+    else if (c=='H') {
+        handle_canvas_resize_height();
+    }
+    else if (c==0x09) { // tab
+        // toggle between normal mode and cam mode
+        invert_current_color_pair();
+    }
+    else if (c=='v') {
+        canvas_flip_vertical(canvas, canvas_height, canvas_width);
+    }
+    else if (c=='h') {
+        canvas_flip_horizontal(canvas, canvas_height, canvas_width);
+    }
+    else if (c==KEY_RESIZE) {
+        getmaxyx(stdscr, terminal_height, terminal_width);
+    }      
+}
+
+
+void handle_canvas_resize_width() {
+    int w = -1;
         // TODO: this is a temporary max width
         // eventually we will decide on something resonable
         const int max_width = 150;
@@ -939,48 +989,37 @@ void handle_normal_mode_input(int c) {
         old_canvas = canvas;
         canvas = new_canvas;
         free_canvas(old_canvas, canvas_height);
-    }
-    // resize the canvas' height
-    else if (c=='H') {
-        int h = -1;
-        // whats the max height?
-        // eventually we will decide on something resonable
-        const int tmp_max_height = 1000;
-        canvas_pixel_t **new_canvas = NULL;
-        int old_canvas_height = -1;
-        canvas_pixel_t **old_canvas = NULL;
-        while (h==-1 || h > tmp_max_height) {
-            h = get_new_height_from_user();
-        }
-        new_canvas = init_canvas(h, canvas_width);
-        if (new_canvas == NULL) {
-            show_error("Error creating new canvas");
-            return;
-        }
-        y = 0;
-        x = 0;
-        move(y,x);
-        copy_canvas(new_canvas, canvas, h, canvas_width, canvas_height, canvas_width);
-        old_canvas_height = canvas_height;
-        canvas_height = h;
-        old_canvas = canvas;
-        canvas = new_canvas;
-        free_canvas(old_canvas, old_canvas_height);
-    }
-    else if (c==0x09) { // tab
-        // toggle between normal mode and cam mode
-        invert_current_color_pair();
-    }
-    else if (c=='v') {
-        canvas_flip_vertical(canvas, canvas_height, canvas_width);
-    }
-    else if (c=='h') {
-        canvas_flip_horizontal(canvas, canvas_height, canvas_width);
-    }
-    else if (c==KEY_RESIZE) {
-        getmaxyx(stdscr, terminal_height, terminal_width);
-    }      
+
 }
+
+
+void handle_canvas_resize_height() {
+    int h = -1;
+    // whats the max height?
+    // eventually we will decide on something resonable
+    const int tmp_max_height = 1000;
+    canvas_pixel_t **new_canvas = NULL;
+    int old_canvas_height = -1;
+    canvas_pixel_t **old_canvas = NULL;
+    while (h==-1 || h > tmp_max_height) {
+        h = get_new_height_from_user();
+    }
+    new_canvas = init_canvas(h, canvas_width);
+    if (new_canvas == NULL) {
+        show_error("Error creating new canvas");
+        return;
+    }
+    y = 0;
+    x = 0;
+    move(y,x);
+    copy_canvas(new_canvas, canvas, h, canvas_width, canvas_height, canvas_width);
+    old_canvas_height = canvas_height;
+    canvas_height = h;
+    old_canvas = canvas;
+    canvas = new_canvas;
+    free_canvas(old_canvas, old_canvas_height);
+}
+
 
 
 void handle_text_mode_input(int c) {
