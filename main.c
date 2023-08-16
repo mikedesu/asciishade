@@ -836,22 +836,18 @@ void handle_normal_mode_input(int c) {
     // you will press l, then navigate to where you want the line drawn
     else if (c=='l') {
         // y0 and x0 must be set and it must set that we are in line draw mode 
+        // enter line draw mode
         if (!is_line_draw_mode) {
             is_line_draw_mode = true;
             line_draw_y0 = y;
             line_draw_x0 = x;
             curs_set(0);
         }
+        // draw the line and exit line draw mode
         else {
             is_line_draw_mode = false;
-            line_draw_y1 = y;
-            line_draw_x1 = x;
-            int fg = get_current_fg_color();
-            int bg = get_current_bg_color();
-            draw_line(line_draw_y0, line_draw_x0, line_draw_y1, line_draw_x1, fg, bg);
-            line_draw_y0 = -1;
-            line_draw_x0 = -1;
-            curs_set(1);
+            draw_line(line_draw_y0, line_draw_x0, y, x, get_current_fg_color(), get_current_bg_color());
+            reset_line_draw_vars();
         }
         // user must either
         // 1. move to the y1 x1 that they want to drawn the line to and then press space or l or something
@@ -869,14 +865,8 @@ void handle_normal_mode_input(int c) {
         }
         else {
             is_rect_draw_mode = false;
-            line_draw_y1 = y;
-            line_draw_x1 = x;
-            int fg = get_current_fg_color();
-            int bg = get_current_bg_color();
-            draw_rect(line_draw_y0, line_draw_x0, line_draw_y1, line_draw_x1, fg, bg);
-            line_draw_y0 = -1;
-            line_draw_x0 = -1;
-            curs_set(1);
+            draw_rect(line_draw_y0, line_draw_x0, y, x, get_current_fg_color(), get_current_bg_color());
+            reset_line_draw_vars();
         }
     }
     else if (c=='C') {
@@ -888,9 +878,7 @@ void handle_normal_mode_input(int c) {
     } 
     // fill canvas
     else if (c=='F') {
-        int fg = get_current_fg_color();
-        int bg = get_current_bg_color();
-        fill_canvas(canvas, canvas_height, canvas_width, fg, bg);
+        fill_canvas(canvas, canvas_height, canvas_width, get_current_fg_color(), get_current_bg_color());
     } 
     else if (c==KEY_DC) {
         delete_block();
@@ -910,20 +898,10 @@ void handle_normal_mode_input(int c) {
             handle_normal_mode_arrow_keys(c);
         }
     } 
-    // disabling temporarily
     else if (c=='G') {
-        // paintbucket tool
-        // smart fill
-        int fg = get_current_fg_color();
-        int bg = get_current_bg_color();
-        int old_fg = canvas[y][x].foreground_color;
-        int old_bg = canvas[y][x].background_color;
-        wchar_t old_char = canvas[y][x].character;
-        wchar_t new_char = gblock;
-        paintbucket(y, x, old_char, new_char, old_fg, old_bg, fg, bg);
+        // paintbucket tool - smart fill
+        paintbucket(y, x, canvas[y][x].character, gblock, canvas[y][x].foreground_color, canvas[y][x].background_color, get_current_fg_color(), get_current_bg_color());
     }
-    /*
-    */
     else if (c==' ') {
         add_block();
         handle_move_right();
@@ -932,13 +910,8 @@ void handle_normal_mode_input(int c) {
         handle_color_pair_change(c);
     }
     else if (c=='[' || c==']') {
-        // lets just test switching between a full block and a half block
         handle_gblock_rotation(c);
     }
-    //else if (c=='E') { // experimental
-    //    show_error("This is an error message");
-    //    get_int_str_from_user("Enter a number: ");
-    //}
     else if (c=='?') {
         show_help();
     }

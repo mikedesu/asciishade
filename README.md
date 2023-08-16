@@ -29,7 +29,8 @@ Now, asciishade is an ASCII Art Editor.
 
 ### What is asciishade?
 
-asciishade is an upcoming ASCII creation and editing tool.
+asciishade is an ASCII creation and editing tool.
+
 It is written from the ground up in C using the ncurses library.
 
 ### Why write asciishade?
